@@ -365,7 +365,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);

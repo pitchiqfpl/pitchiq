@@ -659,7 +659,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;}
+function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');

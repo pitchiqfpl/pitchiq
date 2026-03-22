@@ -891,7 +891,7 @@ async function loadSquad(teamId) {
 }
 
 function resolveGw(bs) {
-  return (bs.events?.find(e=>e.is_current) ?? bs.events?.find(e=>e.is_next))?.id ?? 1;
+  return (bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
 }
 
 function resolveDeadline(bs) {

@@ -542,8 +542,21 @@ const ENGINE = (() => {
     const xgMap=mapXg(xgResp?.teams??{},fplMap);
     const ns=normalise(rawScores(xgMap));
     const thresholds=computeThresholds(ns);
-    const upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&f.finished===false);
-    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:sGw,endGw:eGw,gwList:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs,hasXg:!!xgResp?.teams};
+    // Try unfinished fixtures first; fall back to all fixtures in range if none found
+    let upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&f.finished===false);
+    if(upcoming.length===0){
+      // Between GWs — include recently finished GW too so ticker isn't empty
+      upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw);
+    }
+    if(upcoming.length===0){
+      // No fixtures in range at all — widen to next 8 published GWs
+      const nextGws=[...new Set(allFix.filter(f=>f.event>=curGw).map(f=>f.event))].sort((a,b)=>a-b).slice(0,GWS_TO_SHOW);
+      upcoming=allFix.filter(f=>nextGws.includes(f.event));
+    }
+    const actualGws=[...new Set(upcoming.map(f=>f.event))].sort((a,b)=>a-b);
+    const actualStart=actualGws[0]??sGw;
+    const actualEnd=actualGws[actualGws.length-1]??eGw;
+    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:actualStart,endGw:actualEnd,gwList:actualGws.length?actualGws:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs,hasXg:!!xgResp?.teams};
   }
 
   return{build};

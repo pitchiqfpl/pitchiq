@@ -522,18 +522,24 @@ const ENGINE = (() => {
   }
 
   async function build({fromGw,toGw}={}){
-    const [bs,allFix,xgResp]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures'),fetchJ('api/xg-data')]);
+    const [bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
     if(!Array.isArray(bs.teams))throw new Error('Bad bootstrap: no teams');
     if(!Array.isArray(allFix))throw new Error('Bad fixtures: not array');
-    if(!xgResp?.teams)throw new Error('Bad xg-data: no teams');
+
+    // xg-data is optional — fall back to FPL strength ratings if unavailable
+    let xgResp = null;
+    try { xgResp = await fetchJ('api/xg-data'); } catch(e) {
+      console.warn('[ENGINE] xg-data unavailable — using FPL strength fallback');
+    }
+
     const curGw=resolveGw(bs);
     const sGw=fromGw??curGw, eGw=toGw??sGw+10;
     const fplMap=buildFplMap(bs.teams);
-    const xgMap=mapXg(xgResp.teams,fplMap);
+    const xgMap=mapXg(xgResp?.teams??{},fplMap);
     const ns=normalise(rawScores(xgMap));
     const thresholds=computeThresholds(ns);
     const upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&f.finished===false);
-    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:sGw,endGw:eGw,gwList:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs};
+    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:sGw,endGw:eGw,gwList:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs,hasXg:!!xgResp?.teams};
   }
 
   return{build};
@@ -683,8 +689,8 @@ async function loadLive() {
 
     isLive = true;
     document.getElementById('headerSub').textContent =
-      `FIXTURE DIFFICULTY TICKER · GW${result.currentGw}–${result.endGw} · xG MODEL`;
-    setBadge('live', `Live · xG model · GW${result.currentGw}`);
+      `FIXTURE DIFFICULTY TICKER · GW${result.currentGw}–${result.endGw} · ${result.hasXg?'xG MODEL':'FPL RATINGS'}`;
+    setBadge('live', `Live · ${result.hasXg?'xG model':'FPL ratings'} · GW${result.currentGw}`);
   } catch (err) {
     console.warn('[PitchIQ] Live data unavailable:', err.message);
     isLive  = false;

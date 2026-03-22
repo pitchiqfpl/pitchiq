@@ -46,48 +46,34 @@ export default async function handler(req, res) {
   };
 
   try {
-    // ── Call 1: standings to get the list of all 20 PL teams ────────────────
-    const standingsRes = await fetch(
-      `${API_BASE}/standings?league=${PL_LEAGUE_ID}&season=${CURRENT_SEASON}`,
+    // ── Get all PL teams directly — broader free tier coverage than standings ─
+    const teamsRes = await fetch(
+      `${API_BASE}/teams?league=${PL_LEAGUE_ID}&season=${CURRENT_SEASON}`,
       { headers }
     );
-    if (!standingsRes.ok) throw new Error(`Standings: HTTP ${standingsRes.status}`);
-    const standingsData = await standingsRes.json();
+    if (!teamsRes.ok) throw new Error(`Teams: HTTP ${teamsRes.status}`);
+    const teamsData = await teamsRes.json();
 
-    // Log the raw response structure for debugging
-    console.log('[xg-data] Standings response keys:', JSON.stringify(Object.keys(standingsData)));
-    console.log('[xg-data] Response length:', standingsData.response?.length);
-    console.log('[xg-data] First response item keys:', JSON.stringify(Object.keys(standingsData.response?.[0] ?? {})));
+    console.log('[xg-data] Teams response count:', teamsData.results, 'response length:', teamsData.response?.length);
 
-    // Try multiple response structures — API-Football varies between seasons
-    let standings = standingsData.response?.[0]?.league?.standings?.[0]
-                 ?? standingsData.response?.[0]?.standings?.[0]
-                 ?? standingsData.response?.[0];
-
-    // If still no standings, try the teams endpoint directly as fallback
-    if (!Array.isArray(standings) || standings.length === 0) {
-      console.warn('[xg-data] No standings — trying teams endpoint directly');
-      const teamsRes = await fetch(
-        `${API_BASE}/teams?league=${PL_LEAGUE_ID}&season=${CURRENT_SEASON}`,
+    if (!Array.isArray(teamsData.response) || teamsData.response.length === 0) {
+      // Last resort — try previous season to at least get team IDs
+      console.warn('[xg-data] No teams for 2025 — trying 2024 season for team IDs');
+      const fallbackRes = await fetch(
+        `${API_BASE}/teams?league=${PL_LEAGUE_ID}&season=2024`,
         { headers }
       );
-      if (!teamsRes.ok) throw new Error(`Teams: HTTP ${teamsRes.status}`);
-      const teamsData = await teamsRes.json();
-      console.log('[xg-data] Teams response length:', teamsData.response?.length);
-      if (!Array.isArray(teamsData.response) || teamsData.response.length === 0) {
-        throw new Error(`No team data for season ${CURRENT_SEASON} — check API key and season ID`);
+      const fallbackData = await fallbackRes.json();
+      if (!Array.isArray(fallbackData.response) || fallbackData.response.length === 0) {
+        throw new Error(`No team data available for league ${PL_LEAGUE_ID}`);
       }
-      // Build teams from the teams endpoint
-      var teams = teamsData.response.map(t => ({
-        id:   t.team.id,
-        name: t.team.name,
-      }));
-    } else {
-      var teams = standings.map(s => ({
-        id:   s.team.id,
-        name: s.team.name,
-      }));
+      teamsData.response = fallbackData.response;
     }
+
+    const teams = teamsData.response.map(t => ({
+      id:   t.team.id,
+      name: t.team.name,
+    }));
 
     // ── Call 2: last N rounds of fixtures for form calculation ───────────────
     // Using `last=` keeps us well within the 100-result page limit.

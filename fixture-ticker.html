@@ -524,7 +524,7 @@ const ENGINE = (() => {
   }
 
   async function build({fromGw,toGw}={}){
-    const [bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
+    const [bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     if(!Array.isArray(bs.teams))throw new Error('Bad bootstrap: no teams');
     if(!Array.isArray(allFix))throw new Error('Bad fixtures: not array');
 

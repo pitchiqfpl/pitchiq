@@ -434,7 +434,7 @@ async function fetchJ(url){
 async function loadBootstrap(){
   setBadge('loading','Loading…');
   try{
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TOTAL_PLAYERS=bs.total_players??10000000;
     // Store current GW average and highest score for live rank estimation
@@ -1043,7 +1043,7 @@ async function refreshPriceData(){
   const lbl=document.getElementById('priceLastUpdate');
   if(btn){btn.textContent='Refreshing…';btn.disabled=true;}
   try{
-    const bs=await fetchJ('api/fpl-bootstrap?_='+Date.now());
+    const bs=await fetchJ('api/fpl-bootstrap');
     if(bs.teams)bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,

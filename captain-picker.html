@@ -679,7 +679,7 @@ async function fetchJ(url) {
 async function loadData() {
   setBadge('loading', 'Fetching live FPL data…');
   try {
-    const bs = await fetchJ('api/fpl-bootstrap?_='+Date.now());
+    const bs = await fetchJ('api/fpl-bootstrap');
     if (!Array.isArray(bs.teams) || !Array.isArray(bs.elements)) throw new Error('Bad bootstrap');
     CURRENT_GW   = resolveGw(bs);
     SELECTED_GW  = CURRENT_GW;

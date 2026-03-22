@@ -635,7 +635,7 @@ async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_
 async function loadData(){
   setBadge('loading','Fetching live FPL data…');
   try{
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     if(!Array.isArray(bs.teams)||!Array.isArray(bs.elements))throw new Error('Bad bootstrap');
     GW=resolveGw(bs);
     TMAP=buildTmap(bs.teams);

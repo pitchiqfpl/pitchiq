@@ -407,6 +407,7 @@ const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
 const LS='pitchiq_live_';
 let ALL=[],TMAP={},GW=1,TOTAL_PLAYERS=10000000;
+let GW_AVERAGE=0,GW_HIGHEST=0;
 let PICKS=[];
 let SQUAD_IDS=new Set();
 let LIVE_MAP={};
@@ -436,6 +437,10 @@ async function loadBootstrap(){
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
     GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
     TOTAL_PLAYERS=bs.total_players??10000000;
+    // Store current GW average and highest score for live rank estimation
+    const currentEvent=bs.events?.find(e=>e.is_current);
+    GW_AVERAGE=currentEvent?.average_entry_score??0;
+    GW_HIGHEST=currentEvent?.highest_score??0;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,
@@ -517,54 +522,42 @@ function calcApproxRank(myPts, totalPlayers){
     return {
       rank: scaled+1,
       percentile: ((totalPlayers-scaled)/totalPlayers*100),
-      confidence: 'est.',
       based: known,
       method: 'results',
     };
   }
 
-  // Method 2: Estimate from live player scores during active GW
-  // Logic: count how many of the top-owned players are outscoring you
-  // weighted by their ownership %. Not precise but directionally correct.
-  if(Object.keys(LIVE_MAP).length > 0 && ALL.length > 0){
-    // Get the top 50 most-owned players and their live scores
-    const topOwned = [...ALL]
-      .filter(p => p.pos !== 'GK' && p.ownedPct > 5)
-      .sort((a,b) => b.ownedPct - a.ownedPct)
-      .slice(0, 50);
-
-    // Estimate: what % of managers have more points than me?
-    // For each player, if their captain (2x) score beats myPts, 
-    // roughly their ownership% of managers are beating me via that captain
-    let estimatedPctAbove = 0;
-    const counted = new Set();
-
-    for(const p of topOwned){
-      const live = LIVE_MAP[p.id];
-      if(!live) continue;
-      const capPts = live.total_points * 2;
-      if(capPts > myPts && !counted.has(p.id)){
-        // Rough estimate: their ownership% of managers captained them
-        // and if that captain score beats myPts, those managers likely beat me
-        estimatedPctAbove += (p.ownedPct / 100) * 0.35; // ~35% of owners captain them
-        counted.add(p.id);
-      }
-    }
-
-    // Cap at 99%
-    estimatedPctAbove = Math.min(estimatedPctAbove, 0.99);
-    const estimatedRank = Math.round(estimatedPctAbove * totalPlayers) + 1;
-
+  // Method 2: Normal distribution estimate using GW average + highest score
+  // FPL scores roughly follow a normal distribution centred on the average.
+  // We estimate SD from the average and highest score, then use the
+  // cumulative normal distribution to estimate what % scored above you.
+  if(GW_AVERAGE > 0 && GW_HIGHEST > 0){
+    const mean = GW_AVERAGE;
+    // Approximate SD: highest score is typically ~3.5 SDs above mean
+    const sd = Math.max((GW_HIGHEST - mean) / 3.5, 1);
+    const z = (myPts - mean) / sd;
+    // Cumulative normal: % of managers scoring below you
+    const pctBelow = 0.5*(1 + erf(z/Math.SQRT2));
+    const managersAbove = Math.round((1-pctBelow) * totalPlayers);
     return {
-      rank: estimatedRank,
-      percentile: ((1 - estimatedPctAbove) * 100),
-      confidence: 'live est.',
+      rank: Math.max(1, managersAbove + 1),
+      percentile: pctBelow * 100,
       based: null,
-      method: 'live',
+      method: 'estimate',
     };
   }
 
   return null;
+}
+
+// Error function approximation for normal distribution
+function erf(x){
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const sign=x<0?-1:1;
+  x=Math.abs(x);
+  const t=1/(1+p*x);
+  const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
+  return sign*y;
 }
 
 function formatRank(rank){
@@ -705,11 +698,15 @@ function renderLiveContent(){
   const rankHtml=rankInfo
     ?`<div class="rank-val ${rankClass(rankInfo.rank,TOTAL_PLAYERS)}">${formatRank(rankInfo.rank)}</div>
        <div class="pts-label">Live rank</div>
-       <div class="rank-accuracy">${rankInfo.method==='live'?'Live estimate · captain scoring':'~'+rankInfo.percentile.toFixed(1)+'% · est. from '+(rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based)+' scores'}</div>`
+       <div class="rank-accuracy">${
+         rankInfo.method==='results'
+           ?`~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores`
+           :`~${rankInfo.percentile.toFixed(1)}% · based on GW avg ${GW_AVERAGE}pts`
+       }</div>`
     :hasLive
-      ?`<div class="rank-loading"></div>
-        <div class="pts-label" style="margin-top:6px">Live rank</div>
-        <div class="rank-accuracy">Calculating…</div>`
+      ?`<div class="rank-val" style="color:var(--muted);font-size:18px">—</div>
+        <div class="pts-label">Live rank</div>
+        <div class="rank-accuracy">GW avg score loading…</div>`
       :`<div class="rank-val" style="color:var(--muted)">—</div>
         <div class="pts-label">Live rank</div>
         <div class="rank-accuracy">Load your squad above</div>`;

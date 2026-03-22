@@ -635,7 +635,7 @@ async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_
 async function loadData(){
   setBadge('loading','Fetching live FPL data…');
   try{
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
     if(!Array.isArray(bs.teams)||!Array.isArray(bs.elements))throw new Error('Bad bootstrap');
     GW=resolveGw(bs);
     TMAP=buildTmap(bs.teams);
@@ -1388,17 +1388,18 @@ function computeL6(id, history){
 async function loadTableXg(players){
   if(ALL===FB_PLAYERS) return;
   const toFetch = players.filter(p => !L6_CACHE.has(p.id));
-  await Promise.allSettled(toFetch.map(async p => {
+  // Sequential with delay to avoid FPL rate limiting
+  for(const p of toFetch){
     try{
       const d = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
       computeL6(p.id, d.history??[]);
-      // Also warm the GWH cache for detail panel
       if(!GWH.has(p.id)){
         const h=(d.history??[]).slice(0,5).reverse();
         GWH.set(p.id,h.map(g=>({gw:g.round,pts:g.total_points??0,xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),mins:g.minutes||0})));
       }
     }catch{ L6_CACHE.set(p.id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); }
-  }));
+    await new Promise(r=>setTimeout(r,120));
+  }
   patchL6Cells(players);
 }
 

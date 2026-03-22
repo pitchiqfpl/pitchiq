@@ -520,7 +520,7 @@ const ENGINE = (() => {
   }
 
   async function build({fromGw,toGw}={}){
-    const [bs,allFix,xgResp]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures'),fetchJ('api/xg-data')]);
+    const [bs,allFix,xgResp]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures'),fetchJ('api/xg-data')]);
     if(!Array.isArray(bs.teams))throw new Error('Bad bootstrap: no teams');
     if(!Array.isArray(allFix))throw new Error('Bad fixtures: not array');
     if(!xgResp?.teams)throw new Error('Bad xg-data: no teams');

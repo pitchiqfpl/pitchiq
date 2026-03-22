@@ -347,7 +347,7 @@ const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
 const FIX_TOKEN=['','fix-d1-t','fix-d2-t','fix-d3-t','fix-d4-t','fix-d5-t'];
 const POS={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const LS='pitchiq_myteam_';
-let ALL=[],TMAP={},GW=1,
+let ALL=[],TMAP={},GW=1;
 let PICKS=[]; // [{element, position, multiplier, is_captain, is_vice_captain}]
 let PENDING_TRANSFERS=[]; // transfers made this GW from FPL API
 
@@ -364,7 +364,7 @@ async function loadData(){
   setBadge('loading','Fetching FPL data…');
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
-    const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
+    const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]),timeout]);
     GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);

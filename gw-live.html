@@ -433,7 +433,7 @@ async function fetchJ(url){
 async function loadBootstrap(){
   setBadge('loading','Loading…');
   try{
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap?_='+Date.now()),fetchJ('api/fpl-fixtures')]);
     GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
     TOTAL_PLAYERS=bs.total_players??10000000;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
@@ -1012,7 +1012,7 @@ async function refreshPriceData(){
   const lbl=document.getElementById('priceLastUpdate');
   if(btn){btn.textContent='Refreshing…';btn.disabled=true;}
   try{
-    const bs=await fetchJ('api/fpl-bootstrap');
+    const bs=await fetchJ('api/fpl-bootstrap?_='+Date.now());
     if(bs.teams)bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,

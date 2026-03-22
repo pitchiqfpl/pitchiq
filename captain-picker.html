@@ -679,7 +679,7 @@ async function fetchJ(url) {
 async function loadData() {
   setBadge('loading', 'Fetching live FPL data…');
   try {
-    const bs = await fetchJ('api/fpl-bootstrap');
+    const bs = await fetchJ('api/fpl-bootstrap?_='+Date.now());
     if (!Array.isArray(bs.teams) || !Array.isArray(bs.elements)) throw new Error('Bad bootstrap');
     CURRENT_GW   = resolveGw(bs);
     SELECTED_GW  = CURRENT_GW;
@@ -755,23 +755,22 @@ async function loadSparklines(players) {
   const toFetch = players.slice(0, 24).filter(p => !XG_TREND_CACHE.has(p.id));
   if (!toFetch.length) { patchSparklines(players); return; }
 
-  // Fetch all in parallel — silent on failure per player
-  await Promise.allSettled(
-    toFetch.map(async p => {
-      try {
-        const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
-        // history[] is newest-first array of GW objects with expected_goals, expected_assists
-        const history = Array.isArray(data.history) ? data.history : [];
-        const vals = history
-          .slice(0, SPARK_GWS)
-          .reverse()  // oldest first for left-to-right chart
-          .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
-        XG_TREND_CACHE.set(p.id, vals);
-      } catch {
-        XG_TREND_CACHE.set(p.id, []); // mark as fetched even on failure
-      }
-    })
-  );
+  // Fetch sequentially with small delay to avoid FPL rate limiting
+  for (const p of toFetch) {
+    try {
+      const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
+      const history = Array.isArray(data.history) ? data.history : [];
+      const vals = history
+        .slice(0, SPARK_GWS)
+        .reverse()
+        .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
+      XG_TREND_CACHE.set(p.id, vals);
+    } catch {
+      XG_TREND_CACHE.set(p.id, []);
+    }
+    // Small delay between requests to avoid FPL rate limiting
+    await new Promise(r => setTimeout(r, 80));
+  }
 
   patchSparklines(players);
 }

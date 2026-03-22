@@ -386,8 +386,10 @@ const ENGINE = (() => {
   function resolveGw(bs){
     const cur=bs.events?.find(e=>e.is_current);
     const nxt=bs.events?.find(e=>e.is_next);
-    const gw=(cur??nxt)?.id;
-    if(!gw){const f=bs.events?.[0]?.id??1;console.warn(`[ENGINE] GW unknown, defaulting to ${f}`);return f;}
+    const prev=bs.events?.find(e=>e.is_previous);
+    const lastFinished=[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0];
+    const gw=(cur??nxt??prev??lastFinished)?.id;
+    if(!gw){console.warn('[ENGINE] GW unknown, defaulting to 1');return 1;}
     return gw;
   }
 

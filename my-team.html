@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta name="keywords" content="FPL my team, FPL squad view, Fantasy Premier League team analysis, FPL team importer">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/my-team.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/my-team.html">
+  <meta property="og:title" content="FPL My Team — Pitch View & Fixture Analysis | PitchIQ">
+  <meta property="og:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL My Team — Pitch View & Fixture Analysis | PitchIQ">
+  <meta name="twitter:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — My Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--purple:#a78bfa;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:1100px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px;color:var(--cream)}.logo span{color:var(--grass)}
+.header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:blink 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* IMPORT BAR */
+.import-bar{display:flex;align-items:center;gap:10px;padding:14px 18px;margin-bottom:24px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap}
+.import-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.import-input{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:8px 12px;border-radius:7px;font-family:var(--font-m);font-size:13px;outline:none;width:150px;transition:border-color 0.2s}
+.import-input:focus{border-color:rgba(39,174,96,0.4)}
+.import-input::placeholder{color:var(--muted)}
+.import-btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--grass);color:var(--ink);transition:background 0.15s;font-family:var(--font-b);white-space:nowrap}
+.import-btn:hover{background:var(--grass-l)}
+.import-btn:disabled{opacity:0.5;cursor:not-allowed}
+.import-status{font-size:12px;font-family:var(--font-m)}
+.import-status.loaded{color:var(--grass-l)}
+.import-status.loading{color:var(--gold)}
+.import-status.error{color:var(--accent)}
+.import-hint{font-size:11px;color:var(--muted);flex:1;min-width:160px}
+
+/* MAIN LAYOUT */
+.team-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+
+/* ─── PITCH ─────────────────────────────────────────────────────────────── */
+.pitch-wrap{
+  position:relative;overflow:hidden;border-radius:18px;
+  padding:32px 8px 20px;
+  /* Deep emerald with visible mown stripes */
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255,255,255,0.0) 0px, rgba(255,255,255,0.0) 56px,
+      rgba(0,0,0,0.09) 56px, rgba(0,0,0,0.09) 112px
+    ),
+    linear-gradient(180deg,#0d3b18 0%,#0f4a1e 50%,#0d3b18 100%);
+  border:1px solid rgba(255,255,255,0.07);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 24px 64px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+/* Top spotlight glow */
+.pitch-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:40%;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 100%);
+  pointer-events:none;z-index:0;
+}
+.pitch-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.28}
+.pitch-row{display:flex;justify-content:center;gap:4px;margin-bottom:10px;position:relative;z-index:1}
+.pitch-row:last-child{margin-bottom:0}
+.formation-badge{
+  position:absolute;top:9px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-m);font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,0.6);
+  background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(10px);
+  padding:4px 14px;border-radius:30px;
+  border:1px solid rgba(255,255,255,0.12);
+  z-index:2;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ─── PLAYER CARD — FIFA-style portrait tile ────────────────────────────── */
+.player-token{
+  display:flex;flex-direction:column;align-items:center;
+  gap:0;cursor:pointer;width:76px;
+  transition:transform 0.22s cubic-bezier(0.34,1.56,0.64,1),filter 0.2s;
+}
+@media(hover:hover){.player-token:hover{transform:translateY(-6px) scale(1.04);filter:brightness(1.08)}}
+
+/* ─── AVATAR RING ─────────────────────────────────────────────────────────── */
+.token-avatar{position:relative;width:56px;height:56px;flex-shrink:0}
+.token-avatar::before{content:'';position:absolute;inset:-3px;border-radius:50%;z-index:0;transition:opacity 0.2s;opacity:0.7}
+@media(hover:hover){.player-token:hover .token-avatar::before{opacity:1}}
+.ring-gk::before{background:conic-gradient(#f59e0b,#fbbf24,#f59e0b);filter:blur(2px)}
+.ring-def::before{background:conic-gradient(#3b82f6,#60a5fa,#3b82f6);filter:blur(2px)}
+.ring-mid::before{background:conic-gradient(#10b981,#34d399,#10b981);filter:blur(2px)}
+.ring-fwd::before{background:conic-gradient(#ef4444,#f87171,#ef4444);filter:blur(2px)}
+.ring-cap::before{background:conic-gradient(#f0b429,#ffe066,#f0b429)!important;filter:blur(1px)!important;opacity:1!important;animation:capPulse 2.5s ease-in-out infinite}
+.ring-vc::before{background:conic-gradient(#63b3ed,#90cdf4,#63b3ed)!important;filter:blur(1px)!important;opacity:0.9!important}
+@keyframes capPulse{0%,100%{opacity:1}50%{opacity:0.55}}
+.token-avatar-inner{position:absolute;inset:0;border-radius:50%;overflow:hidden;z-index:1;background:var(--ink-2);box-shadow:inset 0 0 0 2px rgba(13,17,23,0.9)}
+.token-photo-wrap{position:relative;width:56px;flex-shrink:0}
+.token-photo{width:56px;height:56px;object-fit:cover;object-position:top center;display:block;border-radius:50%}
+.token-photo-fallback{width:56px;height:56px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.token-photo-fallback .shirt-svg{width:38px;height:42px;flex-shrink:0}
+.token-photo-fallback .shirt-num{position:absolute;font-family:var(--font-d);font-size:16px;letter-spacing:1px;color:rgba(255,255,255,0.95);text-shadow:0 2px 6px rgba(0,0,0,0.9);margin-top:6px}
+.shirt-gk-bg{background:radial-gradient(circle at 50% 60%,rgba(245,158,11,0.25),rgba(13,17,23,1))}
+.shirt-def-bg{background:radial-gradient(circle at 50% 60%,rgba(59,130,246,0.25),rgba(13,17,23,1))}
+.shirt-mid-bg{background:radial-gradient(circle at 50% 60%,rgba(16,185,129,0.25),rgba(13,17,23,1))}
+.shirt-fwd-bg{background:radial-gradient(circle at 50% 60%,rgba(239,68,68,0.25),rgba(13,17,23,1))}
+.ep-badge{display:inline-flex;align-items:baseline;gap:1px;background:rgba(8,10,14,0.95);border:1px solid rgba(240,180,41,0.7);border-radius:20px;padding:2px 8px;font-family:var(--font-d);font-size:13px;color:var(--gold);line-height:1;backdrop-filter:blur(8px);box-shadow:0 0 10px rgba(240,180,41,0.2);white-space:nowrap}
+.ep-pts{font-family:var(--font-b);font-size:7px;color:rgba(240,180,41,0.6);font-weight:700}
+.cap-badge{position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:8px;font-weight:700;line-height:1;z-index:5;border:2px solid var(--ink);box-shadow:0 2px 6px rgba(0,0,0,0.6)}
+.cap-badge.cap{background:var(--gold);color:#000}
+.cap-badge.vc{background:var(--blue);color:#000}
+.status-dot{position:absolute;top:0;left:0;width:10px;height:10px;border-radius:50%;z-index:5;border:2px solid var(--ink);animation:statusPulse 2s ease-in-out infinite}
+.status-dot.doubt{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.status-dot.injured{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+@keyframes statusPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(0.8)}}
+.token-info{text-align:center;width:76px;margin-top:5px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.token-name{font-size:11px;font-weight:700;color:var(--cream);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;display:block;letter-spacing:0.4px;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,0.8)}
+.token-fix-pill{display:inline-block;font-family:var(--font-m);font-size:7px;font-weight:600;letter-spacing:0.5px;padding:2px 6px;border-radius:10px}
+.fix-pill-0{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.1)}
+.fix-pill-1{background:rgba(74,222,128,0.18);color:#4ade80;border:1px solid rgba(74,222,128,0.25)}
+.fix-pill-2{background:rgba(134,239,172,0.14);color:#86efac;border:1px solid rgba(134,239,172,0.2)}
+.fix-pill-3{background:rgba(252,211,77,0.14);color:#fcd34d;border:1px solid rgba(252,211,77,0.2)}
+.fix-pill-4{background:rgba(252,165,165,0.14);color:#fca5a5;border:1px solid rgba(252,165,165,0.2)}
+.fix-pill-5{background:rgba(248,113,113,0.18);color:#f87171;border:1px solid rgba(248,113,113,0.25)}
+
+
+/* ─── BENCH ─────────────────────────────────────────────────────────────── */
+.bench-section{margin-top:14px;position:relative;z-index:1}
+.bench-label{
+  text-align:center;
+  font-family:var(--font-m);font-size:8px;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,0.18);margin-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+}
+.bench-label::before,.bench-label::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);
+}
+.bench-row{display:flex;justify-content:center;gap:4px}
+.bench-row .player-token{opacity:0.45;filter:saturate(0.5) brightness(0.85)}
+@media(hover:hover){.bench-row .player-token:hover{opacity:0.9;filter:saturate(1) brightness(1.05);transform:translateY(-4px) scale(1.03)}}
+
+.fix-d1-t{background:rgba(74,222,128,0.2);color:#4ade80}
+.fix-d2-t{background:rgba(134,239,172,0.15);color:#86efac}
+.fix-d3-t{background:rgba(252,211,77,0.15);color:#fcd34d}
+.fix-d4-t{background:rgba(252,165,165,0.15);color:#fca5a5}
+.fix-d5-t{background:rgba(248,113,113,0.15);color:#f87171}
+
+/* SIDE PANEL */
+.side-panel{display:flex;flex-direction:column;gap:14px}
+.stat-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stat-card-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-tile{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
+.stat-tile-val{font-family:var(--font-d);font-size:24px;line-height:1;color:var(--cream)}
+.stat-tile-label{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* FIXTURE TABLE */
+.fix-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.fix-table td{padding:6px 8px;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+.fix-table td:first-child{font-weight:600;color:var(--cream);width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fix-table td:last-child{overflow:hidden}
+.fix-table tr:last-child td{border-bottom:none}
+.fix-pill-sm{display:inline-flex;padding:1px 5px;border-radius:4px;font-family:var(--font-m);font-size:8px;font-weight:600;border:1px solid;white-space:nowrap}
+
+/* TRANSFER PANEL */
+.xfer-panel{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;margin-bottom:14px}
+.xfer-panel-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.xfer-panel-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.xfer-panel-badge{font-family:var(--font-m);font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(99,179,237,0.1);color:var(--blue)}
+.xfer-card{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.xfer-card:last-child{border-bottom:none}
+.xfer-player{display:flex;align-items:center;gap:9px}
+.xfer-player-photo{width:36px;height:36px;border-radius:7px;object-fit:cover;object-position:top;flex-shrink:0;background:rgba(255,255,255,0.06)}
+.xfer-player-info{}
+.xfer-player-name{font-size:12px;font-weight:600;color:var(--cream)}
+.xfer-player-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.xfer-arrow{display:flex;flex-direction:column;align-items:center;gap:3px}
+.xfer-arrow-icon{font-size:16px;color:var(--muted)}
+.xfer-price-pill{font-family:var(--font-m);font-size:9px;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.xfer-price-pill.save{background:rgba(39,174,96,0.1);color:var(--grass-l)}
+.xfer-price-pill.cost{background:rgba(230,57,70,0.08);color:var(--accent)}
+.xfer-price-pill.same{background:rgba(255,255,255,0.05);color:var(--muted)}
+.xfer-tag-out{font-size:9px;font-family:var(--font-m);letter-spacing:0.8px;text-transform:uppercase;color:rgba(230,57,70,0.7);margin-bottom:3px}
+.xfer-tag-in{font-size:9px;font-family:var(--font-m);letter-spacing:0.8px;text-transform:uppercase;color:var(--grass-l);margin-bottom:3px}
+.xfer-no-changes{padding:16px;font-size:12px;color:var(--muted);text-align:center;font-style:italic}
+/* Highlight transferred in/out players on pitch */
+.player-token.xfer-in .token-avatar::before{background:conic-gradient(#27ae60,#2ecc71,#27ae60)!important;opacity:1!important;filter:blur(1px)!important}
+.player-token.xfer-out .token-avatar{opacity:0.5;filter:grayscale(0.6)}
+
+/* CONCERNS */
+.concern-row{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.concern-row:last-child{border-bottom:none}
+.concern-icon{flex-shrink:0;margin-top:1px}
+.concern-text{color:rgba(240,236,227,0.55);line-height:1.5}
+.concern-text strong{color:var(--cream)}
+
+
+
+/* IMPORT PROMPT */
+.import-prompt{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;line-height:1.8;grid-column:1/-1}
+.import-prompt h3{font-family:var(--font-d);font-size:32px;letter-spacing:1px;color:rgba(240,236,227,0.2);margin-bottom:10px}
+
+.fix-d1{background:rgba(15,76,41,0.6);border-color:rgba(74,222,128,0.2);color:#4ade80}
+.fix-d2{background:rgba(22,101,52,0.6);border-color:rgba(134,239,172,0.15);color:#86efac}
+.fix-d3{background:rgba(113,63,18,0.6);border-color:rgba(252,211,77,0.15);color:#fcd34d}
+.fix-d4{background:rgba(124,29,29,0.6);border-color:rgba(252,165,165,0.15);color:#fca5a5}
+.fix-d5{background:rgba(69,10,10,0.6);border-color:rgba(248,113,113,0.15);color:#f87171}
+
+@media(max-width:900px){.team-layout{grid-template-columns:1fr}.side-panel{gap:10px}}
+@media(max-width:600px){.page{padding:20px 14px 80px}.import-bar{flex-direction:column;align-items:flex-start}.xfer-card{gap:6px;padding:8px 10px}.xfer-player{gap:6px}.xfer-player-photo{width:28px;height:28px}.xfer-player-name{font-size:11px}.xfer-player-meta{font-size:9px}.xfer-price-pill{font-size:8px;padding:1px 5px}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+@media(max-width:700px){
+  .team-layout{grid-template-columns:1fr}
+  .pitch-wrap{min-height:auto;padding:20px 6px 14px}
+  .player-token{width:66px}
+  .token-avatar{width:50px;height:50px}
+  .token-avatar-inner{inset:0}
+  .token-photo,.token-photo-fallback{width:50px;height:50px}
+  .token-photo-wrap{width:50px}
+  .token-name{font-size:9px}
+  .token-info{width:66px}
+  .pitch-row{gap:3px}
+  .bench-row{gap:3px}
+}
+@media(max-width:480px){
+  .player-token{width:56px}
+  .token-avatar{width:42px;height:42px}
+  .token-avatar::before{inset:-2px}
+  .token-photo,.token-photo-fallback{width:42px;height:42px}
+  .token-photo-wrap{width:42px}
+  .token-info{width:56px;margin-top:3px}
+  .token-name{font-size:8px;letter-spacing:0}
+  .token-fix-pill{font-size:6px;padding:1px 4px}
+  .ep-badge{font-size:10px;padding:1px 5px}
+  .cap-badge{width:14px;height:14px;font-size:7px}
+  .status-dot{width:8px;height:8px}
+  .pitch-row{gap:2px}
+  .bench-section{margin-top:8px}
+  .formation-badge{font-size:8px;letter-spacing:2px;padding:3px 10px}
+  .stat-card{padding:12px}
+  .stat-tile-val{font-size:20px}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub" id="headerSub">MY TEAM · Import your squad to get started</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Loading…</span></div>
+  </div>
+
+  <div class="import-bar">
+    <span class="import-label">Your squad</span>
+    <input type="number" class="import-input" id="teamIdInput" placeholder="Team ID…" min="1" max="99999999">
+    <button class="import-btn" id="importBtn">Load my team</button>
+    <button class="import-btn" id="xferCheckBtn" style="background:var(--ink-3);color:var(--muted);border:1px solid var(--border)" title="Re-fetch your transfers from FPL">↻ Sync transfers</button>
+    <span class="import-status" id="importStatus"></span>
+    <span class="import-status" id="xferSyncStatus" style="display:none"></span>
+    <span class="import-hint" id="importHint">Find your Team ID at fantasy.premierleague.com → Points → the number in the URL: /entry/<strong style="color:var(--cream)">1234567</strong>/event/…</span>
+  </div>
+
+  <div id="mainWrap">
+    <div class="import-prompt">
+      <h3>Import your squad</h3>
+      <p>Enter your FPL Team ID above to see your players on the pitch with their upcoming fixtures, projected points, and squad concerns.</p>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
+const FIX_TOKEN=['','fix-d1-t','fix-d2-t','fix-d3-t','fix-d4-t','fix-d5-t'];
+const POS={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+const LS='pitchiq_myteam_';
+let ALL=[],TMAP={},GW=1,
+let PICKS=[]; // [{element, position, multiplier, is_captain, is_vice_captain}]
+let PENDING_TRANSFERS=[]; // transfers made this GW from FPL API
+
+function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
+function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
+function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
+async function fetchJ(url){
+  const r=await fetch(url);
+  if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
+  return r.json();
+}
+
+async function loadData(){
+  setBadge('loading','Fetching FPL data…');
+  try{
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
+    const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
+    TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+    const fm=buildFixMap(fixes,GW,6);
+    ALL=buildPlayers(bs.elements,fm);
+    
+    setBadge('live',`Live · GW${GW}`);
+    document.getElementById('headerSub').textContent=`MY TEAM · GW${GW}`;
+    // Restore saved team
+    const savedId=lsG('teamId','');
+    if(savedId){
+      document.getElementById('teamIdInput').value=savedId;
+      const savedPicks=lsG('picks',[]);
+      const savedGw=lsG('picksGw',0);
+      // Only restore picks if they were saved for the current GW
+      if(savedPicks.length && savedGw===GW){
+        PICKS=savedPicks;renderTeam();
+        const xferBtnR=document.getElementById('xferCheckBtn');
+        if(xferBtnR){xferBtnR.style.display='';xferBtnR.style.color='var(--blue)';xferBtnR.style.borderColor='rgba(99,179,237,0.3)';}
+        // Auto-sync transfers on restore
+        syncTransfers(savedId).then(()=>renderTeam());
+      } else if(savedPicks.length && savedGw!==GW) {
+        // Stale picks — show a prompt to reload
+        document.getElementById('importStatus').className='import-status loading';
+        document.getElementById('importStatus').textContent=`GW${savedGw} data — click Load to refresh`;
+      }
+    }
+  }catch(err){
+    const _exp=err.status===404||err.name==='AbortError'||err.message==='Failed to fetch';if(!_exp)console.warn('[MyTeam]',err.message);
+    ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+    setBadge('fallback',err.status===404?'Static data · deploy for live':'Static data');
+  }
+}
+
+function buildFixMap(fixtures,gw,count){
+  const m={};if(!Array.isArray(fixtures))return m;
+  fixtures.filter(f=>f.event>=gw&&f.event<gw+count&&!f.finished).forEach(f=>{
+    [f.team_h,f.team_a].forEach(tid=>{
+      if(!m[tid])m[tid]=[];
+      const isH=tid===f.team_h;
+      m[tid].push({gw:f.event,opp:TMAP[isH?f.team_a:f.team_h]?.short??'?',ha:isH?'H':'A',diff:isH?f.team_h_difficulty??3:f.team_a_difficulty??3});
+    });
+  });
+  Object.values(m).forEach(a=>a.sort((x,y)=>x.gw-y.gw));
+  return m;
+}
+
+function buildPlayers(els,fm){
+  return els.filter(e=>e.element_type>0&&e.status!=='u').map(e=>({
+    id:e.id,name:e.web_name,code:e.code||0,squadNumber:e.squad_number||null,teamId:e.team,
+    pos:POS[e.element_type]??'MID',posId:e.element_type,
+    price:e.now_cost/10,
+    form:parseFloat(e.form)||0,
+    epNext:parseFloat(e.ep_next)||0,
+    ownedPct:parseFloat(e.selected_by_percent)||0,
+    status:e.status,
+    fixes:fm[e.team]??[],
+  }));
+}
+
+async function importTeam(){
+  const raw=document.getElementById('teamIdInput').value.trim();
+  const id=parseInt(raw,10);
+  const btn=document.getElementById('importBtn');
+  const status=document.getElementById('importStatus');
+
+  if(isNaN(id)||id<1||id>999999999){
+    status.className='import-status error';status.textContent='⚠ Enter a valid Team ID';return;
+  }
+
+  btn.disabled=true;
+  status.className='import-status loading';status.textContent='Loading…';
+
+  try{
+    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    if(!data||!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
+    const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
+    if(!ids.length)throw new Error('No valid player IDs');
+    PICKS=data.picks;
+    lsS('teamId',String(id));lsS('picks',PICKS);lsS('picksGw',GW);
+    status.className='import-status loaded';status.textContent=`✓ ${PICKS.length} players loaded`;
+    document.getElementById('importHint').style.display='none';
+    // Show sync button now that we have a team loaded
+    const xferBtn=document.getElementById('xferCheckBtn');
+    if(xferBtn){xferBtn.style.display='';xferBtn.style.color='var(--blue)';xferBtn.style.borderColor='rgba(99,179,237,0.3)';}
+
+    // Also fetch pending transfers for this GW
+    await syncTransfers(id);
+    renderTeam();
+  }catch(err){
+    status.className='import-status error';
+    if(err.status===404)         status.textContent='⚠ Team not found — check your ID';
+    else if(err.status===503||err.status===429) status.textContent='⚠ FPL API busy — try again';
+    else if(ALL===FB_PLAYERS)             status.textContent='⚠ Requires Vercel deployment';
+    else                         status.textContent=`⚠ ${err.message||'Could not load team'}`;
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+function renderTeam(){
+  if(!PICKS.length){return;}
+  const prevScrollY = window.scrollY;
+
+  // Match picks to live player data
+  const players=PICKS.map(pick=>{
+    const p=ALL.find(x=>x.id===pick.element);
+    return p?{...p,isCaptain:pick.is_captain,isVice:pick.is_vice_captain,position:pick.position}:null;
+  }).filter(Boolean);
+
+  if(!players.length){
+    document.getElementById('mainWrap').innerHTML=`<div class="import-prompt"><h3>No player data</h3><p>Player data hasn't loaded yet. Try refreshing after a moment.</p></div>`;
+    return;
+  }
+
+  // Split starting XI (positions 1-11) from bench (12-15)
+  const starters=players.filter(p=>p.position<=11).sort((a,b)=>a.position-b.position);
+  const bench=players.filter(p=>p.position>11).sort((a,b)=>a.position-b.position);
+
+  // Group starters by position for pitch layout
+  const gks=starters.filter(p=>p.posId===1);
+  const defs=starters.filter(p=>p.posId===2);
+  const mids=starters.filter(p=>p.posId===3);
+  const fwds=starters.filter(p=>p.posId===4);
+
+  // Auto-detect formation
+  const formation=`${defs.length}-${mids.length}-${fwds.length}`;
+
+  const pitchHtml=`
+    <div class="pitch-wrap">
+      <svg class="pitch-svg" viewBox="0 0 400 560" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outline -->
+        <rect x="20" y="10" width="360" height="540" fill="none" stroke="white" stroke-width="2"/>
+        <!-- Halfway line -->
+        <line x1="20" y1="280" x2="380" y2="280" stroke="white" stroke-width="1.5"/>
+        <!-- Centre circle -->
+        <circle cx="200" cy="280" r="55" fill="none" stroke="white" stroke-width="1.5"/>
+        <circle cx="200" cy="280" r="3" fill="white"/>
+        <!-- Top penalty box -->
+        <rect x="90" y="10" width="220" height="90" fill="none" stroke="white" stroke-width="1.5"/>
+        <!-- Top goal box -->
+        <rect x="140" y="10" width="120" height="40" fill="none" stroke="white" stroke-width="1.5"/>
+        <!-- Top penalty spot -->
+        <circle cx="200" cy="75" r="3" fill="white"/>
+        <!-- Bottom penalty box -->
+        <rect x="90" y="460" width="220" height="90" fill="none" stroke="white" stroke-width="1.5"/>
+        <!-- Bottom goal box -->
+        <rect x="140" y="510" width="120" height="40" fill="none" stroke="white" stroke-width="1.5"/>
+        <!-- Bottom penalty spot -->
+        <circle cx="200" cy="495" r="3" fill="white"/>
+      </svg>
+      <div class="formation-badge">${formation}</div>
+      ${renderRow(fwds)}
+      ${renderRow(mids)}
+      ${renderRow(defs)}
+      ${renderRow(gks)}
+      <div class="bench-section">
+        <div class="bench-label">Bench</div>
+        <div class="bench-row">${bench.map(p=>tokenHtml(p,true)).join('')}</div>
+      </div>
+    </div>`;
+
+  // Squad stats
+  const totalEp=starters.reduce((s,p)=>s+(p.epNext||0),0);
+  const avgForm=starters.length?(starters.reduce((s,p)=>s+p.form,0)/starters.length).toFixed(1):'—';
+  const doubts=starters.filter(p=>p.status==='d').length;
+  const blanks=starters.filter(p=>!p.fixes.length).length;
+
+  const statsHtml=`<div class="stat-card">
+    <div class="stat-card-title">GW${GW} overview</div>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="stat-tile-val" style="color:var(--grass-l)">${totalEp.toFixed(1)}</div><div class="stat-tile-label">Projected pts (XI)</div></div>
+      <div class="stat-tile"><div class="stat-tile-val">${avgForm}</div><div class="stat-tile-label">Avg form</div></div>
+      <div class="stat-tile"><div class="stat-tile-val" style="color:${doubts>0?'var(--gold)':'var(--muted)'}">${doubts}</div><div class="stat-tile-label">Doubts</div></div>
+      <div class="stat-tile"><div class="stat-tile-val" style="color:${blanks>0?'var(--accent)':'var(--muted)'}">${blanks}</div><div class="stat-tile-label">Blanks</div></div>
+    </div>
+  </div>`;
+
+  // Transfer panel — show pending GW transfers from FPL
+  let transfersHtml = '';
+  if(PENDING_TRANSFERS.length) {
+    const xferCards = PENDING_TRANSFERS.map(t => {
+      const pOut = ALL.find(p=>p.id===t.element_out);
+      const pIn  = ALL.find(p=>p.id===t.element_in);
+      if(!pOut||!pIn) return '';
+      const priceDiff = (t.selling_price - t.purchase_price) / 10;
+      const netDiff   = priceDiff; // selling price vs purchase price
+      const swapDiff  = pIn.price - (t.selling_price/10);
+      const priceLabel = Math.abs(swapDiff)<0.05 ? 'Same price'
+        : swapDiff>0 ? `+£${swapDiff.toFixed(1)}m` : `-£${Math.abs(swapDiff).toFixed(1)}m`;
+      const priceCls = Math.abs(swapDiff)<0.05?'same':swapDiff>0?'cost':'save';
+      const outPhoto = pOut.code?`https://resources.premierleague.com/premierleague/photos/players/110x140/p${pOut.code}.png`:'';
+      const inPhoto  = pIn.code?`https://resources.premierleague.com/premierleague/photos/players/110x140/p${pIn.code}.png`:'';
+      const outFix = pOut.fixes[0];
+      const inFix  = pIn.fixes[0];
+      return `<div class="xfer-card">
+        <div>
+          <div class="xfer-tag-out">Out</div>
+          <div class="xfer-player">
+            <img class="xfer-player-photo" src="${outPhoto}" alt="${pOut.name}"
+              onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/p${pOut.code}.png'">
+            <div class="xfer-player-info">
+              <div class="xfer-player-name">${pOut.name}</div>
+              <div class="xfer-player-meta">${TMAP[pOut.teamId]?.short??'?'} · £${(t.selling_price/10).toFixed(1)}m${outFix?` · ${outFix.opp}`:''}</div>
+            </div>
+          </div>
+        </div>
+        <div class="xfer-arrow">
+          <span class="xfer-arrow-icon">→</span>
+          <span class="xfer-price-pill ${priceCls}">${priceLabel}</span>
+        </div>
+        <div>
+          <div class="xfer-tag-in">In</div>
+          <div class="xfer-player">
+            <img class="xfer-player-photo" src="${inPhoto}" alt="${pIn.name}"
+              onerror="this.src='https://resources.premierleague.com/premierleague/photos/players/250x250/p${pIn.code}.png'">
+            <div class="xfer-player-info">
+              <div class="xfer-player-name">${pIn.name}</div>
+              <div class="xfer-player-meta">${TMAP[pIn.teamId]?.short??'?'} · £${pIn.price.toFixed(1)}m${inFix?` · ${inFix.opp}`:''}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    transfersHtml = `<div class="xfer-panel">
+      <div class="xfer-panel-header">
+        <span class="xfer-panel-title">Pending transfers</span>
+        <span class="xfer-panel-badge">${PENDING_TRANSFERS.length} this GW</span>
+      </div>
+      ${xferCards||'<div class="xfer-no-changes">Could not match transfer players</div>'}
+    </div>`;
+  }
+
+  // Annotate pitch tokens for transferred in/out players
+  // (done via CSS classes set on player-token in tokenHtml)
+
+  // Fixture table — next 3 GWs for each starter
+  const fixRows=starters.map(p=>{
+    const fixHtml=p.fixes.slice(0,5).map(f=>
+      `<span class="fix-pill-sm ${FIX_CLS[f.diff]}" style="margin-right:3px">${f.opp}<span style="opacity:0.6;font-size:8px"> ${f.ha}</span></span>`
+    ).join('')||`<span style="color:var(--accent);font-size:10px">BGW</span>`;
+    return`<tr>
+      <td>${p.name}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:3px">${fixHtml}</div></td>
+    </tr>`;
+  }).join('');
+
+  const fixturesHtml=`<div class="stat-card">
+    <div class="stat-card-title">Upcoming fixtures</div>
+    <table class="fix-table">${fixRows}</table>
+  </div>`;
+
+  // Concerns
+  const concerns=[];
+  starters.filter(p=>p.status==='d').forEach(p=>concerns.push({icon:'⚠',text:`<strong>${p.name}</strong> is a doubt — watch for team news before deadline`}));
+  starters.filter(p=>!p.fixes.length).forEach(p=>concerns.push({icon:'📅',text:`<strong>${p.name}</strong> has a blank gameweek — consider benching or transferring`}));
+  const hardFix=starters.filter(p=>p.fixes[0]?.diff>=4);
+  hardFix.slice(0,2).forEach(p=>concerns.push({icon:'🔴',text:`<strong>${p.name}</strong> faces ${p.fixes[0].opp} (${p.fixes[0].ha}) — difficulty ${p.fixes[0].diff}/5`}));
+  const captain=starters.find(p=>p.isCaptain);
+  if(captain&&captain.fixes[0]?.diff>=4)concerns.push({icon:'⚡',text:`Your captain <strong>${captain.name}</strong> has a hard fixture — consider switching captaincy`});
+
+  const concernsHtml=concerns.length?`<div class="stat-card">
+    <div class="stat-card-title">⚠ Concerns</div>
+    ${concerns.map(c=>`<div class="concern-row"><span class="concern-icon">${c.icon}</span><span class="concern-text">${c.text}</span></div>`).join('')}
+  </div>`:'';
+
+  document.getElementById('mainWrap').innerHTML=`
+    <div class="team-layout">
+      ${pitchHtml}
+      <div class="side-panel">
+        ${transfersHtml}
+        ${statsHtml}
+        ${fixturesHtml}
+        ${concernsHtml}
+      </div>
+    </div>`;
+  // Restore scroll position so sync doesn't jump the page
+  if(prevScrollY>0) requestAnimationFrame(()=>window.scrollTo(0, prevScrollY));
+}
+
+function renderRow(players){
+  if(!players.length)return'';
+  return`<div class="pitch-row">${players.map(p=>tokenHtml(p,false)).join('')}</div>`;
+}
+
+// Shirt SVG by position colour — used in photo fallback
+function shirtSvg(pos){
+  const fills={GK:'#f59e0b',DEF:'#3b82f6',MID:'#10b981',FWD:'#ef4444'};
+  const darks={GK:'#b45309',DEF:'#1d4ed8',MID:'#047857',FWD:'#b91c1c'};
+  const fill=fills[pos]??'#6b7280';
+  const dark=darks[pos]??'#374151';
+  return`<svg class="shirt-svg" viewBox="0 0 60 68" xmlns="http://www.w3.org/2000/svg">
+    <!-- Left sleeve — tighter angle, closer to body -->
+    <path d="M19 22 L9 20 L7 30 L17 33 Z"
+      fill="${fill}" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+    <!-- Right sleeve — tighter angle -->
+    <path d="M41 22 L51 20 L53 30 L43 33 Z"
+      fill="${fill}" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+    <!-- Body -->
+    <path d="M17 33 L17 63 L43 63 L43 33 L41 22 Q36 14 30 14 Q24 14 19 22 Z"
+      fill="${fill}" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+    <!-- Collar -->
+    <path d="M25 15 Q30 10 35 15 Q33 20 30 20 Q27 20 25 15 Z"
+      fill="${dark}" stroke="${dark}" stroke-width="0.5"/>
+    <!-- Shirt crease / highlight -->
+    <path d="M27 22 L27 58" stroke="rgba(255,255,255,0.1)" stroke-width="2" stroke-linecap="round"/>
+    <!-- Side panel shading -->
+    <path d="M17 33 L19 22 L19 63 L17 63 Z" fill="${dark}" opacity="0.25"/>
+    <path d="M43 33 L41 22 L41 63 L43 63 Z" fill="${dark}" opacity="0.25"/>
+  </svg>`;
+}
+
+function tokenHtml(p,isSub){
+  const fix=p.fixes[0];
+  const fixLabel=fix?`${fix.opp} ${fix.ha}`:'BGW';
+  const fixPillCls=fix?`fix-pill-${fix.diff}`:'fix-pill-3';
+  const bgCls=`shirt-${p.pos.toLowerCase()}-bg`;
+
+  // Position ring — captain overrides to gold, VC to cyan
+  const posRing=p.isCaptain?'ring-cap':p.isVice?'ring-vc':`ring-${p.pos.toLowerCase()}`;
+
+  const photoUrl  = p.code ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${p.code}.png` : '';
+  const photoUrl2 = p.code ? `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png` : '';
+  const shirtNum  = p.squadNumber ?? '';
+
+  const photoHtml = photoUrl
+    ? `<img class="token-photo" src="${photoUrl}" alt="${p.name}" loading="lazy"
+        onerror="if(this.dataset.tried2){this.style.display='none';this.nextElementSibling.style.display='flex';}else{this.dataset.tried2=1;this.src='${photoUrl2}'}">`
+    : '';
+  const fallbackHtml = `<div class="token-photo-fallback ${bgCls}" style="${photoUrl?'display:none':''}">
+    ${shirtSvg(p.pos)}
+    <span class="shirt-num">${shirtNum}</span>
+  </div>`;
+
+  const capBadge = p.isCaptain
+    ? `<div class="cap-badge cap">C</div>`
+    : p.isVice ? `<div class="cap-badge vc">V</div>` : '';
+  const statusDot = p.status==='d'
+    ? `<div class="status-dot doubt" title="Doubt"></div>`
+    : p.status==='i' ? `<div class="status-dot injured" title="Injured"></div>` : '';
+  const epBadge = p.epNext>0
+    ? `<div class="ep-badge">${p.epNext.toFixed(1)}<span class="ep-pts">pts</span></div>`
+    : '';
+
+  const isXferIn  = PENDING_TRANSFERS.some(t=>t.element_in===p.id);
+  const isXferOut = PENDING_TRANSFERS.some(t=>t.element_out===p.id);
+
+  return`<div class="player-token${isXferIn?' xfer-in':isXferOut?' xfer-out':''}">
+    <div class="token-avatar ${posRing}">
+      <div class="token-avatar-inner">
+        <div class="token-photo-wrap">
+          ${photoHtml}${fallbackHtml}
+        </div>
+      </div>
+      ${capBadge}${statusDot}
+    </div>
+    <div class="token-info">
+      ${epBadge}
+      <span class="token-name">${p.name}</span>
+      <span class="token-fix-pill ${fixPillCls}">${fixLabel}</span>
+    </div>
+  </div>`;
+}
+
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
+const FB_PLAYERS=[
+  {id:1,squadNumber:11,code:20,name:'Salah',teamId:12,pos:'MID',posId:3,price:13.2,form:11.2,epNext:9.8,ownedPct:73.2,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3}]},
+  {id:2,squadNumber:9,code:223094,name:'Haaland',teamId:13,pos:'FWD',posId:4,price:14.5,form:8.9,epNext:8.2,ownedPct:54.1,status:'a',fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'A',diff:3},{gw:37,opp:'IPS',ha:'A',diff:1},{gw:38,opp:'CHE',ha:'H',diff:3}]},
+  {id:3,squadNumber:19,code:557,name:'Mbeumo',teamId:4,pos:'FWD',posId:4,price:8.3,form:10.8,epNext:7.6,ownedPct:41.2,status:'a',fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
+  {id:4,squadNumber:20,code:237928,name:'Palmer',teamId:6,pos:'MID',posId:3,price:11.0,form:7.4,epNext:7.1,ownedPct:49.8,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4}]},
+  {id:5,squadNumber:14,code:238107,name:'Isak',teamId:15,pos:'FWD',posId:4,price:9.0,form:8.1,epNext:6.4,ownedPct:37.4,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3}]},
+  {id:12,squadNumber:66,code:237989,name:'Trent A-A',teamId:12,pos:'DEF',posId:2,price:7.2,form:7.1,epNext:6.2,ownedPct:28.6,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3}]},
+  {id:6,squadNumber:19,code:76682,name:'Trossard',teamId:1,pos:'MID',posId:3,price:7.5,form:6.4,epNext:5.8,ownedPct:22.1,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
+  {id:19,squadNumber:12,code:461,name:'Timber',teamId:1,pos:'DEF',posId:2,price:5.2,form:5.6,epNext:4.8,ownedPct:21.8,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
+  {id:15,squadNumber:23,code:76749,name:'Porro',teamId:18,pos:'DEF',posId:2,price:5.8,form:4.8,epNext:4.4,ownedPct:14.2,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3},{gw:38,opp:'NEW',ha:'H',diff:3}]},
+  {id:11,squadNumber:2,code:81064,name:'Trippier',teamId:15,pos:'DEF',posId:2,price:6.5,form:3.2,epNext:4.1,ownedPct:18.4,status:'d',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3}]},
+  {id:13,squadNumber:22,code:241978,name:'Raya',teamId:1,pos:'GK',posId:1,price:5.5,form:5.8,epNext:5.2,ownedPct:26.1,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
+  {id:14,squadNumber:1,code:0,name:'Flekken',teamId:4,pos:'GK',posId:1,price:4.5,form:5.4,epNext:4.8,ownedPct:12.4,status:'a',fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
+  {id:8,squadNumber:7,code:238107,name:'Neto',teamId:6,pos:'MID',posId:3,price:6.8,form:7.8,epNext:5.2,ownedPct:6.4,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4}]},
+  {id:24,squadNumber:11,code:58839,name:'Wood',teamId:16,pos:'FWD',posId:4,price:6.5,form:6.2,epNext:5.6,ownedPct:7.2,status:'a',fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3},{gw:38,opp:'MUN',ha:'H',diff:3}]},
+  {id:7,squadNumber:11,code:54694,name:'Watkins',teamId:2,pos:'FWD',posId:4,price:9.5,form:5.9,epNext:5.4,ownedPct:31.6,status:'a',fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2},{gw:38,opp:'BHA',ha:'A',diff:2}]},
+];
+
+async function syncTransfers(teamId){
+  const btn = document.getElementById('xferCheckBtn');
+  const syncStatus = document.getElementById('xferSyncStatus');
+  if(btn){ btn.disabled=true; btn.textContent='↻ Syncing…'; }
+  if(syncStatus){ syncStatus.textContent=''; syncStatus.style.display='none'; }
+  try {
+    const xferData = await fetch(`api/fpl-transfers?team=${teamId}`)
+      .then(r=>r.ok?r.json():null)
+      .catch(()=>null);
+
+    if(Array.isArray(xferData)){
+      // GW could be 1 if live data hasn't loaded — guard against filtering everything out
+      const effectiveGw = GW > 1 ? GW : (xferData[0]?.event ?? GW);
+      PENDING_TRANSFERS = xferData.filter(t=>t.event===effectiveGw);
+      const n = PENDING_TRANSFERS.length;
+      if(syncStatus){
+        syncStatus.style.display='';
+        syncStatus.className = n ? 'import-status loaded' : 'import-status';
+        syncStatus.textContent = n
+          ? `${n} transfer${n>1?'s':''} this GW`
+          : 'No transfers this GW';
+      }
+    } else {
+      PENDING_TRANSFERS=[];
+      if(syncStatus){ syncStatus.style.display=''; syncStatus.textContent='Could not fetch transfers'; syncStatus.className='import-status error'; }
+    }
+  } catch(e) {
+    PENDING_TRANSFERS=[];
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='↻ Sync transfers'; }
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+  const importBtn=document.getElementById('importBtn');
+  document.getElementById('teamIdInput').value='1500';
+  // Disable until live data has loaded so GW is correct
+  importBtn.disabled=true;
+  loadData().then(()=>{
+    importBtn.disabled=false;
+  });
+  importBtn.addEventListener('click',importTeam);
+  document.getElementById('xferCheckBtn')?.addEventListener('click',async()=>{
+    const savedId=lsG('teamId','')||document.getElementById('teamIdInput').value.trim();
+    if(!savedId){
+      const ss=document.getElementById('xferSyncStatus');
+      if(ss){ss.style.display='';ss.className='import-status error';ss.textContent='Load a team first';}
+      return;
+    }
+    await syncTransfers(savedId);
+    renderTeam();
+  });
+
+  document.getElementById('teamIdInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();importTeam();}});
+
+  // Demo: load a realistic squad so the pitch view is visible immediately
+  PICKS=[
+    {element:13,position:1, is_captain:false,is_vice_captain:false}, // Raya     GK
+    {element:12,position:2, is_captain:false,is_vice_captain:false}, // Trent    DEF
+    {element:19,position:3, is_captain:false,is_vice_captain:false}, // Timber   DEF
+    {element:15,position:4, is_captain:false,is_vice_captain:false}, // Porro    DEF
+    {element:11,position:5, is_captain:false,is_vice_captain:false}, // Trippier DEF
+    {element:1, position:6, is_captain:false,is_vice_captain:true},  // Salah    MID (VC)
+    {element:4, position:7, is_captain:false,is_vice_captain:false}, // Palmer   MID
+    {element:6, position:8, is_captain:false,is_vice_captain:false}, // Trossard MID
+    {element:2, position:9, is_captain:true, is_vice_captain:false}, // Haaland  FWD (C)
+    {element:3, position:10,is_captain:false,is_vice_captain:false}, // Mbeumo   FWD
+    {element:5, position:11,is_captain:false,is_vice_captain:false}, // Isak     FWD
+    {element:14,position:12,is_captain:false,is_vice_captain:false}, // Flekken  GK  bench
+    {element:8, position:13,is_captain:false,is_vice_captain:false}, // Neto     MID bench
+    {element:24,position:14,is_captain:false,is_vice_captain:false}, // Wood     FWD bench
+    {element:7, position:15,is_captain:false,is_vice_captain:false}, // Watkins  FWD bench
+  ];
+  renderTeam();
+});
+</script>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="gw-live.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🔴</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">GW Live</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Live points & price changes</div>
+        </div>
+      </a>
+      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+        </div>
+      </a>
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

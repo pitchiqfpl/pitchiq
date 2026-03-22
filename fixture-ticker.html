@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Colour-coded FPL fixture difficulty ticker powered by live xG data. Plan transfers and captain picks around the best fixture runs across the next 8 gameweeks.">
+  <meta name="keywords" content="FPL fixture ticker, fixture difficulty rating, FDR, Fantasy Premier League fixtures, best FPL fixtures">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/fixture-ticker.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/fixture-ticker.html">
+  <meta property="og:title" content="FPL Fixture Difficulty Ticker — PitchIQ">
+  <meta property="og:description" content="Colour-coded FPL fixture difficulty ticker powered by live xG data. Plan transfers and captain picks around the best fixture runs across the next 8 gameweeks.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL Fixture Difficulty Ticker — PitchIQ">
+  <meta name="twitter:description" content="Colour-coded FPL fixture difficulty ticker powered by live xG data. Plan transfers and captain picks around the best fixture runs across the next 8 gameweeks.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — Fixture Ticker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;--a1:#0f4c29;--a1t:#4ade80;--a2:#166534;--a2t:#86efac;--a3:#713f12;--a3t:#fcd34d;--a4:#7c1d1d;--a4t:#fca5a5;--a5:#450a0a;--a5t:#f87171}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:1280px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:28px;letter-spacing:3px;color:var(--cream)}
+.logo span{color:var(--grass)}
+.header-sub{font-size:12px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:9px;border:1px solid;font-size:12px;font-weight:500;transition:all 0.3s}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-badge.error{background:rgba(230,57,70,0.07);border-color:rgba(230,57,70,0.2);color:#f87171}
+.data-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:pulse 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:pulse 1s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+.data-badge.error .data-dot{background:var(--accent)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.model-banner{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:rgba(99,179,237,0.06);border:1px solid rgba(99,179,237,0.15);border-radius:12px;margin-bottom:20px;font-size:12px;color:rgba(240,236,227,0.55);line-height:1.6}
+.model-banner strong{color:var(--blue)}
+.model-banner-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.model-close{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 0 0 12px;flex-shrink:0;line-height:1}
+.model-close:hover{color:var(--cream)}
+.mode-banner{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border-radius:12px;border:1px solid;margin-bottom:20px;transition:all 0.3s}
+.mode-banner.mb-overall{background:rgba(39,174,96,0.07);border-color:rgba(39,174,96,0.2)}
+.mode-banner.mb-attack{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2)}
+.mode-banner.mb-defence{background:rgba(99,179,237,0.07);border-color:rgba(99,179,237,0.2)}
+.mode-banner.mb-split{background:rgba(255,255,255,0.03);border-color:var(--border)}
+.mode-banner-title{font-size:13px;font-weight:600;color:var(--cream);margin-bottom:3px}
+.mode-banner-desc{font-size:12px;color:rgba(240,236,227,0.55);line-height:1.55}
+.controls{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.ctrl-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.pill-group{display:flex;background:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.pill{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.18s;font-family:var(--font-b);letter-spacing:0.3px;white-space:nowrap}
+.pill:hover{color:var(--cream)}
+.pill.active{background:var(--ink-3);color:var(--cream);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.pill.active.att{color:var(--gold)}
+.pill.active.def{color:var(--blue)}
+.pill.active.green{color:var(--grass-l)}
+.sep{width:1px;height:28px;background:var(--border);flex-shrink:0}
+.filter-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--ink-2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;flex-wrap:wrap}
+.pill-group.filters{flex-wrap:wrap;border-radius:10px}
+.search-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:6px 12px;border-radius:7px;font-family:var(--font-b);font-size:12px;outline:none;width:160px;transition:border-color 0.2s}
+.search-input::placeholder{color:var(--muted)}
+.search-input:focus{border-color:rgba(39,174,96,0.4)}
+.legend-section{margin-bottom:20px}
+.legend-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:7px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-swatch{width:28px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:0.3px}
+.legend-note{font-size:11px;color:rgba(240,236,227,0.3);font-style:italic;line-height:1.5}
+.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);background:var(--ink-2)}
+table{width:100%;border-collapse:collapse;min-width:860px}
+thead tr{border-bottom:1px solid var(--border)}
+th{padding:10px 6px;font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-weight:400;white-space:nowrap}
+th.team-col{text-align:left;padding-left:18px;min-width:130px}
+th.gw-col{text-align:center;min-width:68px}
+th.score-col{text-align:center;min-width:72px;cursor:pointer;color:var(--cream)}
+th.score-col:hover{color:var(--grass-l)}
+.sort-arrow{font-size:9px;margin-left:3px}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,0.025)}
+tbody tr.hl{background:rgba(39,174,96,0.05)}
+td{padding:6px;vertical-align:middle}
+td.team-col{padding:9px 18px;white-space:nowrap}
+.team-name{font-weight:600;font-size:13px;color:var(--cream)}
+.team-abbr{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:1px}
+td.fix-td{text-align:center;padding:5px 4px}
+.fix-cell{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:58px;height:38px;border-radius:7px;cursor:pointer;transition:transform 0.12s,box-shadow 0.12s;position:relative;gap:1px}
+.fix-cell:hover{transform:scale(1.08);box-shadow:0 4px 12px rgba(0,0,0,0.4);z-index:10}
+.fix-opp{font-family:var(--font-m);font-size:10px;font-weight:500;letter-spacing:0.3px;line-height:1}
+.fix-ha{font-size:8px;letter-spacing:0.5px;opacity:0.7;text-transform:uppercase}
+.fix-blank{background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.15);font-size:10px}
+.fix-double{position:relative}
+.fix-double::after{content:'2\00d7';position:absolute;top:-5px;right:-5px;background:var(--gold);color:#1a0e00;font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;font-family:var(--font-m)}
+.d1{background:var(--a1);color:var(--a1t)}
+.d2{background:var(--a2);color:var(--a2t)}
+.d3{background:var(--a3);color:var(--a3t)}
+.d4{background:var(--a4);color:var(--a4t)}
+.d5{background:var(--a5);color:var(--a5t)}
+.split-cell{display:grid;grid-template-columns:1fr 1fr;width:60px;height:38px;border-radius:7px;overflow:hidden;cursor:pointer;transition:transform 0.12s;position:relative;gap:1px}
+.split-cell:hover{transform:scale(1.08)}
+.split-half{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.split-half .fix-opp{font-size:9px}
+td.score-td{text-align:center}
+.score-pill{display:inline-flex;align-items:center;justify-content:center;width:46px;height:28px;border-radius:7px;font-family:var(--font-d);font-size:18px;letter-spacing:0.5px}
+.score-s1{background:rgba(74,222,128,0.15);color:#4ade80}
+.score-s2{background:rgba(74,222,128,0.1);color:#86efac}
+.score-s3{background:rgba(252,211,77,0.12);color:#fcd34d}
+.score-s4{background:rgba(248,113,113,0.12);color:#fca5a5}
+.score-s5{background:rgba(248,113,113,0.18);color:#f87171}
+.score-explainer{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:12px 16px;background:var(--ink-2);border:1px solid var(--border);border-radius:10px}
+.score-explainer-label{font-size:11px;color:var(--muted);font-family:var(--font-m);letter-spacing:0.5px;margin-right:4px;display:flex;align-items:center;gap:5px}
+.score-band{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.score-band-pip{width:32px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:13px}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.summary-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.sc-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.sc-val{font-family:var(--font-d);font-size:28px;letter-spacing:1px;line-height:1;margin-bottom:3px}
+.sc-sub{font-size:11px;color:var(--muted)}
+.gw-th-inner{display:flex;flex-direction:column;align-items:center;gap:3px}
+.gw-num{font-size:10px}
+.gw-chip-dot{width:6px;height:6px;border-radius:50%;display:none}
+.gw-chip-dot.on{display:block}
+.gw-chip-wc{background:var(--grass)}
+.gw-chip-tc{background:var(--gold)}
+.gw-chip-bb{background:var(--blue)}
+.gw-chip-fh{background:var(--accent)}
+.chip-section{margin-top:24px;padding:22px 20px 18px;background:var(--ink-2);border:1px solid var(--border);border-radius:14px}
+.chip-section-title{font-family:var(--font-m);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.chip-section-sub{font-size:12px;color:rgba(240,236,227,0.4);line-height:1.55;margin-bottom:18px}
+.chip-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.chip-card{border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,0.025);padding:14px 14px 12px;cursor:pointer;transition:all 0.18s}
+.chip-card:hover{border-color:rgba(255,255,255,0.14);background:rgba(255,255,255,0.04)}
+.chip-card.placed.wc{background:rgba(39,174,96,0.1);border-color:rgba(39,174,96,0.3)}
+.chip-card.placed.tc{background:rgba(240,180,41,0.09);border-color:rgba(240,180,41,0.3)}
+.chip-card.placed.bb{background:rgba(99,179,237,0.09);border-color:rgba(99,179,237,0.3)}
+.chip-card.placed.fh{background:rgba(230,57,70,0.09);border-color:rgba(230,57,70,0.3)}
+.chip-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.chip-name{font-size:13px;font-weight:600;color:var(--cream)}
+.chip-gw-badge{font-family:var(--font-m);font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(255,255,255,0.07);color:var(--muted);transition:all 0.18s}
+.chip-card.placed .chip-gw-badge{color:var(--ink);font-weight:600}
+.chip-card.placed.wc .chip-gw-badge{background:var(--grass)}
+.chip-card.placed.tc .chip-gw-badge{background:var(--gold)}
+.chip-card.placed.bb .chip-gw-badge{background:var(--blue)}
+.chip-card.placed.fh .chip-gw-badge{background:var(--accent)}
+.chip-desc{font-size:11px;color:rgba(240,236,227,0.4);line-height:1.55;margin-bottom:7px}
+.chip-tip{font-size:10px;font-family:var(--font-m);padding:5px 8px;border-radius:6px;line-height:1.5}
+.chip-tip.tip-good{background:rgba(39,174,96,0.1);color:var(--grass-l)}
+.chip-tip.tip-warn{background:rgba(240,180,41,0.1);color:var(--gold)}
+.chip-status-bar{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:rgba(240,236,227,0.3);font-style:italic}
+.ii{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);font-size:9px;color:var(--muted);cursor:default;position:relative;flex-shrink:0;vertical-align:middle}
+.ii:hover .ip{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.ip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%) translateY(4px);background:#1e2530;border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:10px 13px;min-width:220px;max-width:280px;font-size:11px;color:rgba(240,236,227,0.72);line-height:1.6;opacity:0;pointer-events:none;transition:opacity 0.15s,transform 0.15s;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,0.5);white-space:normal;text-align:left;font-family:var(--font-b);letter-spacing:0;text-transform:none;font-weight:400}
+.ip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e2530}
+.ip strong{color:var(--cream);font-weight:600}
+.tt{position:fixed;z-index:9999;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity 0.15s,transform 0.15s;min-width:240px}
+.tt.on{opacity:1;transform:translateY(0)}
+.tt-inner{background:#1e2530;border:1px solid rgba(255,255,255,0.12);border-radius:11px;padding:13px 15px;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.tt-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.tt-match{font-weight:600;font-size:13px;color:var(--cream)}
+.tt-gw{font-family:var(--font-m);font-size:10px;color:var(--muted)}
+.tt-ctx{font-size:11px;color:rgba(240,236,227,0.42);margin-bottom:10px;line-height:1.5}
+.tt-bar{display:flex;align-items:center;gap:8px;margin-top:7px}
+.tt-bl{font-size:10px;color:var(--muted);width:62px}
+.tt-bt{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.tt-bf{height:100%;border-radius:2px}
+.tt-bv{font-size:9px;color:var(--muted);width:48px;text-align:right;font-family:var(--font-m)}
+.tt-note{margin-top:9px;font-size:10px;font-family:var(--font-m)}
+.tt-xg-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px}
+.tt-xg-label{font-size:10px;color:var(--muted)}
+.tt-xg-val{font-family:var(--font-m);font-size:11px;font-weight:500}
+@media(max-width:900px){.chip-cards{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.page{padding:20px 14px 60px}.summary-row{grid-template-columns:1fr 1fr}.chip-cards{grid-template-columns:1fr 1fr}.controls{gap:7px;flex-wrap:wrap}.scroll-hint{display:block}}@media(max-width:480px){.summary-row{grid-template-columns:1fr 1fr}.chip-cards{grid-template-columns:1fr}.controls select,.controls button{font-size:12px}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub" id="headerSub">FIXTURE DIFFICULTY TICKER &middot; Loading&hellip;</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading">
+      <div class="data-dot"></div>
+      <span id="dataBadgeText">Fetching live data&hellip;</span>
+    </div>
+  </div>
+
+  <div class="model-banner" id="modelBanner">
+    <div class="model-banner-icon">🧮</div>
+    <div>
+      <strong>How difficulty ratings are calculated:</strong>
+      <strong>Overall</strong> uses the official FPL difficulty rating.
+      <strong>Attacking</strong> uses opponent xGC per game (how leaky their defence is) — weighted 60% season average + 40% last-5 form, with a home/away multiplier.
+      <strong>Defensive</strong> uses opponent xG per game (how dangerous their attack is) — same weighting.
+      All scores are min-max normalised across all 20 teams then bucketed 1–5. xG from API-Football, updated after every matchday.
+    </div>
+    <button class="model-close" id="modelCloseBtn" title="Dismiss">&times;</button>
+  </div>
+
+  <div class="controls">
+    <span class="ctrl-label">View</span>
+    <div class="pill-group" id="pgMode">
+      <button class="pill active green" data-mode="overall">Overall</button>
+      <button class="pill att"          data-mode="attack">Attacking</button>
+      <button class="pill def"          data-mode="defence">Defensive</button>
+      <button class="pill"              data-mode="split">Split view</button>
+    </div>
+    <div class="sep"></div>
+    <span class="ctrl-label">GWs shown</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <input type="range" id="rangeSlider" min="1" max="11" value="5" step="1"
+        style="width:120px;accent-color:var(--grass);cursor:pointer">
+      <span id="rangeLabel" style="font-family:var(--font-m);font-size:11px;color:var(--cream);min-width:28px">5 GW</span>
+    </div>
+    <div class="sep"></div>
+    <span class="ctrl-label">Sort</span>
+    <div class="pill-group" id="pgSort">
+      <button class="pill active" data-sort="cumulative">Easiest run</button>
+      <button class="pill"        data-sort="alpha">A&ndash;Z</button>
+      <button class="pill"        data-sort="next">Next GW</button>
+    </div>
+  </div>
+
+  <div class="mode-banner mb-overall" id="modeBanner">
+    <div id="modeIcon" style="font-size:22px;flex-shrink:0;margin-top:1px">📊</div>
+    <div>
+      <div class="mode-banner-title" id="modeBannerTitle">Overall difficulty</div>
+      <div class="mode-banner-desc"  id="modeBannerDesc">The official FPL difficulty rating (1–5) based on overall opponent strength. Green = easy. Switch to Attacking or Defensive mode for position-specific ratings powered by xG data.</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="ctrl-label">Filter</span>
+    <div class="pill-group filters" id="pgFilter">
+      <button class="pill active green" data-filter="all">All 20</button>
+      <button class="pill" data-filter="green_run">🟢 Green Run</button>
+      <button class="pill" data-filter="in_form">🔥 In Form</button>
+      <button class="pill" data-filter="cold">❄️ Cold Streak</button>
+      <button class="pill" data-filter="popular">📈 Popular</button>
+      <button class="pill" data-filter="my_squad">👕 My Squad</button>
+      <button class="pill" data-filter="dgw">2× DGW</button>
+      <button class="pill" data-filter="blank">— Blank</button>
+    </div>
+    <div class="sep"></div>
+    <span class="ctrl-label">Search</span>
+    <input class="search-input" id="searchInput" type="text" placeholder="e.g. Liverpool&hellip;">
+  </div>
+  <div id="filterInfo" style="display:none;font-size:12px;color:var(--muted);font-family:var(--font-m);margin:-12px 0 16px;padding:0 4px"></div>
+
+  <div class="legend-section">
+    <div class="legend-row">
+      <span class="ctrl-label" style="margin-right:4px">Difficulty:</span>
+      <div class="legend-item"><div class="legend-swatch d1">VEZ</div>1 &ndash; Very easy</div>
+      <div class="legend-item"><div class="legend-swatch d2">EAS</div>2 &ndash; Easy</div>
+      <div class="legend-item"><div class="legend-swatch d3">MED</div>3 &ndash; Medium</div>
+      <div class="legend-item"><div class="legend-swatch d4">HAR</div>4 &ndash; Hard</div>
+      <div class="legend-item"><div class="legend-swatch d5">VHD</div>5 &ndash; Very hard</div>
+      <div class="sep" style="margin:0 6px"></div>
+      <div class="legend-item">
+        <div class="legend-swatch fix-blank" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,0.2)">—</div>
+        Blank GW
+        <span class="ii">i<div class="ip">A <strong>blank gameweek</strong> means this team has no fixture that week. Players you own from that club score 0 pts — plan around it with transfers or your Free Hit chip.</div></span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch d2 fix-double" style="position:relative"></div>
+        Double GW
+        <span class="ii">i<div class="ip">A <strong>double gameweek</strong> means a team plays twice. Owning those players doubles your scoring chances — the best time to play your Bench Boost chip.</div></span>
+      </div>
+    </div>
+    <div class="legend-note">H&nbsp;=&nbsp;home &middot; A&nbsp;=&nbsp;away &middot; Home advantage is factored into the xG-based attacking and defensive ratings.</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead id="tHead"></thead>
+      <tbody id="tBody"></tbody>
+    </table>
+  </div>
+
+  <div class="score-explainer">
+    <span class="score-explainer-label">
+      Avg score guide
+      <span class="ii">i<div class="ip">Mean difficulty across shown GWs. <strong>Lower is better.</strong> In Attacking/Defensive modes this reflects xG-based ratings, not FPL&rsquo;s official score.</div></span>
+    </span>
+    <div class="score-band"><div class="score-band-pip score-s1">1.x</div>Excellent &mdash; prioritise buying</div>
+    <div class="score-band"><div class="score-band-pip score-s2">2.x</div>Good &mdash; hold or buy</div>
+    <div class="score-band"><div class="score-band-pip score-s3">3.x</div>Average &mdash; judge case by case</div>
+    <div class="score-band"><div class="score-band-pip score-s4">4.x</div>Tough &mdash; consider selling</div>
+    <div class="score-band"><div class="score-band-pip score-s5">5.x</div>Avoid &mdash; sell if possible</div>
+  </div>
+
+  <div class="summary-row" id="summaryRow"></div>
+
+  <div class="chip-section">
+    <div class="chip-section-title">
+      🎯 Chip planner
+      <span class="ii">i<div class="ip" style="left:0;transform:none">Click a chip to cycle it through the visible gameweeks. A coloured dot appears on the GW header so you can visually align it with the best fixture run.</div></span>
+    </div>
+    <div class="chip-section-sub">Click any chip to assign it to a gameweek. Line each chip up with the best possible fixture run for maximum points.</div>
+    <div class="chip-cards" id="chipCards"></div>
+    <div class="chip-status-bar" id="chipStatus">No chips placed yet. Click a chip above to get started.</div>
+  </div>
+
+</div>
+
+<div class="tt" id="tooltip"><div class="tt-inner" id="ttInner"></div></div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────────────────────
+   INLINED DIFFICULTY ENGINE
+   Mirrors /lib/difficultyEngine.js exactly.
+   When integrating into the full PitchIQ site with a module bundler or server,
+   replace this IIFE with: import { buildDifficultyRatings } from '/lib/difficultyEngine.js'
+   and call ENGINE.build() as buildDifficultyRatings().
+───────────────────────────────────────────────────────────────────────────── */
+const ENGINE = (() => {
+  const W_SEASON=0.60, W_FORM=0.40;
+  const HOME_ATT=1.10, HOME_DEF=0.88;
+  // Percentile cutoffs: bottom 15% = 1, next 20% = 2, middle 30% = 3, next 20% = 4, top 15% = 5
+  // Computed dynamically from actual score distribution — not hardcoded
+  const BUCKET_PCT=[0.15,0.35,0.65,0.85];
+
+  async function fetchJ(url){
+    const r=await fetch(url);
+    if(!r.ok){const t=await r.text().catch(()=>'');throw new Error(`HTTP ${r.status} from ${url}${t?': '+t.slice(0,120):''}`);}
+    return r.json();
+  }
+
+  function resolveGw(bs){
+    const cur=bs.events?.find(e=>e.is_current);
+    const nxt=bs.events?.find(e=>e.is_next);
+    const gw=(cur??nxt)?.id;
+    if(!gw){const f=bs.events?.[0]?.id??1;console.warn(`[ENGINE] GW unknown, defaulting to ${f}`);return f;}
+    return gw;
+  }
+
+  // Returns array [startGw, startGw+1, ..., endGw]
+  function gwList(s,e){const l=[];for(let g=s;g<=e;g++)l.push(g);return l;}
+
+  function buildFplMap(teams){
+    const m={};
+    teams.forEach(t=>{m[t.id]={id:t.id,name:t.name,short:t.short_name,
+      sAH:t.strength_attack_home??1100,sAA:t.strength_attack_away??1100,
+      sDH:t.strength_defence_home??1100,sDA:t.strength_defence_away??1100,
+      sOv:t.strength??1100};});
+    return m;
+  }
+
+  function canon(s){
+    return s.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')
+      .replace('manchestercity','mancity').replace('manchesterunited','manutd')
+      .replace('nottinghamforest','nottmforest').replace('newcastleunited','newcastle')
+      .replace('tottenhamhotspur','spurs').replace('tottenham','spurs')
+      .replace('wolverhamptonwanderers','wolves').replace('wolverhampton','wolves')
+      .replace('brightonandhovealbion','brighton').replace('brightonhove','brighton');
+  }
+
+  function fplStr2Xg(s){return 0.8+(((s??1100)-1000)/400)*1.2;}
+
+  function makeEntry(t,x){
+    const xs=x.xg_season??0, xcs=x.xgc_season??0;
+    return{...t,xg_season:xs,xgc_season:xcs,xg_last5:x.xg_last5??xs,xgc_last5:x.xgc_last5??xcs,hasXg:true};
+  }
+
+  function mapXg(xgTeams,fplMap){
+    const fplList=Object.values(fplMap).map(t=>({id:t.id,c:canon(t.name),t}));
+    const res={};
+    // Pass 1: exact
+    Object.values(xgTeams).forEach(x=>{
+      const xc=canon(x.name),m=fplList.find(f=>f.c===xc);
+      if(m&&!res[m.id])res[m.id]=makeEntry(m.t,x);
+    });
+    // Pass 2: substring
+    Object.values(xgTeams).forEach(x=>{
+      const xc=canon(x.name);
+      if(Object.values(res).some(r=>canon(r.name)===xc))return;
+      const m=fplList.find(f=>!res[f.id]&&(f.c.includes(xc)||xc.includes(f.c)));
+      if(m)res[m.id]=makeEntry(m.t,x);
+    });
+    // Pass 3: fallback
+    fplList.forEach(({id,t})=>{
+      if(!res[id]){
+        console.warn(`[ENGINE] No xG match for "${t.name}" — using FPL strength fallback`);
+        const xg=fplStr2Xg(t.sAH),xgc=fplStr2Xg(t.sDH);
+        res[id]={...t,xg_season:xg,xgc_season:xgc,xg_last5:xg,xgc_last5:xgc,hasXg:false};
+      }
+    });
+    return res;
+  }
+
+  function rawScores(xgMap){
+    const s={};
+    Object.entries(xgMap).forEach(([id,t])=>{
+      const bA=t.xg_season*W_SEASON+t.xg_last5*W_FORM;
+      const bD=t.xgc_season*W_SEASON+t.xgc_last5*W_FORM;
+      s[id]={name:t.name,short:t.short,homeAtt:bA*HOME_ATT,awayAtt:bA/HOME_ATT,homeDef:bD*HOME_DEF,awayDef:bD/HOME_DEF};
+    });
+    return s;
+  }
+
+  function normalise(scores){
+    const keys=['homeAtt','awayAtt','homeDef','awayDef'];
+    const ranges={};
+    keys.forEach(k=>{
+      const vs=Object.values(scores).map(s=>s[k]);
+      ranges[k]={mn:Math.min(...vs),mx:Math.max(...vs)};
+    });
+    const n=(v,r)=>r.mx===r.mn?0.5:(v-r.mn)/(r.mx-r.mn);
+    const res={};
+    Object.entries(scores).forEach(([id,s])=>{
+      res[id]={...s,nHA:n(s.homeAtt,ranges.homeAtt),nAA:n(s.awayAtt,ranges.awayAtt),nHD:n(s.homeDef,ranges.homeDef),nAD:n(s.awayDef,ranges.awayDef)};
+    });
+    return res;
+  }
+
+  function bkt(v, thresholds){
+    if(v<=thresholds[0])return 1;
+    if(v<=thresholds[1])return 2;
+    if(v<=thresholds[2])return 3;
+    if(v<=thresholds[3])return 4;
+    return 5;
+  }
+
+  // Compute percentile thresholds from actual normalised score values
+  function computeThresholds(ns){
+    // Collect all normalised attack and defence scores
+    const attVals=[], defVals=[];
+    Object.values(ns).forEach(s=>{
+      attVals.push(s.nHA, s.nAA);
+      defVals.push(s.nHD, s.nAD);
+    });
+    const pct=(arr,p)=>{
+      const s=[...arr].sort((a,b)=>a-b);
+      return s[Math.floor(p*s.length)] ?? s[s.length-1];
+    };
+    const attT = BUCKET_PCT.map(p=>pct(attVals,p));
+    const defT = BUCKET_PCT.map(p=>pct(defVals,p));
+    return {attT, defT};
+  }
+  function tier(s){const v=s??1100;if(v>=1250)return'top6';if(v>=1100)return'mid';return'bottom6';}
+
+  function buildRatings(fixtures,fplMap,ns,xgMap,thresholds){
+    const {attT,defT}=thresholds;
+    const byTeam={};
+    Object.keys(fplMap).forEach(id=>{
+      const xg=xgMap[id];
+      byTeam[id]={id:+id,name:fplMap[id].name,short:fplMap[id].short,tier:tier(fplMap[id].sOv),
+        xg_last5:xg?.xg_last5??null,xgc_last5:xg?.xgc_last5??null,fixtures:[]};
+    });
+    fixtures.forEach(f=>{
+      const hId=f.team_h,aId=f.team_a,gw=f.event;
+      const h=ns[hId],a=ns[aId];
+      if(!h||!a){console.warn(`[ENGINE] Missing scores for fixture ${f.id}`);return;}
+      // Attacking difficulty: how hard is it to score? (opponent's defensive strength)
+      // Low nAD = leaky defence = easy to score = low attacking difficulty
+      const hAtt=bkt(1-a.nAD, attT), hDef=bkt(a.nAA, defT);
+      const aAtt=bkt(1-h.nHD, attT), aDef=bkt(h.nHA, defT);
+      byTeam[hId]?.fixtures.push({gw,opp:fplMap[aId]?.short??'???',oppName:fplMap[aId]?.name??'Unknown',ha:'H',kickoff:f.kickoff_time??null,overall:f.team_h_difficulty??3,attacking:hAtt,defensive:hDef,blank:false,double:false,_raw:{oppNormAtt:a.nAA.toFixed(3),oppNormDef:a.nAD.toFixed(3)}});
+      byTeam[aId]?.fixtures.push({gw,opp:fplMap[hId]?.short??'???',oppName:fplMap[hId]?.name??'Unknown',ha:'A',kickoff:f.kickoff_time??null,overall:f.team_a_difficulty??3,attacking:aAtt,defensive:aDef,blank:false,double:false,_raw:{oppNormAtt:h.nHA.toFixed(3),oppNormDef:h.nHD.toFixed(3)}});
+    });
+    Object.values(byTeam).forEach(t=>t.fixtures.sort((a,b)=>a.gw-b.gw));
+    return byTeam;
+  }
+
+  async function build({fromGw,toGw}={}){
+    const [bs,allFix,xgResp]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures'),fetchJ('api/xg-data')]);
+    if(!Array.isArray(bs.teams))throw new Error('Bad bootstrap: no teams');
+    if(!Array.isArray(allFix))throw new Error('Bad fixtures: not array');
+    if(!xgResp?.teams)throw new Error('Bad xg-data: no teams');
+    const curGw=resolveGw(bs);
+    const sGw=fromGw??curGw, eGw=toGw??sGw+10;
+    const fplMap=buildFplMap(bs.teams);
+    const xgMap=mapXg(xgResp.teams,fplMap);
+    const ns=normalise(rawScores(xgMap));
+    const thresholds=computeThresholds(ns);
+    const upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&f.finished===false);
+    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:sGw,endGw:eGw,gwList:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs};
+  }
+
+  return{build};
+})();
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STATIC FALLBACK DATA  (GW34–44, 2024/25 season)
+   Rendered immediately on page load. Replaced by live data once APIs respond.
+   Update GW numbers and fixtures at the start of each new season.
+───────────────────────────────────────────────────────────────────────────── */
+const FALLBACK_TEAMS=[
+  {name:'Arsenal',      abbr:'ARS',tier:'top6',   fx:[{gw:34,opp:'BHA',ha:'H',overall:2,attacking:2,defensive:2},{gw:35,opp:'MCI',ha:'A',overall:4,attacking:5,defensive:4},{gw:36,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:1},{gw:37,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:38,opp:'EVE',ha:'H',overall:2,attacking:2,defensive:2},{gw:39,opp:'NEW',ha:'A',overall:3,attacking:3,defensive:2},{gw:40,opp:'WHU',ha:'H',overall:2,attacking:1,defensive:2},{gw:41,opp:'TOT',ha:'A',overall:3,attacking:3,defensive:3},{gw:42,opp:'BRE',ha:'H',overall:2,attacking:2,defensive:2},{gw:43,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:44,opp:'MUN',ha:'H',overall:3,attacking:4,defensive:2}]},
+  {name:'Aston Villa',  abbr:'AVL',tier:'top6',   fx:[{gw:34,opp:'LIV',ha:'A',overall:4,attacking:5,defensive:4},{gw:35,opp:'BOU',ha:'H',overall:2,attacking:1,defensive:2},{gw:36,opp:'NEW',ha:'A',overall:3,attacking:3,defensive:2},{gw:37,opp:'FUL',ha:'H',overall:2,attacking:2,defensive:2},{gw:38,opp:'BHA',ha:'A',overall:2,attacking:2,defensive:2},{gw:39,opp:'IPS',ha:'H',overall:1,attacking:1,defensive:1},{gw:40,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:41,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:42,opp:'MUN',ha:'A',overall:3,attacking:4,defensive:2},{gw:43,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:1},{gw:44,opp:'EVE',ha:'A',overall:1,attacking:1,defensive:1}]},
+  {name:'Bournemouth',  abbr:'BOU',tier:'mid',    fx:[{gw:34,opp:'LIV',ha:'H',overall:5,attacking:5,defensive:5},{gw:35,opp:'AVL',ha:'A',overall:3,attacking:3,defensive:3},{gw:36,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:37,opp:'CHE',ha:'A',overall:3,attacking:4,defensive:3},{gw:38,opp:'WOL',ha:'H',overall:2,attacking:1,defensive:2},{gw:39,opp:'BRE',ha:'A',overall:2,attacking:2,defensive:2},{gw:40,opp:'FUL',ha:'H',overall:2,attacking:2,defensive:2},{gw:41,opp:'IPS',ha:'A',overall:1,attacking:1,defensive:1},{gw:42,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:43,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:44,opp:'MUN',ha:'H',overall:3,attacking:3,defensive:2}]},
+  {name:'Brentford',    abbr:'BRE',tier:'mid',    fx:[{gw:34,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:35,opp:'NFO',ha:'A',overall:2,attacking:2,defensive:2},{gw:36,opp:'MUN',ha:'H',overall:3,attacking:4,defensive:2},{gw:37,opp:'CRY',ha:'A',overall:2,attacking:2,defensive:2},{gw:38,opp:'WOL',ha:'H',overall:2,attacking:1,defensive:2},{gw:39,opp:'BOU',ha:'H',overall:2,attacking:2,defensive:2},{gw:40,opp:'EVE',ha:'A',overall:1,attacking:1,defensive:1},{gw:41,opp:'NEW',ha:'H',overall:3,attacking:3,defensive:2},{gw:42,opp:'ARS',ha:'A',overall:3,attacking:3,defensive:3},{gw:43,opp:'LEI',ha:'H',overall:1,attacking:1,defensive:1},{gw:44,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2}]},
+  {name:'Brighton',     abbr:'BHA',tier:'mid',    fx:[{gw:34,opp:'ARS',ha:'A',overall:3,attacking:3,defensive:3},{gw:35,opp:'EVE',ha:'H',overall:1,attacking:1,defensive:1},{gw:36,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:37,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:38,opp:'AVL',ha:'H',overall:3,attacking:3,defensive:3},{gw:39,opp:'LEI',ha:'A',overall:1,attacking:1,defensive:1},{gw:40,opp:'IPS',ha:'H',overall:1,attacking:1,defensive:1},{gw:41,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:42,opp:'CHE',ha:'H',overall:3,attacking:4,defensive:3},{gw:43,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2},{gw:44,opp:'WHU',ha:'H',overall:2,attacking:2,defensive:2}]},
+  {name:'Chelsea',      abbr:'CHE',tier:'top6',   fx:[{gw:34,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:35,opp:'WHU',ha:'A',overall:2,attacking:2,defensive:2},{gw:36,opp:'IPS',ha:'H',overall:1,attacking:1,defensive:1},{gw:37,opp:'BOU',ha:'H',overall:2,attacking:1,defensive:2},{gw:38,opp:'MCI',ha:'A',overall:4,attacking:5,defensive:3},{gw:39,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:40,opp:'ARS',ha:'A',overall:3,attacking:3,defensive:4},{gw:41,opp:'LEI',ha:'H',overall:1,attacking:1,defensive:1},{gw:42,opp:'BHA',ha:'A',overall:2,attacking:2,defensive:2},{gw:43,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:44,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2}]},
+  {name:'Crystal Palace',abbr:'CRY',tier:'mid',   fx:[{gw:34,opp:'WHU',ha:'H',overall:2,attacking:2,defensive:2},{gw:35,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2},{gw:36,opp:'ARS',ha:'A',overall:4,attacking:4,defensive:4},{gw:37,opp:'BRE',ha:'H',overall:2,attacking:2,defensive:2},{gw:38,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:39,opp:'WOL',ha:'H',overall:2,attacking:1,defensive:2},{gw:40,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:41,opp:'MCI',ha:'H',overall:4,attacking:5,defensive:3},{gw:42,opp:'EVE',ha:'A',overall:1,attacking:1,defensive:1},{gw:43,opp:'AVL',ha:'A',overall:3,attacking:3,defensive:3},{gw:44,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2}]},
+  {name:'Everton',      abbr:'EVE',tier:'bottom6',fx:[{gw:34,opp:'IPS',ha:'H',overall:1,attacking:1,defensive:1},{gw:35,opp:'BHA',ha:'A',overall:3,attacking:3,defensive:3},{gw:36,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:37,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:38,opp:'ARS',ha:'A',overall:4,attacking:4,defensive:4},{gw:39,opp:'FUL',ha:'H',overall:2,attacking:2,defensive:2},{gw:40,opp:'BRE',ha:'H',overall:2,attacking:2,defensive:2},{gw:41,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:42,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:2},{gw:43,opp:'MUN',ha:'A',overall:3,attacking:4,defensive:2},{gw:44,opp:'AVL',ha:'H',overall:3,attacking:3,defensive:3}]},
+  {name:'Fulham',       abbr:'FUL',tier:'mid',    fx:[{gw:34,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:35,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:2},{gw:36,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:37,opp:'AVL',ha:'A',overall:3,attacking:3,defensive:3},{gw:38,opp:'LEI',ha:'H',overall:1,attacking:1,defensive:1},{gw:39,opp:'EVE',ha:'A',overall:2,attacking:2,defensive:2},{gw:40,opp:'BOU',ha:'A',overall:2,attacking:2,defensive:2},{gw:41,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:42,opp:'WHU',ha:'A',overall:2,attacking:2,defensive:2},{gw:43,opp:'BHA',ha:'H',overall:2,attacking:2,defensive:2},{gw:44,opp:'BRE',ha:'H',overall:2,attacking:2,defensive:2}]},
+  {name:'Ipswich',      abbr:'IPS',tier:'bottom6',fx:[{gw:34,opp:'EVE',ha:'A',overall:2,attacking:2,defensive:2},{gw:35,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:36,opp:'CHE',ha:'A',overall:4,attacking:5,defensive:3},{gw:37,opp:'MCI',ha:'H',overall:5,attacking:5,defensive:5},{gw:38,opp:'WOL',ha:'A',overall:2,attacking:2,defensive:2},{gw:39,opp:'AVL',ha:'A',overall:3,attacking:3,defensive:3},{gw:40,opp:'BHA',ha:'A',overall:3,attacking:3,defensive:3},{gw:41,opp:'BOU',ha:'H',overall:2,attacking:2,defensive:2},{gw:42,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:43,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:44,opp:'TOT',ha:'A',overall:3,attacking:3,defensive:3}]},
+  {name:'Leicester',    abbr:'LEI',tier:'bottom6',fx:[{gw:34,opp:'MCI',ha:'A',overall:5,attacking:5,defensive:5},{gw:35,opp:'WOL',ha:'H',overall:2,attacking:1,defensive:2},{gw:36,opp:'TOT',ha:'A',overall:3,attacking:4,defensive:3},{gw:37,opp:'NEW',ha:'H',overall:3,attacking:3,defensive:2},{gw:38,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:2},{gw:39,opp:'BHA',ha:'H',overall:3,attacking:3,defensive:3},{gw:40,opp:'AVL',ha:'H',overall:3,attacking:3,defensive:3},{gw:41,opp:'EVE',ha:'H',overall:2,attacking:1,defensive:2},{gw:42,opp:'IPS',ha:'H',overall:2,attacking:1,defensive:2},{gw:43,opp:'BRE',ha:'A',overall:2,attacking:2,defensive:2},{gw:44,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1}]},
+  {name:'Liverpool',    abbr:'LIV',tier:'top6',   fx:[{gw:34,opp:'BOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:35,opp:'TOT',ha:'H',overall:2,attacking:2,defensive:2},{gw:36,opp:'MCI',ha:'A',overall:3,attacking:4,defensive:3},{gw:37,opp:'NEW',ha:'H',overall:2,attacking:2,defensive:2},{gw:38,opp:'ARS',ha:'A',overall:3,attacking:3,defensive:3},{gw:39,opp:'WOL',ha:'H',overall:1,attacking:1,defensive:1},{gw:40,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:41,opp:'MUN',ha:'H',overall:3,attacking:3,defensive:2},{gw:42,opp:'WHU',ha:'A',overall:2,attacking:1,defensive:2},{gw:43,opp:'CHE',ha:'H',overall:3,attacking:3,defensive:3},{gw:44,opp:'NFO',ha:'A',overall:2,attacking:2,defensive:2}]},
+  {name:'Man City',     abbr:'MCI',tier:'top6',   fx:[{gw:34,opp:'LEI',ha:'H',overall:1,attacking:1,defensive:1},{gw:35,opp:'ARS',ha:'H',overall:3,attacking:3,defensive:3},{gw:36,opp:'LIV',ha:'H',overall:3,attacking:3,defensive:3},{gw:37,opp:'IPS',ha:'A',overall:1,attacking:1,defensive:1},{gw:38,opp:'CHE',ha:'H',overall:3,attacking:3,defensive:3},{gw:39,opp:'TOT',ha:'A',overall:2,attacking:3,defensive:2},{gw:40,opp:'WHU',ha:'H',overall:1,attacking:1,defensive:1},{gw:41,opp:'CRY',ha:'A',overall:2,attacking:2,defensive:2},{gw:42,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:43,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:44,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2}]},
+  {name:'Man United',   abbr:'MUN',tier:'top6',   fx:[{gw:34,opp:'WOL',ha:'H',overall:2,attacking:2,defensive:2},{gw:35,opp:'NEW',ha:'A',overall:3,attacking:3,defensive:3},{gw:36,opp:'BRE',ha:'A',overall:2,attacking:2,defensive:2},{gw:37,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:38,opp:'NFO',ha:'A',overall:2,attacking:2,defensive:2},{gw:39,opp:'SOU',ha:'H',overall:1,attacking:1,defensive:1},{gw:40,opp:'WHU',ha:'A',overall:2,attacking:2,defensive:2},{gw:41,opp:'LIV',ha:'A',overall:4,attacking:5,defensive:3},{gw:42,opp:'AVL',ha:'H',overall:3,attacking:3,defensive:3},{gw:43,opp:'EVE',ha:'H',overall:2,attacking:1,defensive:2},{gw:44,opp:'ARS',ha:'A',overall:3,attacking:3,defensive:4}]},
+  {name:'Newcastle',    abbr:'NEW',tier:'mid',    fx:[{gw:34,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2},{gw:35,opp:'',ha:'',overall:0,attacking:0,defensive:0,blank:true},{gw:36,opp:'AVL',ha:'H',overall:3,attacking:3,defensive:3},{gw:37,opp:'LEI',ha:'A',overall:1,attacking:1,defensive:1},{gw:38,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:39,opp:'ARS',ha:'H',overall:3,attacking:3,defensive:3},{gw:40,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:41,opp:'BRE',ha:'A',overall:2,attacking:2,defensive:2},{gw:42,opp:'WOL',ha:'H',overall:1,attacking:1,defensive:1},{gw:43,opp:'WHU',ha:'H',overall:1,attacking:1,defensive:1,double:true},{gw:44,opp:'MUN',ha:'H',overall:3,attacking:3,defensive:2}]},
+  {name:"Nott'm Forest",abbr:'NFO',tier:'mid',    fx:[{gw:34,opp:'CHE',ha:'A',overall:3,attacking:4,defensive:3},{gw:35,opp:'BRE',ha:'H',overall:2,attacking:2,defensive:2},{gw:36,opp:'EVE',ha:'A',overall:1,attacking:1,defensive:1},{gw:37,opp:'BHA',ha:'A',overall:3,attacking:3,defensive:3},{gw:38,opp:'MUN',ha:'H',overall:3,attacking:3,defensive:3},{gw:39,opp:'TOT',ha:'A',overall:3,attacking:3,defensive:3},{gw:40,opp:'CRY',ha:'H',overall:2,attacking:2,defensive:2},{gw:41,opp:'WOL',ha:'A',overall:2,attacking:1,defensive:2},{gw:42,opp:'BOU',ha:'A',overall:2,attacking:2,defensive:2},{gw:43,opp:'IPS',ha:'A',overall:1,attacking:1,defensive:1},{gw:44,opp:'LIV',ha:'H',overall:4,attacking:5,defensive:4}]},
+  {name:'Southampton',  abbr:'SOU',tier:'bottom6',fx:[{gw:34,opp:'BRE',ha:'A',overall:3,attacking:3,defensive:3},{gw:35,opp:'IPS',ha:'A',overall:2,attacking:2,defensive:2},{gw:36,opp:'BOU',ha:'A',overall:3,attacking:2,defensive:3},{gw:37,opp:'ARS',ha:'H',overall:5,attacking:5,defensive:5},{gw:38,opp:'WOL',ha:'H',overall:2,attacking:2,defensive:2},{gw:39,opp:'MUN',ha:'A',overall:4,attacking:4,defensive:4},{gw:40,opp:'LIV',ha:'H',overall:5,attacking:5,defensive:5},{gw:41,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2},{gw:42,opp:'TOT',ha:'H',overall:3,attacking:3,defensive:3},{gw:43,opp:'LEI',ha:'H',overall:2,attacking:1,defensive:2},{gw:44,opp:'CHE',ha:'A',overall:4,attacking:5,defensive:3}]},
+  {name:'Spurs',        abbr:'TOT',tier:'top6',   fx:[{gw:34,opp:'FUL',ha:'A',overall:2,attacking:2,defensive:2},{gw:35,opp:'LIV',ha:'A',overall:4,attacking:5,defensive:3},{gw:36,opp:'LEI',ha:'H',overall:1,attacking:1,defensive:1},{gw:37,opp:'MUN',ha:'A',overall:3,attacking:3,defensive:3},{gw:38,opp:'NEW',ha:'A',overall:3,attacking:3,defensive:3},{gw:39,opp:'MCI',ha:'H',overall:4,attacking:4,defensive:4},{gw:40,opp:'WOL',ha:'H',overall:1,attacking:1,defensive:1},{gw:41,opp:'AVL',ha:'A',overall:3,attacking:3,defensive:3},{gw:42,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:43,opp:'CHE',ha:'A',overall:3,attacking:3,defensive:3},{gw:44,opp:'IPS',ha:'H',overall:1,attacking:1,defensive:1}]},
+  {name:'West Ham',     abbr:'WHU',tier:'mid',    fx:[{gw:34,opp:'CRY',ha:'A',overall:2,attacking:2,defensive:2},{gw:35,opp:'CHE',ha:'H',overall:3,attacking:4,defensive:3},{gw:36,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:37,opp:'BOU',ha:'H',overall:2,attacking:2,defensive:2},{gw:38,opp:'WOL',ha:'A',overall:2,attacking:2,defensive:2},{gw:39,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:40,opp:'MUN',ha:'H',overall:3,attacking:3,defensive:3},{gw:41,opp:'SOU',ha:'A',overall:1,attacking:1,defensive:1},{gw:42,opp:'LIV',ha:'H',overall:4,attacking:5,defensive:3},{gw:43,opp:'NEW',ha:'A',overall:2,attacking:2,defensive:2},{gw:44,opp:'BHA',ha:'A',overall:2,attacking:2,defensive:2}]},
+  {name:'Wolves',       abbr:'WOL',tier:'bottom6',fx:[{gw:34,opp:'MUN',ha:'A',overall:3,attacking:3,defensive:3},{gw:35,opp:'LEI',ha:'A',overall:2,attacking:1,defensive:2},{gw:36,opp:'FUL',ha:'H',overall:2,attacking:2,defensive:2},{gw:37,opp:'EVE',ha:'H',overall:1,attacking:1,defensive:1},{gw:38,opp:'BOU',ha:'A',overall:2,attacking:2,defensive:2},{gw:39,opp:'LIV',ha:'A',overall:5,attacking:5,defensive:5},{gw:40,opp:'TOT',ha:'A',overall:3,attacking:3,defensive:3},{gw:41,opp:'NFO',ha:'H',overall:2,attacking:2,defensive:2},{gw:42,opp:'NEW',ha:'A',overall:3,attacking:3,defensive:2},{gw:43,opp:'MCI',ha:'H',overall:4,attacking:4,defensive:4},{gw:44,opp:'CHE',ha:'H',overall:3,attacking:3,defensive:3}]},
+];
+
+// Fallback GW list — used until live data replaces it
+const FALLBACK_GWS = [34,35,36,37,38,39,40,41,42,43,44];
+
+const DL=['','VEZ','EAS','MED','HAR','VHD'];
+const DF=['','Very easy','Easy','Medium','Hard','Very hard'];
+
+const MODE_INFO={
+  overall:{icon:'📊',title:'Overall difficulty',cls:'mb-overall',desc:'The official FPL difficulty rating (1–5) based on overall opponent strength. Good starting point for any position.'},
+  attack: {icon:'⚡',title:'Attacking difficulty — forwards & attacking midfielders',cls:'mb-attack',desc:'Based on opponent xGC per game (expected goals conceded) — how leaky their defence is. Green = leaky defence = easy to score against. Weighted 60% season + 40% last-5, with home/away multiplier.'},
+  defence:{icon:'🛡',title:'Defensive difficulty — defenders & goalkeepers',cls:'mb-defence',desc:'Based on opponent xG per game — how dangerous their attack is. Green = weak attack = easy clean sheet. Weighted 60% season + 40% last-5, with home/away multiplier.'},
+  split:  {icon:'⚽',title:'Split view — attacking (left) · defensive (right)',cls:'mb-split',desc:'Each cell shows xG-based attacking difficulty on the left and defensive difficulty on the right. Assess both dimensions of a team\'s assets simultaneously.'},
+};
+
+const CHIPS=[
+  {key:'wc',cls:'wc',name:'Wildcard',    desc:'Unlimited free transfers without points penalties.',tip:'Best used going into a long easy fixture run you want to target.',tipCls:'tip-good'},
+  {key:'tc',cls:'tc',name:'Triple Captain',desc:'Your captain scores 3× points instead of 2×.',tip:'Use when your captain has a green home fixture.',tipCls:'tip-good'},
+  {key:'bb',cls:'bb',name:'Bench Boost', desc:'All 15 squad players score, not just the starting 11.',tip:'Most powerful on a Double GW when bench players play twice.',tipCls:'tip-warn'},
+  {key:'fh',cls:'fh',name:'Free Hit',    desc:'Unlimited transfers for one week, squad reverts after.',tip:'Save for a Blank GW to temporarily replace players with no fixture.',tipCls:'tip-warn'},
+];
+
+/* ── STATE ── */
+let TEAMS   = FALLBACK_TEAMS;
+let GW_LIST = FALLBACK_GWS;   // updated when live data loads
+let isLive  = false;
+const S = {mode:'overall',range:5,sort:'cumulative',filter:'all',search:'',hl:true,dir:1,chips:{wc:null,tc:null,bb:null,fh:null}};
+const TEAM_META = {}; // keyed by team abbr: { xg_last5, xgc_last5, ownership, inMySquad, hasDGW, hasBlank }
+
+function setFilterInfo(msg) {
+  const el = document.getElementById('filterInfo');
+  if (!el) return;
+  if (msg) { el.textContent = msg; el.style.display = 'block'; }
+  else { el.style.display = 'none'; }
+}
+
+// FIX_STORE: integer key → fixture object
+// Populated fresh on every rBody() call; avoids JSON in onclick attributes
+const FIX_STORE = new Map();
+let   fixKey    = 0;
+
+/* ── LOAD LIVE DATA ── */
+async function loadLive() {
+  setBadge('loading','Fetching live data…');
+  try {
+    const timeout = new Promise((_,rej) => setTimeout(() => rej(new Error('Timeout fetching live data')), 10000));
+    const result = await Promise.race([ENGINE.build(), timeout]);
+
+    // Update global GW list from live data — fixes the hardcoding bug
+    GW_LIST = result.gwList;
+
+    // Convert engine output to our display format
+    TEAMS = Object.values(result.ratings).map(t => ({
+      name: t.name, abbr: t.short, tier: t.tier,
+      fx:   t.fixtures, // already in {gw, opp, ha, overall, attacking, defensive, ...} shape
+    }));
+
+    // Always store xg values from ratings — independent of bs block
+    TEAMS.forEach(team => {
+      const r = Object.values(result.ratings).find(t => t.short === team.abbr);
+      if (!TEAM_META[team.abbr]) TEAM_META[team.abbr] = {};
+      TEAM_META[team.abbr].xg_last5  = r?.xg_last5  ?? null;
+      TEAM_META[team.abbr].xgc_last5 = r?.xgc_last5 ?? null;
+    });
+
+    // Populate TEAM_META for filters — use bootstrap already fetched by ENGINE.build()
+    try {
+      const bs2 = result.bs;
+      // Ownership per team: sum selected_by_percent across all players per team
+      const teamOwnership = {};
+      bs2.teams.forEach(t => { teamOwnership[t.short_name] = 0; });
+      bs2.elements.filter(e => e.status !== 'u').forEach(e => {
+        const abbr = bs2.teams.find(t => t.id === e.team)?.short_name;
+        if (abbr) teamOwnership[abbr] = (teamOwnership[abbr] || 0) + parseFloat(e.selected_by_percent || 0);
+      });
+      // My squad — try to load from saved team ID
+      const mySquadTeams = new Set();
+      try {
+        // Read team ID saved by any PitchIQ tool (keys differ per tool)
+        const savedId =
+          localStorage.getItem('pitchiq_scout_squadTeamId') ||
+          localStorage.getItem('pitchiq_cap_teamId') ||
+          localStorage.getItem('piq_team_id');
+
+        if (savedId) {
+          // Use the /api/fpl-picks serverless proxy (consistent with other tools)
+          const picks = await fetch(`api/fpl-picks?team=${savedId}&gw=${result.currentGw}`)
+            .then(r => r.ok ? r.json() : null).catch(() => null);
+          if (picks?.picks) {
+            picks.picks.forEach(p => {
+              const player = bs2.elements.find(e => e.id === p.element);
+              const abbr = player ? bs2.teams.find(t => t.id === player.team)?.short_name : null;
+              if (abbr) mySquadTeams.add(abbr);
+            });
+            localStorage.setItem('piq_squad_teams', JSON.stringify([...mySquadTeams]));
+          } else {
+            // Fall back to cached squad teams from previous session
+            const cached = localStorage.getItem('piq_squad_teams');
+            if (cached) JSON.parse(cached).forEach(a => mySquadTeams.add(a));
+          }
+        } else {
+          // No saved team ID — try cached squad teams
+          const cached = localStorage.getItem('piq_squad_teams');
+          if (cached) JSON.parse(cached).forEach(a => mySquadTeams.add(a));
+        }
+      } catch(e) {}
+      // Store metadata — xg_last5/xgc_last5 now come directly from ratings
+      TEAMS.forEach(team => {
+        const r = Object.values(result.ratings).find(t => t.short === team.abbr);
+        TEAM_META[team.abbr] = {
+          xg_last5:  r?.xg_last5  ?? null,
+          xgc_last5: r?.xgc_last5 ?? null,
+          ownership: teamOwnership[team.abbr] ?? 0,
+          inMySquad: mySquadTeams.has(team.abbr),
+        };
+      });
+    } catch(e) { console.warn('[TEAM_META]', e); }
+
+    isLive = true;
+    document.getElementById('headerSub').textContent =
+      `FIXTURE DIFFICULTY TICKER · GW${result.currentGw}–${result.endGw} · xG MODEL`;
+    setBadge('live', `Live · xG model · GW${result.currentGw}`);
+  } catch (err) {
+    console.warn('[PitchIQ] Live data unavailable:', err.message);
+    isLive  = false;
+    GW_LIST = FALLBACK_GWS;
+    TEAMS   = FALLBACK_TEAMS;
+    setBadge('fallback', 'Static data (API unavailable)');
+    document.getElementById('headerSub').textContent =
+      'FIXTURE TICKER · Sample data';
+  }
+  render();
+}
+
+function setBadge(type, text) {
+  document.getElementById('dataBadge').className = 'data-badge ' + type;
+  document.getElementById('dataBadgeText').textContent = text;
+}
+
+/* ── HELPERS ── */
+// GWS() slices the live GW list — no longer hardcoded
+const GWS = () => GW_LIST.slice(0, S.range);
+
+// fv: returns the difficulty value relevant to current mode
+// Returns null for blank fixtures so they render as blanks
+const fv = f => {
+  if (!f || f.blank) return null;
+  if (S.mode === 'attack')  return f.attacking;
+  if (S.mode === 'defence') return f.defensive;
+  return f.overall;
+};
+
+// cAvg: returns a NUMBER (not string) for the average difficulty of a team's fixtures
+// Returns 9 (worst case) when no fixtures are found so sort order stays consistent
+const cAvg = t => {
+  const g = GWS(); let s = 0, c = 0;
+  g.forEach(gw => {
+    const f = t.fx.find(x => x.gw === gw && !x.blank);
+    if (f) { const v = fv(f); if (v !== null) { s += v; c++; } }
+  });
+  return c ? s / c : 9;  // returns a number, not a string
+};
+
+// Format avg for display (2 decimal places)
+const fmtAvg = t => cAvg(t).toFixed(2);
+
+const sc = v => v < 1.8 ? 'score-s1' : v < 2.4 ? 'score-s2' : v < 3.0 ? 'score-s3' : v < 3.6 ? 'score-s4' : 'score-s5';
+
+function filteredTeams() {
+  let t = [...TEAMS];
+  const gws = GWS();
+  const metaReady = Object.keys(TEAM_META).length > 0;
+
+  switch (S.filter) {
+
+    case 'green_run': {
+      const threshold = S.range <= 3 ? 2.0 : S.range <= 5 ? 2.3 : 2.5;
+      const filtered = t.filter(x => cAvg(x) <= threshold);
+      if (filtered.length === 0) {
+        setFilterInfo(`No teams have avg difficulty ≤ ${threshold} across ${S.range} GWs — try a shorter range`);
+      } else {
+        t = filtered;
+        setFilterInfo(`${t.length} team${t.length !== 1 ? 's' : ''} with avg difficulty ≤ ${threshold} across next ${S.range} GWs`);
+      }
+      break;
+    }
+
+    case 'in_form': {
+      if (!metaReady) { setFilterInfo('Loading xG data — try again in a moment'); break; }
+      const sorted = [...t].filter(x => TEAM_META[x.abbr]?.xg_last5 != null)
+                           .sort((a,b) => (TEAM_META[b.abbr]?.xg_last5 || 0) - (TEAM_META[a.abbr]?.xg_last5 || 0));
+      t = sorted.slice(0, 8);
+      if (t.length === 0) { setFilterInfo('xG form data unavailable — try refreshing'); break; }
+      setFilterInfo(`Top ${t.length} teams by xG last 5 games — most attacking threat right now`);
+      break;
+    }
+
+    case 'cold': {
+      if (!metaReady) { setFilterInfo('Loading xG data — try again in a moment'); break; }
+      const sorted = [...t].filter(x => TEAM_META[x.abbr]?.xg_last5 != null)
+                           .sort((a,b) => (TEAM_META[a.abbr]?.xg_last5 || 0) - (TEAM_META[b.abbr]?.xg_last5 || 0));
+      t = sorted.slice(0, 8);
+      if (t.length === 0) { setFilterInfo('xG form data unavailable — try refreshing'); break; }
+      setFilterInfo(`Bottom ${t.length} teams by xG last 5 — cold streak, good defensive fixtures to target`);
+      break;
+    }
+
+    case 'popular': {
+      if (!metaReady) { setFilterInfo('Loading ownership data — try again in a moment'); break; }
+      const sorted = [...t].filter(x => TEAM_META[x.abbr]?.ownership != null)
+                           .sort((a,b) => (TEAM_META[b.abbr]?.ownership || 0) - (TEAM_META[a.abbr]?.ownership || 0));
+      t = sorted.slice(0, 8);
+      if (t.length === 0) { setFilterInfo('Ownership data unavailable — try refreshing'); break; }
+      setFilterInfo(`Top ${t.length} most FPL-owned teams — what your rivals are targeting`);
+      break;
+    }
+
+    case 'my_squad': {
+      // Try TEAM_META first (live), then localStorage cache
+      const fromMeta = TEAMS.filter(x => TEAM_META[x.abbr]?.inMySquad);
+      const fromCache = getMySquadTeams();
+      if (fromMeta.length > 0) {
+        t = fromMeta;
+        setFilterInfo(`${t.length} team${t.length !== 1 ? 's' : ''} from your saved squad`);
+      } else if (fromCache.size > 0) {
+        t = t.filter(x => fromCache.has(x.abbr));
+        setFilterInfo(`${t.length} team${t.length !== 1 ? 's' : ''} from your cached squad`);
+      } else {
+        setFilterInfo('No squad found — enter your Team ID in Captain Picker or My Team first');
+      }
+      break;
+    }
+
+    case 'dgw': {
+      const filtered = t.filter(x => {
+        const gwCounts = {};
+        x.fx.filter(f => gws.includes(f.gw) && !f.blank).forEach(f => {
+          gwCounts[f.gw] = (gwCounts[f.gw] || 0) + 1;
+        });
+        return Object.values(gwCounts).some(c => c > 1);
+      });
+      if (filtered.length === 0) {
+        setFilterInfo('No double gameweeks in the current range — try extending the range');
+      } else {
+        t = filtered;
+        setFilterInfo(`${t.length} team${t.length !== 1 ? 's' : ''} with a double gameweek — prioritise their assets`);
+      }
+      break;
+    }
+
+    case 'blank': {
+      const filtered = t.filter(x => gws.some(gw => !x.fx.find(f => f.gw === gw && !f.blank)));
+      if (filtered.length === 0) {
+        setFilterInfo('No blank gameweeks in the current range — all teams have fixtures');
+      } else {
+        t = filtered;
+        setFilterInfo(`${t.length} team${t.length !== 1 ? 's' : ''} with a blank GW — consider selling their players before the blank`);
+      }
+      break;
+    }
+
+    default:
+      setFilterInfo(null);
+      break;
+  }
+
+  // Filters that define their own sort order — don't re-sort
+  const selfSorted = ['in_form', 'cold', 'popular'];
+
+  if (S.search.trim()) {
+    const q = S.search.toLowerCase();
+    t = t.filter(x => x.name.toLowerCase().includes(q) || x.abbr.toLowerCase().includes(q));
+  }
+
+  if (!selfSorted.includes(S.filter)) {
+    // Always sort fixture-based filters by best fixtures first (cumulative ascending)
+    if (S.filter !== 'all') {
+      t.sort((a, b) => cAvg(a) - cAvg(b));
+    } else if (S.sort === 'cumulative') {
+      t.sort((a, b) => (cAvg(a) - cAvg(b)) * S.dir);
+    } else if (S.sort === 'alpha') {
+      t.sort((a, b) => a.name.localeCompare(b.name) * S.dir);
+    } else {
+      const g = GWS()[0];
+      t.sort((a, b) => {
+        const fa = a.fx.find(x => x.gw === g && !x.blank);
+        const fb = b.fx.find(x => x.gw === g && !x.blank);
+        const va = fa ? (fv(fa) ?? 9) : 9;
+        const vb = fb ? (fv(fb) ?? 9) : 9;
+        return (va - vb) * S.dir;
+      });
+    }
+  }
+  return t;
+}
+
+function getMySquadTeams() {
+  const teams = new Set();
+  try {
+    const raw = localStorage.getItem('piq_squad_teams');
+    if (raw) JSON.parse(raw).forEach(a => teams.add(a));
+  } catch(e) {}
+  return teams;
+}
+
+/* ── RENDER ── */
+function render() {
+  // Hide tooltip on every render to prevent orphaned tooltips
+  hideTT();
+  const ts = filteredTeams(); // compute once, pass to sub-renders
+  rBanner(); rHead(); rBody(ts); rSummary(ts); rChips();
+}
+
+function rBanner() {
+  const m = MODE_INFO[S.mode];
+  document.getElementById('modeBanner').className   = 'mode-banner ' + m.cls;
+  document.getElementById('modeIcon').textContent   = m.icon;
+  document.getElementById('modeBannerTitle').textContent = m.title;
+  document.getElementById('modeBannerDesc').textContent  = m.desc;
+}
+
+function rHead() {
+  const gws = GWS();
+  const isAlpha = S.sort === 'alpha';
+  document.getElementById('tHead').innerHTML = `<tr>
+    <th class="team-col" id="teamColHd" style="cursor:pointer;user-select:none" title="Sort alphabetically">
+      Team <span class="sort-arrow" style="opacity:${isAlpha?1:0.3}">${isAlpha ? (S.dir===1?'↑':'↓') : '↕'}</span>
+    </th>
+    ${gws.map(gw => `<th class="gw-col"><div class="gw-th-inner"><span class="gw-num">GW${gw}</span>${
+      Object.entries(S.chips).map(([k,v]) => v === gw
+        ? `<div class="gw-chip-dot on gw-chip-${k}" title="${k.toUpperCase()} chip placed here"></div>`
+        : ''
+      ).join('')
+    }</div></th>`).join('')}
+    <th class="score-col" id="scoreColHd">${gws.length}GW avg <span class="sort-arrow">${!isAlpha ? (S.dir===1?'↑':'↓') : '↕'}</span></th>
+  </tr>`;
+  // Use onclick (not addEventListener) so it never duplicates across re-renders
+  document.getElementById('teamColHd').onclick = () => {
+    if (S.sort === 'alpha') { S.dir *= -1; } else { S.sort = 'alpha'; S.dir = 1; }
+    syncSortPills();
+    render();
+  };
+  document.getElementById('scoreColHd').onclick = () => {
+    if (S.sort === 'cumulative') { S.dir *= -1; } else { S.sort = 'cumulative'; S.dir = 1; }
+    syncSortPills();
+    render();
+  };
+}
+
+function syncSortPills() {
+  document.querySelectorAll('#pgSort .pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.sort === S.sort);
+  });
+}
+
+function rBody(ts) {
+  // Clear store atomically before populating — keys reset to 0
+  FIX_STORE.clear();
+  fixKey = 0;
+
+  const gws = GWS();
+
+  if (ts.length === 0) {
+    const cols = gws.length + 2;
+    document.getElementById('tBody').innerHTML = `<tr><td colspan="${cols}" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:13px">No teams match this filter</td></tr>`;
+    return;
+  }
+
+  document.getElementById('tBody').innerHTML = ts.map(t => {
+    const avg = cAvg(t);
+    const hl  = avg < 2.0 && S.hl;
+
+    const cells = gws.map(gw => {
+      const f = t.fx.find(x => x.gw === gw);
+
+      if (!f || f.blank) {
+        return `<td class="fix-td"><div class="fix-cell fix-blank" style="width:58px;height:38px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;">—</div></td>`;
+      }
+
+      // Store fixture with a numeric key — safe, no JSON in HTML attributes
+      const k = fixKey++;
+      FIX_STORE.set(k, { ...f, teamName: t.name });
+
+      if (S.mode === 'split') {
+        return `<td class="fix-td">
+          <div class="split-cell${f.double?' fix-double':''}" onmouseenter="showTT(event,${k})" onmouseleave="hideTT()">
+            <div class="split-half d${f.attacking}">
+              <span class="fix-opp" style="font-size:7px;opacity:0.7">ATT</span>
+              <span class="fix-opp">${DL[f.attacking]}</span>
+            </div>
+            <div class="split-half d${f.defensive}">
+              <span class="fix-opp" style="font-size:7px;opacity:0.7">DEF</span>
+              <span class="fix-opp">${DL[f.defensive]}</span>
+            </div>
+          </div>
+        </td>`;
+      }
+
+      const v = fv(f) ?? 3;
+      return `<td class="fix-td">
+        <div class="fix-cell d${v}${f.double?' fix-double':''}" onmouseenter="showTT(event,${k})" onmouseleave="hideTT()">
+          <span class="fix-opp">${f.opp}</span>
+          <span class="fix-ha">${f.ha}</span>
+        </div>
+      </td>`;
+    }).join('');
+
+    return `<tr class="${hl?'hl':''}">
+      <td class="team-col">
+        <div class="team-name">${t.name}</div>
+        <div class="team-abbr">${t.abbr}</div>
+      </td>
+      ${cells}
+      <td class="score-td"><div class="score-pill ${sc(avg)}">${fmtAvg(t)}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function rSummary(ts) {
+  const gws = GWS();
+  const sorted = [...ts].sort((a, b) => cAvg(a) - cAvg(b));
+  const best   = sorted[0]   ?? null;
+  const worst  = sorted[sorted.length - 1] ?? null;
+
+  let blanks = 0, doubles = 0;
+  ts.forEach(t => gws.forEach(gw => {
+    const f = t.fx.find(x => x.gw === gw);
+    if (!f || f.blank) blanks++;
+    if (f && f.double) doubles++;
+  }));
+
+  document.getElementById('summaryRow').innerHTML = `
+    <div class="summary-card">
+      <div class="sc-eyebrow">Easiest run</div>
+      <div class="sc-val" style="color:var(--grass-l)">${best?.abbr ?? '—'}</div>
+      <div class="sc-sub">${best?.name ?? ''} · avg ${best ? fmtAvg(best) : '—'}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-eyebrow">Hardest run</div>
+      <div class="sc-val" style="color:#f87171">${worst?.abbr ?? '—'}</div>
+      <div class="sc-sub">${worst?.name ?? ''} · avg ${worst ? fmtAvg(worst) : '—'}</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-eyebrow">Blank GWs <span class="ii" style="vertical-align:middle">i<div class="ip">Teams with no fixture this range. Use Free Hit chip to cover blank weeks.</div></span></div>
+      <div class="sc-val" style="color:var(--muted)">${blanks}</div>
+      <div class="sc-sub">Across filtered teams &amp; GWs</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-eyebrow">Double GWs <span class="ii" style="vertical-align:middle">i<div class="ip">Teams playing twice in one GW — best time for Bench Boost chip.</div></span></div>
+      <div class="sc-val" style="color:var(--gold)">${doubles}</div>
+      <div class="sc-sub">Extra fixture opportunities</div>
+    </div>`;
+}
+
+function rChips() {
+  const gws = GWS();
+  document.getElementById('chipCards').innerHTML = CHIPS.map(c => {
+    const p = S.chips[c.key];
+    return `<div class="chip-card ${c.cls}${p?' placed':''}" data-chip="${c.key}">
+      <div class="chip-card-top">
+        <span class="chip-name">${c.name}</span>
+        <span class="chip-gw-badge">${p ? 'GW'+p : 'Not set'}</span>
+      </div>
+      <div class="chip-desc">${c.desc}</div>
+      <div class="chip-tip ${c.tipCls}">💡 ${c.tip}</div>
+    </div>`;
+  }).join('');
+
+  // Re-attach click listeners after innerHTML replacement
+  document.querySelectorAll('.chip-card[data-chip]').forEach(el => {
+    el.addEventListener('click', () => cycleChip(el.dataset.chip));
+  });
+
+  const placed = CHIPS.filter(c => S.chips[c.key]).map(c => `${c.name} → GW${S.chips[c.key]}`).join(' · ');
+  document.getElementById('chipStatus').textContent = placed
+    ? '📍 Placed: ' + placed
+    : 'No chips placed yet. Click a chip above to cycle it through the visible gameweeks.';
+}
+
+/* ── TOOLTIP ── */
+function showTT(e, key) {
+  const f = FIX_STORE.get(key);
+  if (!f || f.blank) return;
+
+  const ctx = {
+    overall: `How strong is ${f.opp} overall?`,
+    attack:  `How many goals does ${f.opp} concede? (xGC${isLive?', live':', static'})`,
+    defence: `How many goals does ${f.opp} score? (xG${isLive?', live':', static'})`,
+    split:   `Left = attacking difficulty (xGC) · Right = defensive difficulty (xG)`,
+  };
+
+  const xgRows = isLive && f._raw ? `
+    <div class="tt-xg-row">
+      <span class="tt-xg-label">Opp att threat (xG)</span>
+      <span class="tt-xg-val" style="color:var(--gold)">${(parseFloat(f._raw.oppNormAtt)*100).toFixed(0)}th %ile</span>
+    </div>
+    <div class="tt-xg-row">
+      <span class="tt-xg-label">Opp def weakness (xGC)</span>
+      <span class="tt-xg-val" style="color:var(--grass-l)">${(parseFloat(f._raw.oppNormDef)*100).toFixed(0)}th %ile</span>
+    </div>` : '';
+
+  document.getElementById('ttInner').innerHTML = `
+    <div class="tt-hd">
+      <span class="tt-match">vs ${f.opp} (${f.ha})</span>
+      <span class="tt-gw">GW${f.gw}</span>
+    </div>
+    <div class="tt-ctx">${ctx[S.mode]}</div>
+    <div class="tt-bar"><span class="tt-bl">Attacking</span><div class="tt-bt"><div class="tt-bf" style="width:${f.attacking*20}%;background:var(--gold)"></div></div><span class="tt-bv">${DF[f.attacking]}</span></div>
+    <div class="tt-bar"><span class="tt-bl">Defensive</span><div class="tt-bt"><div class="tt-bf" style="width:${f.defensive*20}%;background:var(--blue)"></div></div><span class="tt-bv">${DF[f.defensive]}</span></div>
+    <div class="tt-bar"><span class="tt-bl">Overall</span><div class="tt-bt"><div class="tt-bf" style="width:${f.overall*20}%;background:var(--grass)"></div></div><span class="tt-bv">${DF[f.overall]}</span></div>
+    ${xgRows}
+    ${f.ha==='H'?'<div class="tt-note" style="color:var(--grass-l)">🏟 Home advantage factored into xG ratings</div>':''}
+    ${f.double?'<div class="tt-note" style="color:var(--gold)">⚡ Double GW — two games this week</div>':''}`;
+
+  const tt   = document.getElementById('tooltip');
+  const rect = e.currentTarget.getBoundingClientRect();
+  let left   = rect.left + window.scrollX;
+  const top  = rect.bottom + window.scrollY + 8;
+  // Prevent overflow off the right edge
+  if (left + 264 > window.innerWidth) left = window.innerWidth - 272;
+  // Prevent overflow off the left edge
+  if (left < 8) left = 8;
+  tt.style.left = left + 'px';
+  tt.style.top  = top  + 'px';
+  tt.classList.add('on');
+}
+
+function hideTT() {
+  document.getElementById('tooltip').classList.remove('on');
+}
+
+/* ── CHIP CYCLING ── */
+function cycleChip(key) {
+  const gws = GWS();
+  const cur = S.chips[key];
+  if (cur === null) {
+    S.chips[key] = gws[0];
+  } else {
+    const idx = gws.indexOf(cur);
+    S.chips[key] = idx >= gws.length - 1 ? null : gws[idx + 1];
+  }
+  render();
+}
+
+/* ── INIT — wire all event listeners once on DOMContentLoaded ── */
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Generic pill group handler factory
+  const wirePills = (groupId, onActivate) => {
+    document.getElementById(groupId)?.addEventListener('click', e => {
+      const btn = e.target.closest('.pill');
+      if (!btn) return;
+      document.querySelectorAll(`#${groupId} .pill`).forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      onActivate(btn);
+      render();
+    });
+  };
+
+  wirePills('pgMode',   btn => { S.mode   = btn.dataset.mode; });
+  wirePills('pgSort',   btn => { S.sort   = btn.dataset.sort; });
+  wirePills('pgFilter', btn => { S.filter = btn.dataset.filter; });
+
+  const slider = document.getElementById('rangeSlider');
+  const rangeLabel = document.getElementById('rangeLabel');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      S.range = parseInt(slider.value, 10);
+      rangeLabel.textContent = S.range + ' GW';
+      // Clear any chip placements that are now outside the visible range
+      const validGws = GWS();
+      Object.keys(S.chips).forEach(k => {
+        if (S.chips[k] !== null && !validGws.includes(S.chips[k])) {
+          S.chips[k] = null;
+        }
+      });
+      render();
+    });
+  }
+
+  document.getElementById('searchInput')?.addEventListener('input', e => {
+    S.search = e.target.value;
+    render();
+  });
+
+  document.getElementById('modelCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('modelBanner').style.display = 'none';
+  });
+
+  // Render immediately with fallback data — page is never blank
+  render();
+
+  // Load live data in background; re-renders when ready
+  loadLive();
+});
+</script>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+      <a href="hit-calculator.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🎯</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Hit Calculator</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Is a -4 hit worth taking?</div>
+        </div>
+      </a>
+      <a href="chip-advisor.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🃏</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Chip Advisor</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">When to play your chips</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

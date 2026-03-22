@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Data-driven advice on when to play your FPL chips. Wildcard, Triple Captain, Bench Boost and Free Hit timing recommendations based on fixtures and your squad.">
+  <meta name="keywords" content="FPL chip advice, when to use wildcard FPL, FPL bench boost timing, free hit blank gameweek, triple captain advice">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/chip-advisor.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/chip-advisor.html">
+  <meta property="og:title" content="FPL Chip Advisor — When to Use Your Chips | PitchIQ">
+  <meta property="og:description" content="Data-driven advice on when to play your FPL chips. Wildcard, Triple Captain, Bench Boost and Free Hit timing recommendations based on fixtures and your squad.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL Chip Advisor — When to Use Your Chips | PitchIQ">
+  <meta name="twitter:description" content="Data-driven advice on when to play your FPL chips. Wildcard, Triple Captain, Bench Boost and Free Hit timing recommendations based on fixtures and your squad.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — Chip Timing Advisor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--purple:#a78bfa;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:1000px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px;color:var(--cream)}.logo span{color:var(--grass)}
+.header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:blink 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* SQUAD IMPORT */
+.squad-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:20px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;flex-wrap:wrap}
+.squad-bar-label{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-weight:500}
+.squad-input{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:7px 12px;border-radius:7px;font-family:var(--font-m);font-size:12px;outline:none;width:140px;transition:border-color 0.2s}
+.squad-input:focus{border-color:rgba(39,174,96,0.4)}
+.squad-input::placeholder{color:var(--muted)}
+.squad-btn{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--grass);color:var(--ink);transition:background 0.15s;font-family:var(--font-b)}
+.squad-btn:hover{background:var(--grass-l)}
+.squad-loaded-tag{font-size:11px;color:var(--grass-l);font-family:var(--font-m);display:none}
+.squad-loaded-tag.visible{display:block}
+.squad-hint{font-size:10px;color:var(--muted);flex:1;min-width:180px}
+
+/* URGENCY STRIP */
+.urgency-strip{display:none;align-items:center;gap:12px;padding:12px 16px;margin-bottom:20px;border-radius:10px;border:1px solid;font-size:12px;flex-wrap:wrap}
+.urgency-strip.critical{background:rgba(230,57,70,0.08);border-color:rgba(230,57,70,0.25);color:var(--accent);display:flex}
+.urgency-strip.warning{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold);display:flex}
+.urgency-strip strong{color:var(--cream)}
+
+/* CHIP CARDS */
+.chips-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+.chip-card{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;position:relative}
+.chip-card.urgent{border-color:var(--gold);box-shadow:0 0 0 1px rgba(240,180,41,0.15),0 4px 16px rgba(0,0,0,0.3)}
+.chip-card.good{border-color:rgba(39,174,96,0.3)}
+.chip-card.wait{opacity:0.7}
+.chip-header{padding:14px 16px 12px;display:flex;align-items:flex-start;gap:10px;border-bottom:1px solid var(--border)}
+.chip-icon{font-size:24px;flex-shrink:0;line-height:1;margin-top:2px}
+.chip-name{font-family:var(--font-d);font-size:20px;letter-spacing:1px;color:var(--cream);line-height:1}
+.chip-desc{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5}
+.chip-body{padding:14px 16px}
+.chip-rec-label{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;font-weight:500}
+.chip-rec-gw{font-family:var(--font-d);font-size:30px;line-height:1;margin-bottom:6px}
+.chip-rec-reason{font-size:11px;color:rgba(240,236,227,0.5);line-height:1.65}
+.chip-rec-reason strong{color:var(--cream)}
+.chip-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;margin-top:10px;font-family:var(--font-m)}
+.chip-status-badge.urgent{background:rgba(240,180,41,0.12);color:var(--gold)}
+.chip-status-badge.good{background:rgba(39,174,96,0.1);color:var(--grass-l)}
+.chip-status-badge.wait{background:rgba(255,255,255,0.05);color:var(--muted)}
+.chip-captain{margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;font-size:11px}
+.chip-captain-name{font-weight:600;color:var(--cream)}
+.chip-captain-meta{color:var(--muted);font-size:10px;margin-top:2px}
+
+/* GW QUALITY BAR */
+.gw-quality-section{margin-bottom:24px;background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+.gw-quality-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+.gw-quality-row{display:flex;gap:6px;align-items:flex-end;height:72px;margin-bottom:8px}
+.gw-quality-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default}
+.gw-quality-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height 0.4s ease;position:relative}
+.gw-quality-bar.dgw{background:linear-gradient(180deg,var(--blue) 0%,rgba(99,179,237,0.6) 100%)}
+.gw-quality-bar.bgw{background:rgba(230,57,70,0.3)}
+.gw-quality-bar.easy{background:linear-gradient(180deg,var(--grass-l) 0%,rgba(39,174,96,0.5) 100%)}
+.gw-quality-bar.medium{background:rgba(240,180,41,0.4)}
+.gw-quality-bar.hard{background:rgba(230,57,70,0.4)}
+.gw-quality-label{font-family:var(--font-m);font-size:9px;color:var(--muted);text-align:center}
+.gw-quality-badge{font-family:var(--font-m);font-size:8px;font-weight:600;text-align:center}
+.gw-chip-markers{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;min-height:14px}
+.gw-chip-marker{font-size:9px;opacity:0.8}
+.gw-quality-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}
+.gql-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.gql-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* HEATMAP */
+.heatmap-section{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:24px}
+.heatmap-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.heatmap-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);font-weight:500}
+.heatmap-search{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:5px 10px;border-radius:6px;font-family:var(--font-b);font-size:11px;outline:none;width:140px;transition:border-color 0.2s}
+.heatmap-search:focus{border-color:rgba(99,179,237,0.3)}
+.heatmap-search::placeholder{color:var(--muted)}
+.heatmap-scroll{overflow-x:auto;padding-bottom:4px}
+.heatmap-table{border-collapse:collapse;width:100%}
+.heatmap-table th{font-family:var(--font-m);font-size:9px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);padding:5px 6px;text-align:center;font-weight:400;white-space:nowrap}
+.heatmap-table th:first-child{text-align:left;min-width:40px}
+.heatmap-table td{padding:2px 3px;text-align:center}
+.hm-cell{width:38px;height:26px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:8px;font-weight:600;cursor:default;border:1px solid transparent;transition:transform 0.1s,box-shadow 0.1s;white-space:nowrap}
+.hm-cell:hover{transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,0.4);z-index:10;position:relative}
+.hm-5{background:rgba(39,174,96,0.65);color:white;border-color:rgba(39,174,96,0.8)}
+.hm-4{background:rgba(39,174,96,0.4);color:#4ade80;border-color:rgba(39,174,96,0.55)}
+.hm-3{background:rgba(39,174,96,0.18);color:#86efac;border-color:rgba(39,174,96,0.3)}
+.hm-2{background:rgba(240,180,41,0.12);color:#fcd34d;border-color:rgba(240,180,41,0.2)}
+.hm-1{background:rgba(230,57,70,0.12);color:#fca5a5;border-color:rgba(230,57,70,0.2)}
+.hm-blank{background:rgba(230,57,70,0.06);color:rgba(230,57,70,0.5);border-color:rgba(230,57,70,0.12);font-size:7px}
+.hm-dgw{background:rgba(99,179,237,0.2);color:var(--blue);border-color:rgba(99,179,237,0.35)}
+.hm-squad{outline:2px solid var(--gold);outline-offset:1px}
+.squad-indicator{font-size:9px;font-family:var(--font-m);color:var(--gold);text-align:left;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38px}
+.team-label{font-size:11px;font-family:var(--font-m);color:rgba(240,236,227,0.6);padding:2px 6px;text-align:left;cursor:default}
+.team-label.in-squad{color:var(--gold);font-weight:600}
+.heatmap-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.hm-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)}
+.hm-legend-dot{width:12px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* CUSTOMISATION PANEL */
+.custom-panel{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.custom-panel-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;font-weight:500}
+.custom-rows{display:flex;flex-direction:column;gap:14px}
+.custom-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.custom-row-label{font-size:12px;color:rgba(240,236,227,0.6);min-width:110px;flex-shrink:0}
+/* Chip used toggles */
+.chip-used-group{display:flex;gap:8px;flex-wrap:wrap}
+.chip-used-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:rgba(240,236,227,0.5);cursor:pointer;transition:all 0.15s;font-family:var(--font-b);user-select:none}
+.chip-used-btn:hover{color:var(--cream);border-color:rgba(255,255,255,0.15)}
+.chip-used-btn.used{background:rgba(230,57,70,0.1);border-color:rgba(230,57,70,0.25);color:var(--accent);text-decoration:line-through}
+.chip-used-btn.available{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.2);color:var(--grass-l)}
+/* Risk / goal selector pills */
+.option-group{display:flex;gap:4px;background:rgba(255,255,255,0.03);border-radius:8px;padding:3px}
+.opt-btn{padding:5px 13px;border-radius:6px;font-size:11px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.opt-btn:hover{color:var(--cream)}
+.opt-btn.active{background:var(--ink-3);color:var(--cream);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+/* Conflict strip */
+.conflict-strip{display:none;align-items:center;gap:10px;padding:11px 16px;margin-bottom:16px;border-radius:10px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);font-size:12px;flex-wrap:wrap}
+.conflict-strip.visible{display:flex}
+.conflict-strip strong{color:var(--cream)}
+.schedule-section{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:24px}
+.schedule-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+.schedule-grid{display:flex;flex-direction:column;gap:8px}
+.schedule-row{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:9px;border:1px solid var(--border)}
+.schedule-row.dgw{border-color:rgba(99,179,237,0.2);background:rgba(99,179,237,0.04)}
+.schedule-row.bgw{border-color:rgba(230,57,70,0.2);background:rgba(230,57,70,0.04)}
+.schedule-gw{font-family:var(--font-d);font-size:20px;color:var(--cream);min-width:52px;padding-top:2px}
+.schedule-content{flex:1}
+.schedule-type{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;font-family:var(--font-m);display:inline-block;margin-bottom:4px}
+.schedule-type.dgw{background:rgba(99,179,237,0.12);color:var(--blue)}
+.schedule-type.bgw{background:rgba(230,57,70,0.1);color:var(--accent)}
+.schedule-teams{font-size:11px;color:rgba(240,236,227,0.5);margin-bottom:4px}
+.schedule-teams .in-squad{color:var(--gold);font-weight:600}
+.schedule-chip-rec{font-size:11px;font-weight:600;font-family:var(--font-m);color:var(--gold)}
+.schedule-squad-note{font-size:10px;color:var(--muted);margin-top:4px;font-style:italic}
+
+@media(max-width:700px){
+  .chips-grid{grid-template-columns:1fr}
+  .gw-quality-row{height:56px}
+  .validator-row,.compare-row{flex-direction:column;align-items:flex-start}
+  .compare-chips{grid-template-columns:1fr}
+  .validator-select{width:100%}
+  .custom-row{flex-direction:column;align-items:flex-start;gap:6px}
+  .custom-row-label{min-width:unset}
+}
+
+/* VALIDATOR */
+.validator-section{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.validator-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+.validator-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.validator-select{background:#1e2530;border:1px solid var(--border);color:var(--cream);padding:7px 12px;border-radius:7px;font-family:var(--font-b);font-size:13px;outline:none;transition:border-color 0.2s;cursor:pointer}
+.validator-select:focus{border-color:rgba(99,179,237,0.4)}
+.validator-select option{background:#1e2530;color:#f0ece3}
+.validator-btn{padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--blue);color:var(--ink);transition:background 0.15s;font-family:var(--font-b)}
+.validator-btn:hover{background:#90cdf4}
+.validator-result{display:none;padding:14px 16px;border-radius:10px;border:1px solid;font-size:12px;line-height:1.7}
+.validator-result.visible{display:block}
+.validator-result.good{background:rgba(39,174,96,0.07);border-color:rgba(39,174,96,0.25)}
+.validator-result.warn{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2)}
+.validator-result.bad{background:rgba(230,57,70,0.06);border-color:rgba(230,57,70,0.2)}
+.validator-result strong{color:var(--cream)}
+.vr-verdict{font-family:var(--font-d);font-size:22px;letter-spacing:1px;margin-bottom:6px}
+.vr-verdict.good{color:var(--grass-l)}.vr-verdict.warn{color:var(--gold)}.vr-verdict.bad{color:var(--accent)}
+
+/* COMPARISON */
+.compare-section{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.compare-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:500}
+.compare-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.compare-chips{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.compare-chip-card{background:var(--ink-3);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.compare-chip-card.winner{border-color:rgba(39,174,96,0.3);background:rgba(39,174,96,0.05)}
+.compare-chip-card.loser{opacity:0.65}
+.compare-gw-label{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.compare-gw-val{font-family:var(--font-d);font-size:28px;color:var(--cream);line-height:1;margin-bottom:8px}
+.compare-stat{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.compare-stat:last-child{border-bottom:none}
+.compare-stat-label{color:var(--muted)}
+.compare-stat-val{font-family:var(--font-m);font-weight:500}
+.compare-winner-badge{font-size:9px;font-family:var(--font-m);font-weight:600;padding:2px 7px;border-radius:4px;background:rgba(39,174,96,0.15);color:var(--grass-l);display:inline-block;margin-top:8px}
+
+/* EXECUTION MODE */
+.exec-section{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px;display:none}
+.exec-section.visible{display:block}
+.exec-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:500}
+.exec-subtitle{font-size:12px;color:rgba(240,236,227,0.45);margin-bottom:14px;line-height:1.6}
+.exec-chip-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.exec-tab{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.exec-tab:hover{color:var(--cream)}
+.exec-tab.active{background:var(--ink-3);color:var(--cream);border-color:rgba(255,255,255,0.12)}
+.exec-content{display:none}.exec-content.active{display:block}
+.exec-player-list{display:flex;flex-direction:column;gap:6px}
+.exec-player-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--ink-3);border:1px solid var(--border);border-radius:8px}
+.exec-rank{font-family:var(--font-d);font-size:18px;color:var(--muted);min-width:20px}
+.exec-shirt{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.exec-name{font-weight:600;font-size:13px;flex:1;min-width:0}
+.exec-meta{font-size:10px;color:var(--muted)}
+.exec-pts{font-family:var(--font-d);font-size:20px;line-height:1;text-align:right;flex-shrink:0;color:var(--grass-l)}
+.exec-fix-pills{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.exec-pill{display:inline-flex;padding:2px 6px;border-radius:4px;font-family:var(--font-m);font-size:9px;font-weight:600;border:1px solid}
+.exec-empty{font-size:12px;color:var(--muted);padding:16px 0;text-align:center}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+@media(max-width:600px){
+  .heatmap-table{font-size:11px}
+  .hm-cell{width:32px;height:28px;font-size:9px}
+  .chip-cards{grid-template-columns:1fr 1fr}
+  .page{padding:20px 14px 80px}
+  .validator-btn{width:100%}
+  .exec-chip-tabs{gap:3px}
+  .exec-tab{font-size:11px;padding:5px 10px}
+}
+@media(max-width:420px){
+  .chip-cards{grid-template-columns:1fr}
+  .hm-cell{width:26px;height:24px;font-size:8px}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub" id="headerSub">CHIP TIMING ADVISOR · Loading…</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Loading…</span></div>
+  </div>
+
+  <!-- PAGE INTRO -->
+  <div style="font-size:13px;color:rgba(240,236,227,0.5);line-height:1.7;margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:10px">
+    <strong style="color:var(--cream)">When should you play your chips?</strong> Enter your Team ID to get personalised recommendations for Triple Captain, Bench Boost, Free Hit and Wildcard — based on your actual squad's fixture run and upcoming blank or double gameweeks. Set your risk appetite and season goal to fine-tune the advice.
+  </div>
+
+  <!-- SQUAD IMPORT -->
+  <div class="squad-bar">
+    <span class="squad-bar-label">Your squad</span>
+    <input type="number" class="squad-input" id="teamIdInput" placeholder="Team ID…" min="1" max="99999999" step="1">
+    <button class="squad-btn" id="loadSquadBtn">Load squad</button>
+    <button class="squad-btn" id="clearSquadBtn" style="display:none;background:rgba(255,255,255,0.06);color:rgba(240,236,227,0.5);border:1px solid var(--border)">Clear</button>
+    <span class="squad-loaded-tag" id="squadLoadedTag"></span>
+    <span class="squad-hint" id="squadHint">Your team ID is in the FPL URL: /entry/<strong style="color:var(--cream)">1234567</strong>/event/… · Loading your squad personalises all chip recommendations below.</span>
+  </div>
+
+  <!-- CUSTOMISATION PANEL -->
+  <div class="custom-panel">
+    <div class="custom-panel-title">⚙ Your chip settings</div>
+    <div class="custom-rows">
+
+      <div class="custom-row">
+        <span class="custom-row-label">Chips used</span>
+        <div class="chip-used-group">
+          <button class="chip-used-btn available" data-chip="tc" id="chipToggleTc">⚡ Triple Captain</button>
+          <button class="chip-used-btn available" data-chip="bb" id="chipToggleBb">🔋 Bench Boost</button>
+          <button class="chip-used-btn available" data-chip="fh" id="chipToggleFh">🎯 Free Hit</button>
+          <button class="chip-used-btn available" data-chip="wc1" id="chipToggleWc1">🃏 Wildcard 1</button>
+          <button class="chip-used-btn available" data-chip="wc2" id="chipToggleWc2">🃏 Wildcard 2</button>
+        </div>
+      </div>
+
+      <div class="custom-row">
+        <span class="custom-row-label">Risk appetite</span>
+        <div class="option-group" id="riskGroup">
+          <button class="opt-btn" data-risk="aggressive">Aggressive</button>
+          <button class="opt-btn active" data-risk="balanced">Balanced</button>
+          <button class="opt-btn" data-risk="conservative">Conservative</button>
+        </div>
+        <span style="font-size:11px;color:var(--muted)" id="riskDesc">Standard thresholds — takes reasonable chip opportunities.</span>
+      </div>
+
+      <div class="custom-row">
+        <span class="custom-row-label">Season goal</span>
+        <div class="option-group" id="goalGroup">
+          <button class="opt-btn" data-goal="chasing">Chasing rank</button>
+          <button class="opt-btn active" data-goal="holding">Holding position</button>
+          <button class="opt-btn" data-goal="minileague">Mini-league only</button>
+        </div>
+        <span style="font-size:11px;color:var(--muted)" id="goalDesc">Protecting current rank — balanced chip timing.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CONFLICT STRIP -->
+  <div class="conflict-strip" id="conflictStrip"></div>
+
+  <!-- URGENCY STRIP -->
+  <div class="urgency-strip" id="urgencyStrip"></div>
+
+  <!-- CHIP CARDS -->
+  <div class="chips-grid" id="chipsGrid">
+    <div style="padding:40px;text-align:center;color:var(--muted);grid-column:1/-1;font-size:13px">Loading chip analysis…</div>
+  </div>
+
+
+  <!-- VALIDATOR -->
+  <div class="validator-section">
+    <div class="validator-title">Validate your plan — "is this a good time to play it?"</div>
+    <div class="validator-row">
+      <select class="validator-select" id="valChip">
+        <option value="">Select chip…</option>
+        <option value="tc">⚡ Triple Captain</option>
+        <option value="bb">🔋 Bench Boost</option>
+        <option value="fh">🎯 Free Hit</option>
+        <option value="wc">🃏 Wildcard</option>
+      </select>
+      <span style="color:var(--muted);font-size:13px">in</span>
+      <select class="validator-select" id="valGw" style="width:120px">
+        <option value="">Select GW…</option>
+      </select>
+      <button class="validator-btn" id="valBtn">Analyse</button>
+    </div>
+    <div class="validator-result" id="valResult"></div>
+  </div>
+
+  <!-- COMPARISON -->
+  <div class="compare-section">
+    <div class="compare-title">Compare two windows — "GW35 or GW36?"</div>
+    <div class="compare-row">
+      <select class="validator-select" id="cmpChip">
+        <option value="">Select chip…</option>
+        <option value="tc">⚡ Triple Captain</option>
+        <option value="bb">🔋 Bench Boost</option>
+        <option value="fh">🎯 Free Hit</option>
+        <option value="wc">🃏 Wildcard</option>
+      </select>
+      <span style="color:var(--muted);font-size:13px">:</span>
+      <select class="validator-select" id="cmpGw1" style="width:110px"><option value="">GW A…</option></select>
+      <span style="color:var(--muted);font-size:13px">vs</span>
+      <select class="validator-select" id="cmpGw2" style="width:110px"><option value="">GW B…</option></select>
+      <button class="validator-btn" id="cmpBtn">Compare</button>
+    </div>
+    <div id="cmpResult"></div>
+  </div>
+
+  <!-- EXECUTION MODE -->
+  <div class="exec-section" id="execSection">
+    <div class="exec-title">You've decided — here's how to maximise it</div>
+    <div class="exec-subtitle" id="execSubtitle">Select a chip below to see execution guidance.</div>
+    <div class="exec-chip-tabs" id="execTabs"></div>
+    <div id="execContent"></div>
+  </div>
+
+  <!-- GW QUALITY OVERVIEW -->
+  <div class="gw-quality-section">
+    <div class="gw-quality-title">Gameweek quality overview — remaining season</div>
+    <div class="gw-quality-row" id="gwQualityRow"></div>
+    <div id="gwChipMarkers" style="display:flex;gap:6px;margin-bottom:8px"></div>
+    <div class="gw-quality-legend">
+      <div class="gql-item"><div class="gql-dot" style="background:linear-gradient(180deg,var(--grass-l),rgba(39,174,96,0.5))"></div>Easy overall</div>
+      <div class="gql-item"><div class="gql-dot" style="background:rgba(240,180,41,0.4)"></div>Average</div>
+      <div class="gql-item"><div class="gql-dot" style="background:linear-gradient(180deg,var(--blue),rgba(99,179,237,0.5))"></div>Double GW</div>
+      <div class="gql-item"><div class="gql-dot" style="background:rgba(230,57,70,0.3)"></div>Blank GW</div>
+    </div>
+  </div>
+
+  <!-- HEATMAP -->
+  <div class="heatmap-section">
+    <div class="heatmap-top">
+      <div>
+        <div class="heatmap-title">Fixture difficulty heatmap</div>
+        <div style="font-size:11px;color:rgba(240,236,227,0.35);margin-top:2px">All 20 teams · remaining GWs · squad players highlighted in gold</div>
+      </div>
+      <input type="text" class="heatmap-search" id="heatmapSearch" placeholder="Filter teams…">
+    </div>
+    <div class="heatmap-scroll">
+      <div id="heatmapWrap">Loading…</div>
+    </div>
+    <div class="heatmap-legend">
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-5"></div>Very easy (diff 1)</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-3"></div>Easy (diff 2)</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-2"></div>Medium (diff 3)</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-1"></div>Hard (diff 4-5)</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-dgw"></div>Double GW</div>
+      <div class="hm-legend-item"><div class="hm-legend-dot hm-blank"></div>Blank GW</div>
+    </div>
+  </div>
+
+  <!-- BLANK/DGW SCHEDULE -->
+  <div class="schedule-section">
+    <div class="schedule-title">Blank &amp; double gameweek schedule</div>
+    <div class="schedule-grid" id="scheduleGrid">Loading…</div>
+  </div>
+
+</div>
+
+<script>
+const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+let ALL=[],TMAP={},EVENTS=[],GW=1;
+let ALL_FIXTURES=[];
+let SQUAD_IDS=new Set();
+let SQUAD_PLAYERS=[];
+
+const LS_KEY='pitchiq_chips_';
+function lsGet(k,fb){try{const v=localStorage.getItem(LS_KEY+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
+function lsSet(k,v){try{localStorage.setItem(LS_KEY+k,JSON.stringify(v));}catch{}}
+
+// User preferences — persisted to localStorage
+const PREFS={
+  used:    lsGet('used',   {tc:false,bb:false,fh:false,wc1:false,wc2:false}),
+  risk:    lsGet('risk',   'balanced'),    // aggressive | balanced | conservative
+  goal:    lsGet('goal',   'holding'),     // chasing | holding | minileague
+};
+
+// Thresholds adjusted by risk appetite
+const THRESHOLDS={
+  aggressive: {bbDgwTeams:1, bbMatchTeams:14, fhBlankTeams:3, wcAvgDiff:2.8},
+  balanced:   {bbDgwTeams:2, bbMatchTeams:16, fhBlankTeams:5, wcAvgDiff:3.2},
+  conservative:{bbDgwTeams:4,bbMatchTeams:18, fhBlankTeams:8, wcAvgDiff:3.6},
+};
+
+function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
+async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+
+async function loadData(){
+  setBadge('loading','Fetching fixture data…');
+  try{
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
+    TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+    EVENTS=bs.events??[];
+    ALL_FIXTURES=Array.isArray(fixes)?fixes:[];
+    ALL=bs.elements.filter(e=>e.element_type>0&&e.status!=='u').map(e=>({
+      id:e.id,name:e.web_name,teamId:e.team,
+      pos:POS_ID[e.element_type]??'MID',
+      form:parseFloat(e.form)||0,
+      epNext:parseFloat(e.ep_next)||0,
+      ownedPct:parseFloat(e.selected_by_percent)||0,
+      status:e.status,
+    }));
+    document.getElementById('headerSub').textContent=`CHIP TIMING ADVISOR · GW${GW}`;
+    setBadge('live',`Live · GW${GW}`);
+    // Re-match squad against live data if loaded from localStorage with fallback data
+    if(SQUAD_IDS.size>0){
+      SQUAD_PLAYERS=ALL.filter(p=>SQUAD_IDS.has(p.id));
+      if(SQUAD_PLAYERS.length>0)setSquadTag('loaded',`✓ ${SQUAD_PLAYERS.length} players loaded`);
+    }
+  }catch(err){
+    const _exp=err.status===404||err.name==='AbortError'||err.message==='Failed to fetch';if(!_exp)console.warn('[ChipAdvisor]',err.message);
+    ALL=FB_PLAYERS;TMAP=FB_TEAMS;EVENTS=FB_EVENTS;ALL_FIXTURES=FB_FIXTURES;
+    setBadge('fallback',err.status===404?'Static data · deploy for live':'Static data');
+    document.getElementById('headerSub').textContent='CHIP TIMING ADVISOR · Sample data';
+  }
+  render();
+}
+
+async function loadSquad(){
+  const raw=document.getElementById('teamIdInput').value.trim();
+  const tag=document.getElementById('squadLoadedTag');
+  const btn=document.getElementById('loadSquadBtn');
+  const hint=document.getElementById('squadHint');
+
+  // ── Input validation ──────────────────────────────────────────────────────────
+  // Must be a positive integer — FPL IDs are 1 to ~10,000,000
+  const id=parseInt(raw,10);
+  if(!raw||isNaN(id)||id<1||id>999999999||String(id)!==raw.replace(/\.0+$/,'')){
+    setSquadTag('error','⚠ Enter a valid FPL Team ID (e.g. 1234567)');
+    return;
+  }
+
+  // ── Guard against race condition — wait for live data if still loading ────────
+  if(ALL.length===0){
+    setSquadTag('loading','Waiting for player data…');
+    await new Promise(r=>setTimeout(r,1500));
+    if(ALL.length===0){
+      setSquadTag('error','⚠ Player data not loaded yet. Try again in a moment.');
+      return;
+    }
+  }
+
+  // ── Debounce — disable button during fetch ────────────────────────────────────
+  btn.disabled=true;
+  btn.textContent='Loading…';
+  setSquadTag('loading','Loading squad…');
+
+  try{
+    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+
+    // Validate response shape
+    if(!data||typeof data!=='object'){throw new Error('Unexpected response format');}
+    if(!Array.isArray(data.picks)){throw new Error('No picks array in response');}
+    if(data.picks.length===0){throw new Error('Squad is empty — check your Team ID is correct');}
+
+    const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
+    if(ids.length===0){throw new Error('No valid player IDs in squad data');}
+
+    SQUAD_IDS=new Set(ids);
+    // Match against ALL players — warn if poor match rate (suggests data mismatch)
+    SQUAD_PLAYERS=ALL.filter(p=>SQUAD_IDS.has(p.id));
+    if(SQUAD_PLAYERS.length<5&&ALL.length>20){
+      console.warn(`[ChipAdvisor] Only ${SQUAD_PLAYERS.length} squad players matched in ALL (${ALL.length} total). Possible GW mismatch.`);
+    }
+
+    // Save to localStorage for next visit
+    lsSet('squadId',String(id));
+    lsSet('squadIds',[...SQUAD_IDS]);
+
+    setSquadTag('loaded',`✓ ${SQUAD_PLAYERS.length} players loaded`);
+    document.getElementById('clearSquadBtn').style.display='inline-block';
+    hint.style.display='none';
+    render();
+
+  }catch(err){
+    // Don't silently load demo squad — tell the user what went wrong
+    let msg='';
+    if(err.status===404){
+      msg='⚠ Squad not found — check your Team ID is correct';
+    }else if(err.status===503||err.status===429){
+      msg='⚠ FPL API is busy — try again in a moment';
+    }else if(err.message?.includes('Team ID')||err.message?.includes('picks')||err.message?.includes('empty')){
+      msg=`⚠ ${err.message}`;
+    }else if(ALL===FB_PLAYERS){
+      msg='⚠ Squad loading requires Vercel deployment — not available in static mode';
+    }else{
+      msg='⚠ Could not load squad — check your Team ID and try again';
+    }
+    setSquadTag('error',msg);
+    // Do NOT load demo squad silently — leave SQUAD_PLAYERS as-is
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Load squad';
+  }
+}
+
+function setSquadTag(state,text){
+  const tag=document.getElementById('squadLoadedTag');
+  tag.classList.add('visible');
+  tag.textContent=text;
+  tag.style.color=state==='loaded'?'var(--grass-l)':state==='loading'?'var(--gold)':'var(--accent)';
+}
+
+function clearSquad(){
+  SQUAD_IDS=new Set();
+  SQUAD_PLAYERS=[];
+  lsSet('squadIds',[]);
+  document.getElementById('teamIdInput').value='';
+  document.getElementById('clearSquadBtn').style.display='none';
+  document.getElementById('squadHint').style.display='';
+  setSquadTag('','');
+  document.getElementById('squadLoadedTag').classList.remove('visible');
+  render();
+}
+
+/* ── FIXTURE HELPERS ─────────────────────────────────────────── */
+function getFixtures(teamId,gw){
+  return ALL_FIXTURES.filter(f=>f.event===gw&&(f.team_h===teamId||f.team_a===teamId));
+}
+function getDiff(fix,teamId){
+  return fix.team_h===teamId?fix.team_h_difficulty??3:fix.team_a_difficulty??3;
+}
+function getOpp(fix,teamId){
+  const oppId=fix.team_h===teamId?fix.team_a:fix.team_h;
+  return{id:oppId,short:TMAP[oppId]?.short??'?',ha:fix.team_h===teamId?'H':'A'};
+}
+function blankTeams(gw){
+  const playing=new Set();
+  ALL_FIXTURES.filter(f=>f.event===gw).forEach(f=>{playing.add(f.team_h);playing.add(f.team_a);});
+  return Object.keys(TMAP).map(Number).filter(id=>!playing.has(id));
+}
+function doubleTeams(gw){
+  const counts={};
+  ALL_FIXTURES.filter(f=>f.event===gw).forEach(f=>{
+    counts[f.team_h]=(counts[f.team_h]||0)+1;
+    counts[f.team_a]=(counts[f.team_a]||0)+1;
+  });
+  return Object.entries(counts).filter(([,v])=>v>=2).map(([id])=>+id);
+}
+function gwMatchCount(gw){return new Set(ALL_FIXTURES.filter(f=>f.event===gw).flatMap(f=>[f.team_h,f.team_a])).size;}
+function gwAvgDiff(gw){
+  const fixes=ALL_FIXTURES.filter(f=>f.event===gw);
+  if(!fixes.length)return null;
+  let s=0,c=0;
+  fixes.forEach(f=>{s+=f.team_h_difficulty??3;s+=f.team_a_difficulty??3;c+=2;});
+  return s/c;
+}
+
+/* ── SQUAD-AWARE CHIP ANALYSIS ───────────────────────────────── */
+function analyseTC(gwsToShow){
+  // For each GW, find best captain option:
+  // If squad loaded: score only squad attackers (MID+FWD), exclude doubts
+  // If no squad: score all non-GK players
+  let best={gw:null,score:-1,player:null,diff:3};
+  gwsToShow.forEach(gw=>{
+    const pool=SQUAD_PLAYERS.length
+      ?SQUAD_PLAYERS.filter(p=>p.pos!=='GK'&&p.status!=='i')
+      :ALL.filter(p=>p.pos!=='GK'&&p.status!=='i').slice(0,50);
+    pool.forEach(p=>{
+      const fixes=getFixtures(p.teamId,gw);
+      if(!fixes.length)return;
+      const diff=getDiff(fixes[0],p.teamId);
+      const reliabilityMult=p.status==='d'?0.5:1.0;
+      const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*reliabilityMult;
+      if(score>best.score){best={gw,score,player:p,diff};}
+    });
+  });
+  if(!best.gw)return null;
+  const opp=ALL_FIXTURES.filter(f=>f.event===best.gw&&(f.team_h===best.player.teamId||f.team_a===best.player.teamId)).map(f=>getOpp(f,best.player.teamId))[0];
+  const isSquadSpecific=SQUAD_PLAYERS.length>0;
+  return{
+    gw:best.gw,
+    player:best.player,
+    diff:best.diff,
+    opp,
+    reason:`${isSquadSpecific?'From your squad, ':''}${best.player.status==='d'?'<span style="color:var(--gold)">⚠ Doubt — </span>':''}<strong>${best.player.name}</strong> is the strongest TC candidate in GW${best.gw}. Projected ${best.player.epNext>0?best.player.epNext.toFixed(1)+' pts':best.player.form.toFixed(1)+' form'}, facing <strong>${opp?.short??'?'} (${opp?.ha??'?'})</strong> — difficulty ${best.diff}/5.${isSquadSpecific?'':' Import your squad for a personalised pick.'}`,
+    urgency: best.gw===GW?'urgent':best.gw<=GW+1?'good':'wait',
+  };
+}
+
+function analyseBB(gwsToShow){
+  const T=THRESHOLDS[PREFS.risk];
+  let best={gw:null,score:-1,dgwTeams:[],reason:''};
+  gwsToShow.forEach(gw=>{
+    const dgws=doubleTeams(gw);
+    const blanks=blankTeams(gw);
+    const matchTeams=gwMatchCount(gw);
+    let score=matchTeams*0.5+dgws.length*3;
+    let squadDGWPlayers=[];
+    if(SQUAD_PLAYERS.length){
+      squadDGWPlayers=SQUAD_PLAYERS.filter(p=>dgws.includes(p.teamId));
+      score+=squadDGWPlayers.length*4;
+    }
+    score-=blanks.length*0.3;
+    // Apply risk threshold — aggressive takes any DGW, conservative needs a big one
+    const meetsThreshold=dgws.length>=T.bbDgwTeams||matchTeams>=T.bbMatchTeams;
+    if(meetsThreshold&&score>best.score){
+      const dgwNames=dgws.map(id=>TMAP[id]?.short??'?').join(', ');
+      const squadNote=squadDGWPlayers.length?` Your squad players with doubles: <strong>${squadDGWPlayers.map(p=>p.name).join(', ')}</strong>.`:'';
+      const riskNote=PREFS.risk==='aggressive'?' (Aggressive mode — taking any DGW opportunity.)':PREFS.risk==='conservative'?' (Conservative mode — waiting for a large DGW.)':'';
+      best={
+        gw,score,dgwTeams:dgws,
+        reason:dgws.length>0
+          ?`GW${gw} has <strong>${dgws.length} teams with double fixtures</strong> (${dgwNames}).${squadNote}${riskNote}`
+          :`GW${gw} has <strong>${matchTeams} of 20 teams playing</strong> with broadly easy fixtures — solid Bench Boost window.${riskNote}`,
+        urgency:dgws.length>=4?'urgent':dgws.length>=T.bbDgwTeams?'good':'wait',
+      };
+    }
+  });
+  return best.gw?best:null;
+}
+
+function analyseFH(gwsToShow){
+  const T=THRESHOLDS[PREFS.risk];
+  let best={gw:null,score:-1,blankTeamsList:[],reason:''};
+  gwsToShow.forEach(gw=>{
+    const blanks=blankTeams(gw);
+    let squadBlanks=[];
+    if(SQUAD_PLAYERS.length)squadBlanks=SQUAD_PLAYERS.filter(p=>blanks.includes(p.teamId));
+    const score=blanks.length*2+squadBlanks.length*3;
+    if(blanks.length>=T.fhBlankTeams&&score>best.score){
+      const blankNames=blanks.slice(0,6).map(id=>TMAP[id]?.short??'?').join(', ');
+      const squadNote=squadBlanks.length?` <strong>${squadBlanks.length} of your players blank</strong> (${squadBlanks.map(p=>p.name).join(', ')}) — Free Hit lets you temporarily replace them all.`:' Import your squad to see which of your players would blank.';
+      const riskNote=PREFS.risk==='aggressive'?' (Aggressive: acting on smaller blanks too.)':PREFS.risk==='conservative'?' (Conservative: only triggering on large blanks.)':''
+      best={
+        gw,score,blankTeamsList:blanks,
+        reason:`GW${gw} has <strong>${blanks.length} teams without a fixture</strong> (${blankNames}${blanks.length>6?'…':''}).${squadNote}${riskNote}`,
+        urgency:blanks.length>=10?'urgent':blanks.length>=T.fhBlankTeams?'good':'wait',
+      };
+    }
+  });
+  if(!best.gw)return{gw:gwsToShow[gwsToShow.length-1]??GW+4,blankTeamsList:[],score:0,
+    reason:'No blank gameweeks meet your threshold in the remaining fixtures. Hold the Free Hit for a future blank or the final gameweek.',urgency:'wait'};
+  return best;
+}
+
+function analyseWC(gwsToShow){
+  const T=THRESHOLDS[PREFS.risk];
+  // Season goal affects urgency threshold:
+  // chasing = lower threshold (more willing to WC), holding = standard, minileague = higher threshold
+  const urgencyBoost=PREFS.goal==='chasing'?0.3:PREFS.goal==='minileague'?-0.2:0;
+  const urgentThresh=T.wcAvgDiff-urgencyBoost;
+  const goalNote=PREFS.goal==='chasing'?' (Chasing rank — using Wildcard more aggressively to swing points.)':
+    PREFS.goal==='minileague'?' (Mini-league focus — only Wildcarding when it clearly helps your specific fixtures.)'
+    :'';
+
+  if(SQUAD_PLAYERS.length){
+    let worst={gw:null,avgDiff:0,reason:''};
+    const wcGws=gwsToShow.length>3?gwsToShow.slice(0,-3):gwsToShow;
+    wcGws.forEach(gw=>{
+      let totalDiff=0,count=0;
+      SQUAD_PLAYERS.filter(p=>p.pos!=='GK').forEach(p=>{
+        [gw,gw+1,gw+2].forEach(g=>{
+          const fixes=getFixtures(p.teamId,g);
+          if(fixes.length){totalDiff+=getDiff(fixes[0],p.teamId);count++;}
+        });
+      });
+      const avg=count?totalDiff/count:3;
+      if(avg>worst.avgDiff){
+        const badPlayers=SQUAD_PLAYERS.filter(p=>{
+          const f=getFixtures(p.teamId,gw);
+          return f.length&&getDiff(f[0],p.teamId)>=4;
+        });
+        const badNames=badPlayers.slice(0,4).map(p=>p.name).join(', ');
+        worst={
+          gw,avgDiff:avg,
+          reason:`Your squad faces its toughest 3-GW run starting GW${gw} (avg difficulty ${avg.toFixed(1)}/5).${badNames?` Players in hard fixtures: <strong>${badNames}</strong>.`:''} Wildcarding now lets you bring in players with much better fixtures.${goalNote}`,
+          urgency:avg>=urgentThresh?'urgent':avg>=urgentThresh-0.4?'good':'wait',
+        };
+      }
+    });
+    if(worst.gw)return worst;
+  }
+  let worst={gw:null,avgDiff:0,reason:''};
+  const wcGwsFallback=gwsToShow.length>2?gwsToShow.slice(0,-2):gwsToShow;
+  wcGwsFallback.forEach(gw=>{
+    let runDiff=0,count=0;
+    [gw,gw+1,gw+2].forEach(g=>{const d=gwAvgDiff(g);if(d){runDiff+=d;count++;}});
+    const avg=count?runDiff/count:3;
+    if(avg>worst.avgDiff){
+      worst={gw,avgDiff:avg,
+        reason:`The hardest run starts around GW${gw} (avg difficulty ${avg.toFixed(1)}/5). Import your squad for a personalised Wildcard recommendation.${goalNote}`,
+        urgency:avg>=urgentThresh?'urgent':'good'};
+    }
+  });
+  return worst.gw?worst:{gw:gwsToShow[0]??GW,avgDiff:3,reason:'Import your squad for a personalised Wildcard recommendation.',urgency:'wait'};
+}
+
+/* ── MAIN RENDER ─────────────────────────────────────────────── */
+function render(){
+  const remaining=EVENTS.filter(e=>e.id>=GW&&!e.finished).map(e=>e.id);
+  if(!remaining.length){
+    document.getElementById('chipsGrid').innerHTML='<div style="padding:20px;color:var(--muted);grid-column:1/-1">Season complete.</div>';
+    return;
+  }
+  const gwsToShow=remaining.slice(0,10);
+
+  const tc=PREFS.used.tc ?null:analyseTC(gwsToShow);
+  const bb=PREFS.used.bb ?null:analyseBB(gwsToShow);
+  const fh=PREFS.used.fh ?null:analyseFH(gwsToShow);
+  // WC: both wildcards used = null, only wc1 used = still show (wc2 available), both available = show
+  const wcAvail=!PREFS.used.wc1||!PREFS.used.wc2;
+  const wc=wcAvail?analyseWC(gwsToShow):null;
+
+  // ── CONFLICT DETECTOR ─────────────────────────────────────────────────────────
+  const conflictEl=document.getElementById('conflictStrip');
+  const conflicts=[];
+  const chipPairs=[{a:'tc',b:'bb',aData:tc,bData:bb},{a:'tc',b:'fh',aData:tc,bData:fh},{a:'bb',b:'fh',aData:bb,bData:fh}];
+  chipPairs.forEach(({a,b,aData,bData})=>{
+    if(aData&&bData&&aData.gw===bData.gw){
+      const names={tc:'Triple Captain',bb:'Bench Boost',fh:'Free Hit'};
+      // Recommend the one with higher urgency, or BB/TC over FH
+      const winner=aData.urgency==='urgent'&&bData.urgency!=='urgent'?a:bData.urgency==='urgent'&&aData.urgency!=='urgent'?b:a==='tc'||a==='bb'?a:b;
+      const loser=winner===a?b:a;
+      conflicts.push(`<strong>${names[a]}</strong> and <strong>${names[b]}</strong> are both recommended for <strong>GW${aData.gw}</strong>. You can only play one — we recommend <strong>${names[winner]}</strong> as it offers higher expected value. Consider holding <strong>${names[loser]}</strong> for the next suitable window.`);
+    }
+  });
+  if(conflicts.length){
+    conflictEl.className='conflict-strip visible';
+    conflictEl.innerHTML='⚠️ Chip conflict: '+conflicts.join(' · ');
+  }else{
+    conflictEl.className='conflict-strip';
+  }
+
+  // ── URGENCY STRIP ────────────────────────────────────────────────────────────
+  const urgentChips=[tc,bb,fh,wc].filter(c=>c&&c.urgency==='urgent');
+  const urgencyEl=document.getElementById('urgencyStrip');
+  if(urgentChips.length){
+    const names={tc:'Triple Captain',bb:'Bench Boost',fh:'Free Hit',wc:'Wildcard'};
+    const chipLabels=urgentChips.map(c=>{
+      const key=c===tc?'tc':c===bb?'bb':c===fh?'fh':'wc';
+      return`<strong>${names[key]}</strong> (GW${c.gw})`;
+    }).join(' and ');
+    urgencyEl.className='urgency-strip critical';
+    urgencyEl.innerHTML=`⚠ ${chipLabels} window${urgentChips.length>1?'s':''} approaching — don't miss ${urgentChips.length>1?'them':'it'}.`;
+  }else{
+    urgencyEl.className='urgency-strip';
+  }
+
+  // ── CHIP CARDS ────────────────────────────────────────────────────────────────
+  const wcLabel=PREFS.used.wc1&&!PREFS.used.wc2?'Wildcard 2':'Wildcard';
+  const chips=[
+    {key:'tc',icon:'⚡',name:'Triple Captain',desc:'Triples your captain\'s points for one GW.',data:tc,used:PREFS.used.tc},
+    {key:'bb',icon:'🔋',name:'Bench Boost',desc:'Your bench players\' points all count this GW.',data:bb,used:PREFS.used.bb},
+    {key:'fh',icon:'🎯',name:'Free Hit',desc:'Temporary unlimited transfers — squad resets after.',data:fh,used:PREFS.used.fh},
+    {key:'wc',icon:'🃏',name:wcLabel,desc:'Unlimited permanent transfers — rebuild your squad.',data:wc,used:!wcAvail},
+  ];
+  const statusLabels={urgent:'⚠ Play soon',good:'✓ Good window',wait:'Hold for now'};
+  document.getElementById('chipsGrid').innerHTML=chips.map(({key,icon,name,desc,data,used})=>{
+    if(used)return`<div class="chip-card" style="opacity:0.4">
+      <div class="chip-header">
+        <div class="chip-icon" style="filter:grayscale(1)">${icon}</div>
+        <div><div class="chip-name" style="color:var(--muted)">${name}</div><div class="chip-desc">${desc}</div></div>
+      </div>
+      <div class="chip-body">
+        <div style="font-family:var(--font-m);font-size:11px;color:var(--muted);padding:10px 0">✓ Already played this season</div>
+      </div>
+    </div>`;
+    if(!data)return`<div class="chip-card"><div class="chip-header"><div class="chip-icon">${icon}</div><div><div class="chip-name">${name}</div><div class="chip-desc">${desc}</div></div></div><div class="chip-body" style="color:var(--muted);font-size:12px">Analysing…</div></div>`;
+    const cardCls=data.urgency==='urgent'?'urgent':data.urgency==='good'?'good':'wait';
+    const captainHtml=key==='tc'&&data.player?`
+      <div class="chip-captain">
+        <div class="chip-captain-name">${data.player.name}</div>
+        <div class="chip-captain-meta">${data.player.pos} · ${TMAP[data.player.teamId]?.short??'?'} · ${data.player.epNext>0?data.player.epNext.toFixed(1)+' proj pts':data.player.form.toFixed(1)+' form'}${data.player.status==='d'?' · ⚠ Doubt':''}</div>
+      </div>`:'';
+    return`<div class="chip-card ${cardCls}">
+      <div class="chip-header">
+        <div class="chip-icon">${icon}</div>
+        <div><div class="chip-name">${name}</div><div class="chip-desc">${desc}</div></div>
+      </div>
+      <div class="chip-body">
+        <div class="chip-rec-label">${data.urgency==='wait'?'Best remaining window':'Recommended gameweek'}</div>
+        <div class="chip-rec-gw" style="color:${data.urgency==='urgent'?'var(--gold)':data.urgency==='good'?'var(--grass-l)':'var(--muted)'}">${data.gw?'GW'+data.gw:'—'}</div>
+        <div class="chip-rec-reason">${data.reason||''}</div>
+        ${captainHtml}
+        <div class="chip-status-badge ${data.urgency}">${statusLabels[data.urgency]}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── GW QUALITY BARS ───────────────────────────────────────────────────────────
+  const gwShow=remaining.slice(0,12);
+  const maxMatches=20;
+  const rowEl=document.getElementById('gwQualityRow');
+  const markersEl=document.getElementById('gwChipMarkers');
+  const chipGws={tc:tc?.gw,bb:bb?.gw,fh:fh?.gw,wc:wc?.gw};
+  const chipIcons={tc:'⚡',bb:'🔋',fh:'🎯',wc:'🃏'};
+  rowEl.innerHTML=gwShow.map(gw=>{
+    const dgws=doubleTeams(gw);
+    const blanks=blankTeams(gw);
+    const matchTeams=gwMatchCount(gw);
+    const avgD=gwAvgDiff(gw);
+    const isBGW=blanks.length>=6;
+    const isDGW=dgws.length>=2;
+    let barCls,barH;
+    if(isBGW){barCls='bgw';barH=Math.max((blanks.length/20)*64,8);}
+    else if(isDGW){barCls='dgw';barH=Math.max((dgws.length/10)*64,12);}
+    else if(avgD!==null&&avgD<=2.2){barCls='easy';barH=Math.max(((3-avgD)/2)*64,8);}
+    else if(avgD!==null&&avgD>=3.5){barCls='hard';barH=Math.max(((avgD-2)/3)*64,8);}
+    else{barCls='medium';barH=Math.max((matchTeams/20)*40,6);}
+    const chips=Object.entries(chipGws).filter(([,g])=>g===gw).map(([k])=>chipIcons[k]).join('');
+    return`<div class="gw-quality-col" title="GW${gw}${isBGW?' — Blank GW ('+blanks.length+' teams no fixture)':isDGW?' — Double GW ('+dgws.length+' teams with 2 fixtures)':avgD?(' — avg difficulty '+avgD.toFixed(1)):''}">
+      <div class="gw-quality-bar ${barCls}" style="height:${barH}px"></div>
+      <div class="gw-quality-label">GW${gw}${chips?`<br><span style="font-size:10px">${chips}</span>`:''}</div>
+    </div>`;
+  }).join('');
+
+  // ── HEATMAP ────────────────────────────────────────────────────────────────────
+  renderHeatmap(gwShow);
+
+  // ── BLANK/DGW SCHEDULE ────────────────────────────────────────────────────────
+  const schedItems=[];
+  gwShow.forEach(gw=>{
+    const blanks=blankTeams(gw);
+    const dgws=doubleTeams(gw);
+    if(blanks.length>=3)schedItems.push({gw,type:'bgw',blanks,dgws:[]});
+    else if(dgws.length>=2)schedItems.push({gw,type:'dgw',blanks:[],dgws});
+  });
+  if(!schedItems.length){
+    document.getElementById('scheduleGrid').innerHTML=`<div style="font-size:12px;color:var(--muted);padding:8px">No significant blank or double gameweeks detected in the next ${gwShow.length} GWs.</div>`;
+  }else{
+    document.getElementById('scheduleGrid').innerHTML=schedItems.map(s=>{
+      const isB=s.type==='bgw';
+      const teams=(isB?s.blanks:s.dgws);
+      const teamNames=teams.map(id=>{
+        const inSq=SQUAD_PLAYERS.find(p=>p.teamId===id);
+        return inSq?`<span class="in-squad" title="${inSq.name}">${TMAP[id]?.short??'?'}</span>`:TMAP[id]?.short??'?';
+      }).join(', ');
+      const chipRec=isB?'💡 Free Hit window':'💡 Bench Boost window';
+      const squadNote=SQUAD_PLAYERS.length?buildSquadScheduleNote(s,isB):'';
+      return`<div class="schedule-row ${s.type}">
+        <div class="schedule-gw">GW${s.gw}</div>
+        <div class="schedule-content">
+          <span class="schedule-type ${s.type}">${isB?`Blank GW · ${s.blanks.length} teams`:`Double GW · ${s.dgws.length} teams`}</span>
+          <div class="schedule-teams">${teamNames}</div>
+          <div class="schedule-chip-rec">${chipRec}</div>
+          ${squadNote?`<div class="schedule-squad-note">${squadNote}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  // ── INTERACTIVE TOOLS ─────────────────────────────────────────────────────────
+  if(document.getElementById('valGw'))populateGwDropdowns();
+  // Clear validator result if chip toggled to used
+  const valRes=document.getElementById('valResult');
+  const valChip=document.getElementById('valChip');
+  if(valRes&&valChip&&valChip.value){
+    const vc=valChip.value;
+    const chipUsed=(vc==='tc'&&PREFS.used.tc)||(vc==='bb'&&PREFS.used.bb)||(vc==='fh'&&PREFS.used.fh)||(vc==='wc'&&PREFS.used.wc1&&PREFS.used.wc2);
+    if(chipUsed)valRes.className='validator-result';
+  }
+  renderExecution();
+}
+
+function buildSquadScheduleNote(s,isBGW){
+  if(isBGW){
+    const blanking=SQUAD_PLAYERS.filter(p=>s.blanks.includes(p.teamId));
+    if(blanking.length)return`${blanking.length} of your players blank: ${blanking.map(p=>p.name).join(', ')} — strong Free Hit candidate.`;
+  }else{
+    const doubling=SQUAD_PLAYERS.filter(p=>s.dgws.includes(p.teamId));
+    if(doubling.length)return`${doubling.length} of your players have doubles: ${doubling.map(p=>p.name).join(', ')} — strong Bench Boost candidate.`;
+  }
+  return'';
+}
+
+function renderHeatmap(gwsToShow){
+  // Sort teams: squad teams first, then alphabetically
+  const allTeamIds=Object.keys(TMAP).map(Number).sort((a,b)=>{
+    const aInSq=SQUAD_PLAYERS.some(p=>p.teamId===a);
+    const bInSq=SQUAD_PLAYERS.some(p=>p.teamId===b);
+    if(aInSq&&!bInSq)return -1;
+    if(!aInSq&&bInSq)return 1;
+    return(TMAP[a]?.short??'').localeCompare(TMAP[b]?.short??'');
+  });
+  const search=(document.getElementById('heatmapSearch')?.value??'').toLowerCase();
+  const filtered=search?allTeamIds.filter(id=>(TMAP[id]?.short??'').toLowerCase().includes(search)||(TMAP[id]?.name??'').toLowerCase().includes(search)):allTeamIds;
+
+  let html=`<table class="heatmap-table"><thead><tr>
+    <th style="text-align:left">Team</th>
+    ${gwsToShow.map(gw=>{
+      const dgws=doubleTeams(gw).length;
+      const blanks=blankTeams(gw).length;
+      const note=dgws>=2?`<div style="color:var(--blue);font-size:7px">DGW</div>`:blanks>=4?`<div style="color:var(--accent);font-size:7px">BGW</div>`:'';
+      return`<th>GW${gw}${note}</th>`;
+    }).join('')}
+  </tr></thead><tbody>`;
+
+  filtered.forEach(tid=>{
+    const team=TMAP[tid]??{short:'?'};
+    const inSquad=SQUAD_PLAYERS.some(p=>p.teamId===tid);
+    const squadPlayerNames=SQUAD_PLAYERS.filter(p=>p.teamId===tid).map(p=>p.name).join(', ');
+    html+=`<tr>
+      <td>
+        <div class="team-label ${inSquad?'in-squad':''}" title="${team.name}${squadPlayerNames?' · '+squadPlayerNames:''}">${team.short}</div>
+        ${squadPlayerNames?`<div class="squad-indicator" title="${squadPlayerNames}">⭐ ${squadPlayerNames}</div>`:''}
+      </td>`;
+    gwsToShow.forEach(gw=>{
+      const fixes=ALL_FIXTURES.filter(f=>f.event===gw&&(f.team_h===tid||f.team_a===tid));
+      if(!fixes.length){
+        html+=`<td><div class="hm-cell hm-blank" title="No fixture GW${gw}">BGW</div></td>`;
+      }else if(fixes.length>=2){
+        const diffs=fixes.map(f=>getDiff(f,tid));
+        const avgD=(diffs.reduce((s,v)=>s+v,0)/diffs.length).toFixed(1);
+        const opps=fixes.map(f=>getOpp(f,tid));
+        html+=`<td><div class="hm-cell hm-dgw" title="DGW${gw}: ${opps.map(o=>o.short+' ('+o.ha+')').join(', ')} · avg diff ${avgD}">${opps.map(o=>o.short+'<span style="font-size:7px;opacity:0.75">'+o.ha+'</span>').join('<span style="opacity:0.4;margin:0 1px">·</span>')}</div></td>`;
+      }else{
+        const fix=fixes[0];
+        const diff=getDiff(fix,tid);
+        const opp=getOpp(fix,tid);
+        const cls=diff<=1?'hm-5':diff===2?'hm-4':diff===3?'hm-3':diff===4?'hm-2':'hm-1';
+        const squadCls=inSquad?' hm-squad':'';
+        html+=`<td><div class="hm-cell ${cls}${squadCls}" title="GW${gw}: ${opp.short} (${opp.ha}) · diff ${diff}/5${squadPlayerNames?' · '+squadPlayerNames:''}">${opp.short}<span style="font-size:7px;opacity:0.75;margin-left:1px">${opp.ha}</span></div></td>`;
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('heatmapWrap').innerHTML=html;
+}
+
+/* ── FALLBACK DATA ─────────────────────────────────────────────── */
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
+const FB_PLAYERS=[
+  {id:1,name:'Salah',teamId:12,pos:'MID',form:11.2,epNext:9.8,ownedPct:73.2,status:'a'},
+  {id:2,name:'Haaland',teamId:13,pos:'FWD',form:8.9,epNext:8.2,ownedPct:54.1,status:'a'},
+  {id:3,name:'Mbeumo',teamId:4,pos:'FWD',form:10.8,epNext:7.6,ownedPct:41.2,status:'a'},
+  {id:4,name:'Palmer',teamId:6,pos:'MID',form:7.4,epNext:7.1,ownedPct:49.8,status:'a'},
+  {id:5,name:'Isak',teamId:15,pos:'FWD',form:8.1,epNext:6.4,ownedPct:37.4,status:'a'},
+  {id:6,name:'Trossard',teamId:1,pos:'MID',form:6.4,epNext:5.8,ownedPct:22.1,status:'a'},
+  {id:7,name:'Watkins',teamId:2,pos:'FWD',form:5.9,epNext:5.4,ownedPct:31.6,status:'a'},
+  {id:8,name:'Neto',teamId:6,pos:'MID',form:7.8,epNext:5.2,ownedPct:6.4,status:'a'},
+  {id:9,name:'Trent A-A',teamId:12,pos:'DEF',form:7.1,epNext:6.2,ownedPct:28.6,status:'a'},
+  {id:10,name:'Trippier',teamId:15,pos:'DEF',form:3.2,epNext:4.1,ownedPct:18.4,status:'d'},
+  {id:11,name:'Raya',teamId:1,pos:'GK',form:5.8,epNext:5.2,ownedPct:26.1,status:'a'},
+  {id:12,name:'Flekken',teamId:4,pos:'GK',form:5.4,epNext:4.8,ownedPct:12.4,status:'a'},
+  {id:13,name:'Timber',teamId:1,pos:'DEF',form:5.6,epNext:4.8,ownedPct:21.8,status:'a'},
+  {id:14,name:'Wood',teamId:16,pos:'FWD',form:6.2,epNext:5.6,ownedPct:7.2,status:'a'},
+  {id:15,name:'Solanke',teamId:18,pos:'FWD',form:4.2,epNext:4.8,ownedPct:12.3,status:'a'},
+];
+const FB_EVENTS=[
+  {id:34,is_current:true,is_next:false,finished:false},{id:35,is_current:false,is_next:true,finished:false},
+  {id:36,is_current:false,is_next:false,finished:false},{id:37,is_current:false,is_next:false,finished:false},
+  {id:38,is_current:false,is_next:false,finished:false},
+];
+const FB_FIXTURES=[
+  {event:34,team_h:12,team_a:3,team_h_difficulty:1,team_a_difficulty:4,finished:false},
+  {event:34,team_h:13,team_a:11,team_h_difficulty:1,team_a_difficulty:4,finished:false},
+  {event:34,team_h:4,team_a:17,team_h_difficulty:1,team_a_difficulty:5,finished:false},
+  {event:34,team_h:6,team_a:16,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:34,team_h:5,team_a:1,team_h_difficulty:3,team_a_difficulty:3,finished:false},
+  {event:34,team_h:8,team_a:10,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:34,team_h:9,team_a:18,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:34,team_h:15,team_a:2,team_h_difficulty:3,team_a_difficulty:2,finished:false},
+  {event:35,team_h:1,team_a:13,team_h_difficulty:4,team_a_difficulty:2,finished:false},
+  {event:35,team_h:12,team_a:18,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:35,team_h:4,team_a:16,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:35,team_h:6,team_a:19,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:35,team_h:10,team_a:17,team_h_difficulty:1,team_a_difficulty:5,finished:false},
+  {event:36,team_h:12,team_a:13,team_h_difficulty:3,team_a_difficulty:3,finished:false},
+  {event:36,team_h:4,team_a:14,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:36,team_h:1,team_a:5,team_h_difficulty:3,team_a_difficulty:3,finished:false},
+  {event:36,team_h:8,team_a:16,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:37,team_h:4,team_a:7,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:37,team_h:4,team_a:17,team_h_difficulty:1,team_a_difficulty:5,finished:false},
+  {event:37,team_h:12,team_a:15,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:37,team_h:6,team_a:3,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:37,team_h:9,team_a:18,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:37,team_h:10,team_a:20,team_h_difficulty:1,team_a_difficulty:4,finished:false},
+  {event:38,team_h:1,team_a:6,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:38,team_h:12,team_a:4,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:38,team_h:13,team_a:10,team_h_difficulty:1,team_a_difficulty:4,finished:false},
+  {event:38,team_h:2,team_a:5,team_h_difficulty:3,team_a_difficulty:3,finished:false},
+  {event:38,team_h:3,team_a:9,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+  {event:38,team_h:7,team_a:8,team_h_difficulty:2,team_a_difficulty:3,finished:false},
+];
+
+/* ── SHARED HELPERS ──────────────────────────────────────────── */
+const SHIRT_EXEC={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
+
+function scoreGwForChip(chip,gw){
+  const dgws=doubleTeams(gw);
+  const blanks=blankTeams(gw);
+  const matchTeams=gwMatchCount(gw);
+  const avgD=gwAvgDiff(gw);
+  if(chip==='tc'){
+    // Best single captain score in this GW
+    const pool=SQUAD_PLAYERS.length
+      ?SQUAD_PLAYERS.filter(p=>p.pos!=='GK'&&p.status!=='i')
+      :ALL.filter(p=>p.pos!=='GK'&&p.status!=='i').slice(0,30);
+    let best=null,bestScore=-1;
+    pool.forEach(p=>{
+      const fixes=getFixtures(p.teamId,gw);
+      if(!fixes.length)return;
+      const diff=getDiff(fixes[0],p.teamId);
+      const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*(p.status==='d'?0.5:1);
+      if(score>bestScore){bestScore=score;best=p;}
+    });
+    return{score:bestScore,player:best,dgws,blanks,matchTeams,avgD};
+  }
+  if(chip==='bb'){
+    let squadScore=0;
+    if(SQUAD_PLAYERS.length){
+      const bench=SQUAD_PLAYERS.slice(11,15);
+      bench.forEach(p=>{
+        const fixes=getFixtures(p.teamId,gw);
+        const diff=fixes.length?getDiff(fixes[0],p.teamId):3;
+        squadScore+=(p.epNext>0?p.epNext:p.form)*(6-diff)/5*(fixes.length?1:0);
+      });
+    }
+    const score=matchTeams*0.5+dgws.length*4+squadScore-blanks.length*0.5;
+    return{score,dgws,blanks,matchTeams,avgD,squadScore};
+  }
+  if(chip==='fh'){
+    const squadBlanks=SQUAD_PLAYERS.filter(p=>blanks.includes(p.teamId));
+    const score=blanks.length*2+squadBlanks.length*3;
+    return{score,dgws,blanks,matchTeams,avgD,squadBlanks};
+  }
+  if(chip==='wc'){
+    // Lower avgD = easier = worse time to WC; higher avgD = harder = better time
+    const score=avgD??3;
+    return{score,dgws,blanks,matchTeams,avgD};
+  }
+  return{score:0,dgws:[],blanks:[],matchTeams:0,avgD:3};
+}
+
+function gwSummaryHtml(chip,gw,data){
+  const pills=[];
+  if(data.dgws?.length>=2)pills.push(`<span style="font-size:10px;font-family:var(--font-m);padding:1px 6px;border-radius:4px;background:rgba(99,179,237,0.12);color:var(--blue)">DGW · ${data.dgws.length} teams</span>`);
+  if(data.blanks?.length>=4)pills.push(`<span style="font-size:10px;font-family:var(--font-m);padding:1px 6px;border-radius:4px;background:rgba(230,57,70,0.1);color:var(--accent)">BGW · ${data.blanks.length} teams blank</span>`);
+  if(data.avgD)pills.push(`<span style="font-size:10px;font-family:var(--font-m);color:var(--muted)">avg diff ${data.avgD.toFixed(1)}</span>`);
+  if(chip==='tc'&&data.player)pills.push(`<span style="font-size:10px;font-family:var(--font-m);color:var(--grass-l)">Best TC: ${data.player.name} (${data.player.epNext>0?data.player.epNext.toFixed(1)+'pts':data.player.form.toFixed(1)+' form'})</span>`);
+  if(chip==='bb')pills.push(`<span style="font-size:10px;font-family:var(--font-m);color:var(--muted)">${data.matchTeams} teams playing</span>`);
+  if(chip==='fh'&&data.squadBlanks?.length)pills.push(`<span style="font-size:10px;font-family:var(--font-m);color:var(--gold)">${data.squadBlanks.length} your players blank</span>`);
+  return pills.join(' · ');
+}
+
+/* ── FEATURE 1: VALIDATOR ────────────────────────────────────── */
+function runValidator(){
+  const chip=document.getElementById('valChip').value;
+  const gw=+document.getElementById('valGw').value;
+  const res=document.getElementById('valResult');
+  if(!chip||!gw){res.className='validator-result';return;}
+
+  // Guard: if chip already used, bail early
+  if((chip==='tc'&&PREFS.used.tc)||(chip==='bb'&&PREFS.used.bb)||(chip==='fh'&&PREFS.used.fh)||(chip==='wc'&&PREFS.used.wc1&&PREFS.used.wc2)){
+    res.className='validator-result warn visible';
+    res.innerHTML=`<div class="vr-verdict warn">Already used</div><div>You've marked this chip as already played this season.</div>`;
+    return;
+  }
+  const data=scoreGwForChip(chip,gw);
+  const remaining=EVENTS.filter(e=>e.id>=GW&&!e.finished).map(e=>e.id);
+  const gwsToShow=remaining.slice(0,10);
+  // Find the recommended GW for this chip
+  const recMap={tc:analyseTC,bb:analyseBB,fh:analyseFH,wc:analyseWC};
+  const recFn=recMap[chip];
+  const rec=recFn?recFn(gwsToShow):null;
+  const recGw=rec?.gw;
+
+  const names={tc:'Triple Captain',bb:'Bench Boost',fh:'Free Hit',wc:'Wildcard'};
+  const chipName=names[chip];
+
+  let verdict,cls,body;
+  if(chip==='tc'){
+    const recData=recGw?scoreGwForChip('tc',recGw):{score:0};
+    const diff=data.score-recData.score;
+    if(recGw===gw||diff>=-1){verdict='Good window';cls='good';body=`GW${gw} is a solid window for your <strong>${chipName}</strong>. ${data.player?`<strong>${data.player.name}</strong> looks your best captain option here.`:''} ${data.dgws.length>=2?`<strong>${data.dgws.length} teams have doubles</strong> — good for multiplied returns.`:''} ${gwSummaryHtml(chip,gw,data)}`;}
+    else if(diff>=-3){verdict='Marginal';cls='warn';body=`GW${gw} works but isn't the optimal window. Our model suggests <strong>GW${recGw}</strong> offers a stronger TC opportunity${recData.player?' with <strong>'+recData.player.name+'</strong> as the captain pick':''}. The difference is small — if you have a reason to play it now, it's defensible.`;}
+    else{verdict='Better options ahead';cls='bad';body=`GW${gw} isn't the best time for <strong>${chipName}</strong>. Our analysis points to <strong>GW${recGw}</strong> as a significantly stronger window. Playing it now means missing a better opportunity later.`;}
+  }else if(chip==='bb'){
+    if(data.dgws.length>=4){verdict='Excellent window';cls='good';body=`GW${gw} has <strong>${data.dgws.length} teams with double fixtures</strong> — one of the best possible Bench Boost gameweeks. Your bench points could be massive here. ${gwSummaryHtml(chip,gw,data)}`;}
+    else if(data.dgws.length>=2||data.matchTeams>=16){verdict='Good window';cls='good';body=`GW${gw} is a reasonable Bench Boost window — ${data.dgws.length>=2?`<strong>${data.dgws.length} double-fixture teams</strong>`:`<strong>${data.matchTeams} teams playing</strong>`}. ${recGw&&recGw!==gw?`Our model prefers <strong>GW${recGw}</strong> slightly, but this is a valid choice.`:''} ${gwSummaryHtml(chip,gw,data)}`;}
+    else if(recGw&&recGw!==gw){verdict='Wait if possible';cls='warn';body=`GW${gw} is an average Bench Boost window. Only <strong>${data.dgws.length} double-fixture teams</strong> — your bench won't get much uplift. <strong>GW${recGw}</strong> looks significantly better. If you can wait, you should.`;}
+    else{verdict='Not ideal';cls='bad';body=`GW${gw} is a weak Bench Boost window — ${data.blanks.length>=4?`<strong>${data.blanks.length} teams blank</strong>, reducing your bench coverage`:`just ${data.matchTeams} teams playing with no significant doubles`}. Hold for a better moment.`;}
+  }else if(chip==='fh'){
+    if(data.blanks.length>=8){verdict='Perfect window';cls='good';body=`GW${gw} has <strong>${data.blanks.length} teams without a fixture</strong> — this is exactly what Free Hit is designed for. ${data.squadBlanks?.length?`<strong>${data.squadBlanks.length} of your players would blank</strong> — the Free Hit lets you replace them all temporarily.`:''} Play it.`;}
+    else if(data.blanks.length>=5){verdict='Good window';cls='good';body=`GW${gw} has <strong>${data.blanks.length} blanking teams</strong>${data.squadBlanks?.length?' and <strong>'+data.squadBlanks.length+' of your players would blank</strong>':''}. A solid Free Hit opportunity. ${gwSummaryHtml(chip,gw,data)}`;}
+    else if(data.blanks.length>=3){verdict='Marginal';cls='warn';body=`Only <strong>${data.blanks.length} teams blank in GW${gw}</strong>. Free Hit is most powerful when 8+ teams blank. ${recGw&&recGw!==gw?`<strong>GW${recGw}</strong> looks like a bigger blank — worth waiting if you can.`:'Hold for a larger blank if one is coming.'}`;}
+    else{verdict='Not worth it';cls='bad';body=`GW${gw} isn't a blank gameweek — only <strong>${data.blanks.length} teams</strong> are without a fixture. The Free Hit is wasted here. Wait for a proper blank.`;}
+  }else if(chip==='wc'){
+    const avgD=data.avgD??3;
+    if(SQUAD_PLAYERS.length){
+      const squadAvgD=SQUAD_PLAYERS.filter(p=>p.pos!=='GK').reduce((s,p)=>{const f=getFixtures(p.teamId,gw);return f.length?s+getDiff(f[0],p.teamId):s+3;},0)/Math.max(SQUAD_PLAYERS.filter(p=>p.pos!=='GK').length,1);
+      if(squadAvgD>=3.8){verdict='Strong Wildcard window';cls='good';body=`Your squad faces an average difficulty of <strong>${squadAvgD.toFixed(1)}/5</strong> in GW${gw} — one of its tougher runs. Wildcarding now lets you bring in players with much better fixtures immediately. ${recGw&&recGw!==gw?`Our model also flags <strong>GW${recGw}</strong> — both are valid.`:''}`;}
+      else if(squadAvgD>=3.3){verdict='Reasonable timing';cls='warn';body=`Your squad's average fixture difficulty in GW${gw} is <strong>${squadAvgD.toFixed(1)}/5</strong> — moderately tough. Wildcarding works but isn't urgent. ${recGw&&recGw!==gw?`Consider waiting until <strong>GW${recGw}</strong> when fixtures get harder.`:'If you have significant squad issues beyond fixtures, now is fine.'}`;}
+      else{verdict='Probably too early';cls='bad';body=`Your squad has average fixture difficulty <strong>${squadAvgD.toFixed(1)}/5</strong> in GW${gw} — relatively easy. The Wildcard is most impactful when your fixtures are at their worst. ${recGw?`Hold until around <strong>GW${recGw}</strong>.`:'Consider waiting for a tougher fixture run.'}`;}
+    }else{
+      if(avgD>=3.5){verdict='Good time league-wide';cls='good';body=`GW${gw} sees average fixture difficulty of <strong>${avgD.toFixed(1)}/5</strong> — fixtures are broadly tough. Load your squad for a personalised Wildcard recommendation.`;}
+      else{verdict='Average timing';cls='warn';body=`GW${gw} has average difficulty <strong>${avgD.toFixed(1)}/5</strong>. Load your Team ID above for a squad-specific Wildcard analysis.`;}
+    }
+  }
+
+  if(!verdict||!body){res.className='validator-result warn visible';res.innerHTML='<div class="vr-verdict warn">Select a chip and gameweek to analyse.</div>';return;}
+  res.className=`validator-result ${cls} visible`;
+  res.innerHTML=`<div class="vr-verdict ${cls}">${verdict}</div><div>${body}</div>`;
+}
+
+/* ── FEATURE 2: COMPARISON ───────────────────────────────────── */
+function runComparison(){
+  const chip=document.getElementById('cmpChip').value;
+  const gw1=+document.getElementById('cmpGw1').value;
+  const gw2=+document.getElementById('cmpGw2').value;
+  const res=document.getElementById('cmpResult');
+  if(!chip||!gw1||!gw2){res.innerHTML='';return;}
+  if(gw1===gw2){res.innerHTML='<div style="font-size:12px;color:var(--muted);padding:10px 0">Select two different gameweeks to compare.</div>';return;}
+
+  const d1=scoreGwForChip(chip,gw1);
+  const d2=scoreGwForChip(chip,gw2);
+  const scoreDiff=Math.abs(d1.score-d2.score);
+  const tied=scoreDiff<0.5;
+  const winner=d1.score>=d2.score?1:2;
+  const names={tc:'Triple Captain',bb:'Bench Boost',fh:'Free Hit',wc:'Wildcard'};
+
+  function cardHtml(gw,data,isWinner){
+    const rows=[];
+    if(chip==='tc'){
+      rows.push(['Best captain',data.player?data.player.name:'—']);
+      rows.push(['Proj pts',data.player?(data.player.epNext>0?data.player.epNext.toFixed(1)+'pts':data.player.form.toFixed(1)+' form'):'—']);
+      rows.push(['DGW teams',data.dgws.length||'None']);
+    }else if(chip==='bb'){
+      rows.push(['Teams playing',data.matchTeams]);
+      rows.push(['DGW teams',data.dgws.length||'None']);
+      rows.push(['Blanking teams',data.blanks.length||'None']);
+      if(SQUAD_PLAYERS.length)rows.push(['Your bench pts est.',data.squadScore>0?data.squadScore.toFixed(1):'—']);
+    }else if(chip==='fh'){
+      rows.push(['Teams blanking',data.blanks.length||'None']);
+      rows.push(['DGW teams',data.dgws.length||'None']);
+      if(SQUAD_PLAYERS.length)rows.push(['Your blanking players',data.squadBlanks?.length||'None']);
+    }else if(chip==='wc'){
+      rows.push(['Avg fixture diff',data.avgD?.toFixed(1)??'—']);
+      rows.push(['DGW teams',data.dgws.length||'None']);
+      rows.push(['Blanking teams',data.blanks.length||'None']);
+    }
+    return`<div class="compare-chip-card ${isWinner?'winner':'loser'}">
+      <div class="compare-gw-label">${isWinner?'Recommended':''}</div>
+      <div class="compare-gw-val" style="color:${isWinner?'var(--grass-l)':'var(--muted)'}">GW${gw}</div>
+      ${rows.map(([l,v])=>`<div class="compare-stat"><span class="compare-stat-label">${l}</span><span class="compare-stat-val">${v}</span></div>`).join('')}
+      ${isWinner?(tied?`<div class="compare-winner-badge" style="background:rgba(240,180,41,0.12);color:var(--gold)">Very similar</div>`:`<div class="compare-winner-badge">Better window</div>`):''}
+    </div>`;
+  }
+
+  res.innerHTML=`<div class="compare-chips">
+    ${cardHtml(gw1,d1,winner===1)}
+    ${cardHtml(gw2,d2,winner===2)}
+  </div>`;
+}
+
+/* ── GW DROPDOWN POPULATION ──────────────────────────────────── */
+function populateGwDropdowns(){
+  const gws=EVENTS.filter(e=>e.id>=GW&&!e.finished).map(e=>e.id).slice(0,12);
+  ['valGw','cmpGw1','cmpGw2'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel)return;
+    const cur=sel.value;
+    while(sel.options.length>1)sel.remove(1);
+    gws.forEach(g=>{const o=new Option(`GW${g}`,g);sel.add(o);});
+    if(cur&&gws.includes(+cur))sel.value=cur;
+  });
+}
+
+/* ── FEATURE 3: EXECUTION MODE ───────────────────────────────── */
+function renderExecution(){
+  const available=[];
+  if(!PREFS.used.tc)available.push({key:'tc',label:'⚡ Triple Captain'});
+  if(!PREFS.used.bb)available.push({key:'bb',label:'🔋 Bench Boost'});
+  if(!PREFS.used.fh)available.push({key:'fh',label:'🎯 Free Hit'});
+  if(!PREFS.used.wc1||!PREFS.used.wc2)available.push({key:'wc',label:'🃏 Wildcard'});
+
+  const sec=document.getElementById('execSection');
+  if(!available.length){sec.classList.remove('visible');return;}
+  sec.classList.add('visible');
+
+  const tabs=document.getElementById('execTabs');
+  const content=document.getElementById('execContent');
+  const activeKey=tabs.querySelector('.exec-tab.active')?.dataset.chip||available[0].key;
+
+  tabs.innerHTML=available.map(({key,label})=>
+    `<button class="exec-tab${key===activeKey?' active':''}" data-chip="${key}">${label}</button>`
+  ).join('');
+
+  tabs.querySelectorAll('.exec-tab').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      tabs.querySelectorAll('.exec-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      showExecContent(btn.dataset.chip);
+    });
+  });
+
+  showExecContent(activeKey);
+}
+
+function showExecContent(chip){
+  const content=document.getElementById('execContent');
+  const sub=document.getElementById('execSubtitle');
+  const remaining=EVENTS.filter(e=>e.id>=GW&&!e.finished).map(e=>e.id).slice(0,8);
+  const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
+
+  function fixPills(teamId,gws){
+    return gws.slice(0,4).map(gw=>{
+      const fixes=getFixtures(teamId,gw);
+      if(!fixes.length)return`<span class="exec-pill" style="background:rgba(230,57,70,0.06);border-color:rgba(230,57,70,0.12);color:rgba(230,57,70,0.5)">BGW</span>`;
+      const diff=getDiff(fixes[0],teamId);
+      const opp=getOpp(fixes[0],teamId);
+      return`<span class="exec-pill ${FIX_CLS[diff]??'fix-d3'}" title="GW${gw}: ${opp.short} (${opp.ha})">${opp.short}</span>`;
+    }).join('');
+  }
+
+  if(chip==='tc'){
+    sub.textContent="You're playing Triple Captain — here are your best options ranked by projected GW points × fixture difficulty.";
+    const pool=(SQUAD_PLAYERS.length?SQUAD_PLAYERS:ALL.slice(0,50))
+      .filter(p=>p.pos!=='GK'&&p.status!=='i')
+      .map(p=>{
+        const fixes=getFixtures(p.teamId,GW);
+        const diff=fixes.length?getDiff(fixes[0],p.teamId):3;
+        const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*(p.status==='d'?0.5:1);
+        return{...p,score,diff,opp:fixes.length?getOpp(fixes[0],p.teamId):null};
+      })
+      .sort((a,b)=>b.score-a.score).slice(0,5);
+
+    if(!pool.length){content.innerHTML=`<div class="exec-empty">Load your squad above to see personalised captain picks.</div>`;return;}
+    content.innerHTML=`<div class="exec-player-list">${pool.map((p,i)=>`
+      <div class="exec-player-row">
+        <div class="exec-rank" style="color:${i===0?'var(--gold)':'var(--muted)'}">${i+1}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="exec-name">${p.name}${p.status==='d'?' <span style="color:var(--gold);font-size:10px">⚠</span>':''}</div>
+          <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${p.opp?' vs '+p.opp.short+' ('+p.opp.ha+') · diff '+p.diff+'/5':''}</div>
+          <div class="exec-fix-pills">${fixPills(p.teamId,remaining)}</div>
+        </div>
+        <div class="exec-pts">${p.epNext>0?p.epNext.toFixed(1):p.form.toFixed(1)}</div>
+      </div>`).join('')}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Scores based on projected points × fixture difficulty. ${SQUAD_PLAYERS.length?'Showing your squad only.':'Load your squad for personalised picks.'}</div>`;
+
+  }else if(chip==='bb'){
+    sub.textContent="You're playing Bench Boost — these are your bench players' fixtures for the upcoming GWs. Ideally play it when they have easy games or doubles.";
+    if(!SQUAD_PLAYERS.length){content.innerHTML=`<div class="exec-empty">Load your squad above to see your bench players and their fixtures.</div>`;return;}
+    const bench=SQUAD_PLAYERS.slice(11,15);
+    if(!bench.length){content.innerHTML=`<div class="exec-empty">No bench players found — your squad may not have loaded correctly.</div>`;return;}
+    content.innerHTML=`<div class="exec-player-list">${bench.map((p,i)=>{
+      const fixes=getFixtures(p.teamId,GW);
+      const diff=fixes.length?getDiff(fixes[0],p.teamId):3;
+      const opp=fixes.length?getOpp(fixes[0],p.teamId):null;
+      const dgwTeams=doubleTeams(GW);
+      const hasDGW=dgwTeams.includes(p.teamId);
+      return`<div class="exec-player-row">
+        <div class="exec-rank" style="color:var(--muted)">${i+12}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="exec-name">${p.name}${hasDGW?` <span style="font-size:9px;font-family:var(--font-m);padding:1px 5px;border-radius:3px;background:rgba(99,179,237,0.12);color:var(--blue)">DGW</span>`:''}</div>
+          <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${opp?' · vs '+opp.short+' ('+opp.ha+')':' · No fixture'}</div>
+          <div class="exec-fix-pills">${fixPills(p.teamId,remaining)}</div>
+        </div>
+        <div class="exec-pts" style="color:${diff<=2?'var(--grass-l)':diff>=4?'var(--accent)':'var(--cream)'}">${p.epNext>0?p.epNext.toFixed(1):p.form.toFixed(1)}</div>
+      </div>`;
+    }).join('')}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px">${SQUAD_PLAYERS.length?'Your bench positions 12–15.':'Load your squad to see your actual bench.'} Best time to play BB is when bench players have easy fixtures or doubles.</div>`;
+
+  }else if(chip==='fh'){
+    sub.textContent="You're playing Free Hit — your squad resets after this GW. Here are the best available players to bring in for this gameweek only.";
+    const gwBlanks=blankTeams(GW);
+    const pool=ALL.filter(p=>!gwBlanks.includes(p.teamId)&&p.status!=='i'&&p.status!=='u')
+      .map(p=>{
+        const fixes=getFixtures(p.teamId,GW);
+        const diff=fixes.length?getDiff(fixes[0],p.teamId):3;
+        const score=(p.epNext>0?p.epNext:p.form)*(6-diff);
+        return{...p,score,diff,opp:fixes.length?getOpp(fixes[0],p.teamId):null};
+      })
+      .sort((a,b)=>b.score-a.score);
+
+    const byPos={FWD:pool.filter(p=>p.pos==='FWD').slice(0,3),MID:pool.filter(p=>p.pos==='MID').slice(0,4),DEF:pool.filter(p=>p.pos==='DEF').slice(0,3),GK:pool.filter(p=>p.pos==='GK').slice(0,1)};
+    const top=[...byPos.FWD,...byPos.MID,...byPos.DEF,...byPos.GK].slice(0,8);
+
+    if(!top.length){content.innerHTML=`<div class="exec-empty">No fixture data available — deploy to Vercel for live picks.</div>`;return;}
+    content.innerHTML=`<div class="exec-player-list">${top.map((p,i)=>`
+      <div class="exec-player-row">
+        <div class="exec-rank" style="color:${i<3?'var(--grass-l)':'var(--muted)'}">${i+1}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="exec-name">${p.name}</div>
+          <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${p.opp?' · vs '+p.opp.short+' ('+p.opp.ha+') · diff '+p.diff+'/5':''}</div>
+        </div>
+        <div class="exec-pts">${p.epNext>0?p.epNext.toFixed(1):p.form.toFixed(1)}</div>
+      </div>`).join('')}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Top picks by projected pts × fixture difficulty for GW${GW} only. Use the Player Scout for deeper analysis before finalising.</div>`;
+
+  }else if(chip==='wc'){
+    sub.textContent="You're planning a Wildcard — here are your squad's hardest fixtures coming up, and the best available replacements.";
+    if(!SQUAD_PLAYERS.length){
+      content.innerHTML=`<div class="exec-empty">Load your squad above to see which players to replace and who to bring in.</div>`;return;
+    }
+    const hardPlayers=SQUAD_PLAYERS.filter(p=>p.pos!=='GK').map(p=>{
+      let totalDiff=0,count=0;
+      [GW,GW+1,GW+2].forEach(g=>{const f=getFixtures(p.teamId,g);if(f.length){totalDiff+=getDiff(f[0],p.teamId);count++;}});
+      const avg=count?totalDiff/count:3;
+      return{...p,avg3Diff:avg};
+    }).filter(p=>p.avg3Diff>=3.5).sort((a,b)=>b.avg3Diff-a.avg3Diff).slice(0,5);
+
+    const replacements=ALL.filter(p=>p.pos!=='GK'&&p.status!=='i'&&!SQUAD_IDS.has(p.id))
+      .map(p=>{
+        const fixes=getFixtures(p.teamId,GW);
+        const diff=fixes.length?getDiff(fixes[0],p.teamId):3;
+        const score=(p.epNext>0?p.epNext:p.form)*(6-diff);
+        return{...p,score,diff};
+      }).sort((a,b)=>b.score-a.score).slice(0,5);
+
+    content.innerHTML=`
+      <div style="font-family:var(--font-m);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Players to consider replacing (hard 3-GW run)</div>
+      ${hardPlayers.length?`<div class="exec-player-list" style="margin-bottom:16px">${hardPlayers.map(p=>`
+        <div class="exec-player-row" style="border-color:rgba(230,57,70,0.15)">
+          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="exec-name">${p.name}</div>
+            <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}</div>
+            <div class="exec-fix-pills">${fixPills(p.teamId,[GW,GW+1,GW+2])}</div>
+          </div>
+          <div style="font-family:var(--font-m);font-size:11px;color:var(--accent);text-align:right">avg ${p.avg3Diff.toFixed(1)}/5</div>
+        </div>`).join('')}</div>`:'<div class="exec-empty" style="margin-bottom:16px">No players with particularly tough upcoming fixtures found.</div>'}
+      <div style="font-family:var(--font-m);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Top transfer targets (not in your squad)</div>
+      ${replacements.length?`<div class="exec-player-list">${replacements.map((p,i)=>`
+        <div class="exec-player-row" style="border-color:rgba(39,174,96,0.15)">
+          <div class="exec-rank" style="color:${i===0?'var(--grass-l)':'var(--muted)'}">${i+1}</div>
+          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="exec-name">${p.name}</div>
+            <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'} · diff ${p.diff}/5</div>
+            <div class="exec-fix-pills">${fixPills(p.teamId,remaining)}</div>
+          </div>
+          <div class="exec-pts">${p.epNext>0?p.epNext.toFixed(1):p.form.toFixed(1)}</div>
+        </div>`).join('')}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">Use the Player Scout tool for deeper transfer-in analysis before finalising your Wildcard.</div>`
+      :'<div class="exec-empty">No replacements found — check fixture data is loaded.</div>'}`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  // Populate player pool with fallback data — squad starts empty until team ID entered
+  ALL=FB_PLAYERS;TMAP=FB_TEAMS;EVENTS=FB_EVENTS;ALL_FIXTURES=FB_FIXTURES;
+  SQUAD_IDS=new Set();
+  SQUAD_PLAYERS=[];
+  render();
+  loadData(); // async — upgrades to live FPL data when API is reachable
+
+  document.getElementById('loadSquadBtn').addEventListener('click',loadSquad);
+  document.getElementById('clearSquadBtn').addEventListener('click',clearSquad);
+  document.getElementById('teamIdInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();loadSquad();}
+  });
+  // Restore saved squad ID from previous visit
+  const savedId=lsGet('squadId','');
+  if(savedId){
+    document.getElementById('teamIdInput').value=savedId;
+    const savedIds=lsGet('squadIds',[]);
+    if(savedIds.length>0){
+      SQUAD_IDS=new Set(savedIds);
+      SQUAD_PLAYERS=ALL.filter(p=>SQUAD_IDS.has(p.id));
+      setSquadTag('loaded',`✓ ${SQUAD_PLAYERS.length} players loaded`);
+      document.getElementById('clearSquadBtn').style.display='inline-block';
+      document.getElementById('squadHint').style.display='none';
+    }
+  }
+  document.getElementById('heatmapSearch').addEventListener('input',()=>{
+    const remaining=EVENTS.filter(e=>e.id>=GW&&!e.finished).map(e=>e.id).slice(0,10);
+    renderHeatmap(remaining);
+  });
+
+  populateGwDropdowns();
+
+  // ── Validator ─────────────────────────────────────────────────────────────────
+  document.getElementById('valBtn').addEventListener('click',runValidator);
+  document.getElementById('valChip').addEventListener('change',()=>document.getElementById('valResult').className='validator-result');
+  document.getElementById('valGw').addEventListener('change',()=>document.getElementById('valResult').className='validator-result');
+
+  // ── Comparison ────────────────────────────────────────────────────────────────
+  document.getElementById('cmpBtn').addEventListener('click',runComparison);
+  document.getElementById('cmpChip').addEventListener('change',()=>document.getElementById('cmpResult').innerHTML='');
+
+  // ── Execution mode ────────────────────────────────────────────────────────────
+  renderExecution();
+
+  // ── CHIP USED TOGGLES ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.chip-used-btn').forEach(btn=>{
+    const chip=btn.dataset.chip;
+    // Restore saved state
+    if(PREFS.used[chip]){btn.classList.remove('available');btn.classList.add('used');}
+    btn.addEventListener('click',()=>{
+      PREFS.used[chip]=!PREFS.used[chip];
+      lsSet('used',PREFS.used);
+      btn.classList.toggle('used',PREFS.used[chip]);
+      btn.classList.toggle('available',!PREFS.used[chip]);
+      render();
+    });
+  });
+
+  // ── RISK APPETITE ─────────────────────────────────────────────────────────────
+  const riskDescs={
+    aggressive:'Aggressive — takes any reasonable chip opportunity, lower bar for FH/BB.',
+    balanced:  'Balanced — standard thresholds, sensible timing.',
+    conservative:'Conservative — waits for large DGWs, big blanks, and hard fixture crises only.',
+  };
+  document.querySelectorAll('[data-risk]').forEach(btn=>{
+    if(btn.dataset.risk===PREFS.risk)btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click',()=>{
+      PREFS.risk=btn.dataset.risk;
+      lsSet('risk',PREFS.risk);
+      document.querySelectorAll('[data-risk]').forEach(b=>b.classList.toggle('active',b.dataset.risk===PREFS.risk));
+      document.getElementById('riskDesc').textContent=riskDescs[PREFS.risk];
+      render();
+    });
+  });
+  document.getElementById('riskDesc').textContent=riskDescs[PREFS.risk];
+
+  // ── SEASON GOAL ───────────────────────────────────────────────────────────────
+  const goalDescs={
+    chasing:    'Chasing rank — aggressive chip use, swing for points, higher Wildcard urgency.',
+    holding:    'Holding position — balanced chip timing, protect current rank.',
+    minileague: 'Mini-league focus — only chip when it clearly helps your specific situation.',
+  };
+  document.querySelectorAll('[data-goal]').forEach(btn=>{
+    if(btn.dataset.goal===PREFS.goal)btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click',()=>{
+      PREFS.goal=btn.dataset.goal;
+      lsSet('goal',PREFS.goal);
+      document.querySelectorAll('[data-goal]').forEach(b=>b.classList.toggle('active',b.dataset.goal===PREFS.goal));
+      document.getElementById('goalDesc').textContent=goalDescs[PREFS.goal];
+      render();
+    });
+  });
+  document.getElementById('goalDesc').textContent=goalDescs[PREFS.goal];
+});
+</script>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+        </div>
+      </a>
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+      <a href="hit-calculator.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🎯</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Hit Calculator</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Is a -4 hit worth taking?</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

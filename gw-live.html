@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Live FPL gameweek scores and player stats as matches happen. Track real-time points, bonus points and upcoming price changes for every player.">
+  <meta name="keywords" content="FPL live scores, FPL gameweek live, FPL price changes, Fantasy Premier League live points">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/gw-live.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/gw-live.html">
+  <meta property="og:title" content="FPL Gameweek Live Scores & Price Changes | PitchIQ">
+  <meta property="og:description" content="Live FPL gameweek scores and player stats as matches happen. Track real-time points, bonus points and upcoming price changes for every player.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL Gameweek Live Scores & Price Changes | PitchIQ">
+  <meta name="twitter:description" content="Live FPL gameweek scores and player stats as matches happen. Track real-time points, bonus points and upcoming price changes for every player.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — GW Live & Price Changes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--purple:#a78bfa;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:1060px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px}.logo span{color:var(--grass)}
+.header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:blink 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* TAB BAR */
+.tab-bar{display:flex;gap:4px;margin-bottom:20px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:4px}
+.tab-btn{flex:1;padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.tab-btn:hover{color:var(--cream)}
+.tab-btn.active{background:var(--ink-3);color:var(--cream)}
+.tab-btn.active.live-tab{color:var(--grass-l)}
+.tab-btn.active.price-tab{color:var(--gold)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* IMPORT BAR */
+.import-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;margin-bottom:16px;background:var(--ink-2);border:1px solid var(--border);border-radius:11px;flex-wrap:wrap}
+.import-label{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-weight:500}
+.import-input{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:7px 11px;border-radius:7px;font-family:var(--font-m);font-size:12px;outline:none;width:140px;transition:border-color 0.2s}
+.import-input:focus{border-color:rgba(39,174,96,0.4)}
+.import-input::placeholder{color:var(--muted)}
+.import-btn{padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--grass);color:var(--ink);transition:background 0.15s;font-family:var(--font-b)}
+.import-btn:hover{background:var(--grass-l)}
+.import-btn:disabled{opacity:0.5;cursor:not-allowed}
+.import-status{font-size:11px;font-family:var(--font-m)}
+.import-status.ok{color:var(--grass-l)}.import-status.loading{color:var(--gold)}.import-status.err{color:var(--accent)}
+.import-hint{font-size:10px;color:var(--muted);flex:1}
+
+/* LIVE STATUS BAR */
+.live-status-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;margin-bottom:16px;border-radius:10px;font-size:12px;flex-wrap:wrap}
+.live-status-bar.active{background:rgba(39,174,96,0.07);border:1px solid rgba(39,174,96,0.2)}
+.live-status-bar.inactive{background:rgba(255,255,255,0.02);border:1px solid var(--border);color:var(--muted)}
+.live-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.live-dot.pulsing{background:var(--grass-l);animation:blink 1s infinite}
+.live-dot.off{background:var(--muted)}
+.refresh-btn{margin-left:auto;padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);cursor:pointer;font-family:var(--font-b);transition:all 0.15s}
+.refresh-btn:hover{color:var(--cream);border-color:rgba(255,255,255,0.15)}
+.countdown{font-family:var(--font-m);font-size:11px;color:var(--muted);margin-left:4px}
+
+/* LIVE POINTS HEADER CARDS */
+.pts-header{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.pts-card{background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:14px 16px;text-align:center}
+.pts-card.highlight{border-color:rgba(39,174,96,0.3);background:rgba(39,174,96,0.05)}
+.pts-val{font-family:var(--font-d);font-size:36px;line-height:1;color:var(--cream)}
+.pts-label{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--font-m);letter-spacing:0.5px;text-transform:uppercase}
+.pts-sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* CAPTAIN COMPARISON */
+.cap-compare{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px}
+.cap-compare-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;font-weight:500}
+.cap-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.cap-row:last-child{border-bottom:none}
+.cap-name{font-weight:600;font-size:13px;flex:1}
+.cap-pts{font-family:var(--font-d);font-size:22px;line-height:1;min-width:40px;text-align:right}
+.cap-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-family:var(--font-m);font-weight:600}
+.cap-badge.yours{background:rgba(39,174,96,0.12);color:var(--grass-l)}
+.cap-badge.template{background:rgba(255,255,255,0.05);color:var(--muted)}
+.cap-gain{font-size:11px;font-family:var(--font-m);min-width:48px;text-align:right}
+.cap-gain.pos{color:var(--grass-l)}.cap-gain.neg{color:var(--accent)}.cap-gain.neu{color:var(--muted)}
+
+/* PLAYER ROWS */
+.section-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin:20px 0 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:500}
+.squad-section-title{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;display:flex;justify-content:space-between;align-items:center;font-weight:500}
+.player-live-list{display:flex;flex-direction:column;gap:6px}
+.player-live-row{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--ink-2);border:1px solid var(--border);border-radius:9px;transition:border-color 0.15s}
+.player-live-row.playing{border-color:rgba(39,174,96,0.2);background:rgba(39,174,96,0.03)}
+.player-live-row.subbed{opacity:0.55}
+.player-live-row.bench{opacity:0.45}
+.pl-shirt{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
+.pl-name{font-weight:600;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-meta{font-size:10px;color:var(--muted);flex-shrink:0}
+.pl-mins{font-family:var(--font-m);font-size:10px;color:var(--muted);min-width:36px;text-align:center}
+.pl-pts{font-family:var(--font-d);font-size:22px;line-height:1;min-width:32px;text-align:right;flex-shrink:0}
+.pl-pts.cap{color:var(--gold)}
+.pl-pts.good{color:var(--grass-l)}
+.pl-pts.ok{color:var(--cream)}
+.pl-pts.zero{color:var(--muted)}
+.pl-bonus{font-size:9px;font-family:var(--font-m);color:var(--gold);margin-left:2px}
+.captain-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:var(--font-m);flex-shrink:0}
+.captain-tag.c{background:rgba(240,180,41,0.15);color:var(--gold)}
+.captain-tag.v{background:rgba(255,255,255,0.06);color:var(--muted)}
+.status-live{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-family:var(--font-m);color:var(--grass-l)}
+.status-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--grass-l);animation:blink 1s infinite;flex-shrink:0}
+.no-squad-prompt{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;line-height:1.8}
+.no-squad-prompt h3{font-family:var(--font-d);font-size:28px;color:rgba(240,236,227,0.2);margin-bottom:8px}
+
+/* ── PRICE CHANGES TAB ────────────────── */
+.price-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+.price-sum-card{background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:13px 15px}
+.psc-val{font-family:var(--font-m);font-size:26px;font-weight:600;line-height:1}
+.psc-label{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--font-m);text-transform:uppercase;letter-spacing:0.5px}
+
+/* POSITION PILLS */
+.pos-pill-row{display:flex;gap:4px;margin-bottom:16px;background:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:4px;flex-wrap:wrap}
+.pos-pill{padding:5px 14px;border-radius:7px;font-size:11px;font-weight:600;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.pos-pill:hover{color:var(--cream)}
+.pos-pill.active{background:var(--ink-3);color:var(--cream)}
+
+/* PRICE PLAYER ROWS */
+.price-list{display:flex;flex-direction:column;gap:5px}
+.price-row{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--ink-2);border:1px solid var(--border);border-radius:9px}
+.price-row.rising{border-color:rgba(39,174,96,0.2)}
+.price-row.dropping{border-color:rgba(230,57,70,0.15)}
+.pr-shirt{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.pr-name{font-weight:600;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-team{font-size:10px;color:var(--muted)}
+.pr-price{font-family:var(--font-m);font-size:12px;color:var(--muted);flex-shrink:0}
+.pr-change{font-size:10px;font-family:var(--font-m);padding:1px 6px;border-radius:4px;flex-shrink:0}
+.pr-change.rose{background:rgba(39,174,96,0.12);color:var(--grass-l)}
+.pr-change.fell{background:rgba(230,57,70,0.1);color:var(--accent)}
+
+/* PROBABILITY BAR */
+.prob-wrap{flex-shrink:0;width:110px}
+.prob-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.07);overflow:hidden;margin-bottom:3px}
+.prob-fill{height:100%;border-radius:3px;transition:width 0.4s ease}
+.prob-fill.rise{background:var(--grass-l)}
+.prob-fill.drop{background:var(--accent)}
+.prob-label{font-family:var(--font-m);font-size:9px;color:var(--muted);display:flex;justify-content:space-between}
+
+/* NET TRANSFER ARROW */
+.net-arrow{font-family:var(--font-m);font-size:10px;flex-shrink:0;min-width:56px;text-align:right}
+.net-arrow.pos{color:var(--grass-l)}.net-arrow.neg{color:var(--accent)}.net-arrow.neu{color:var(--muted)}
+
+.view-toggle{display:flex;gap:3px;background:var(--ink-2);border:1px solid var(--border);border-radius:9px;padding:3px}
+.view-toggle-btn{padding:5px 14px;border-radius:7px;font-size:12px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.view-toggle-btn:hover{color:var(--cream)}
+.view-toggle-btn.active{background:var(--ink-3);color:var(--cream)}
+/* Unified list — change direction indicator */
+.change-dir{font-family:var(--font-m);font-size:11px;font-weight:700;min-width:28px;text-align:center;flex-shrink:0}
+.change-dir.rising{color:var(--grass-l)}.change-dir.dropping{color:var(--accent)}.change-dir.changed-rose{color:var(--grass-l)}.change-dir.changed-fell{color:var(--accent)}.change-dir.neutral{color:var(--muted)}
+.sort-pill{padding:3px 10px;border-radius:5px;font-size:10px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.sort-pill:hover{color:var(--cream)}
+.sort-pill.active{background:var(--ink-3);color:var(--cream)}
+.threshold-divider{display:flex;align-items:center;gap:8px;margin:6px 0;font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.threshold-divider::before,.threshold-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.threshold-divider.likely::before,.threshold-divider.likely::after{background:rgba(39,174,96,0.2)}
+.threshold-divider.unlikely::before,.threshold-divider.unlikely::after{background:var(--border)}
+
+.skel{height:52px;border-radius:9px;background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.03) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;margin-bottom:6px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* LIVE RANK CARD */
+.rank-card{background:var(--ink-2);border:1px solid rgba(99,179,237,0.25);border-radius:11px;padding:14px 16px;text-align:center;position:relative;overflow:hidden}
+.rank-card::before{content:'';position:absolute;inset:0;background:rgba(99,179,237,0.03);pointer-events:none}
+.rank-val{font-family:var(--font-d);font-size:28px;line-height:1;color:var(--blue)}
+.rank-val.top1{color:#f0b429}.rank-val.top10{color:#2ecc71}.rank-val.top100{color:#63b3ed}
+.rank-accuracy{font-size:9px;color:var(--muted);font-family:var(--font-m);margin-top:3px;letter-spacing:0.3px}
+.rank-loading{display:inline-block;width:60px;height:24px;border-radius:4px;
+  background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s infinite}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+@media(max-width:600px){
+  .page{padding:16px 12px 80px}
+
+  /* Header cards — live pts full width top, then 2-col grid */
+  .pts-header{grid-template-columns:1fr 1fr;gap:8px}
+  .pts-card.highlight{grid-column:1/-1}  /* live pts spans full width */
+  .pts-card.highlight .pts-val{font-size:44px}
+  .rank-val{font-size:22px}
+  .rank-accuracy{font-size:8px}
+
+  /* Import bar stacks */
+  .import-bar{flex-direction:column;align-items:flex-start;gap:8px}
+  .import-bar .import-input,.import-bar .import-btn{width:100%}
+  .import-hint{display:none}
+
+  /* Live status bar — compact on mobile */
+  .live-status-bar{gap:6px;padding:8px 12px;font-size:11px}
+  .countdown{display:none}
+
+  /* Captain comparison — hide gain on very small, shrink badge */
+  .cap-row{gap:8px}
+  .cap-gain{min-width:unset;font-size:10px}
+  .cap-pts{font-size:18px;min-width:32px}
+  .cap-badge{font-size:9px;padding:2px 5px}
+
+  /* Player rows — tighten up */
+  .player-live-row{gap:7px;padding:8px 10px}
+  .pl-name{font-size:12px}
+  .pl-meta{font-size:9px;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px}
+  .pl-pts{font-size:18px;min-width:26px}
+  .pl-mins{min-width:28px;font-size:9px}
+
+  /* Tab buttons */
+  .tab-btn{font-size:12px;padding:8px 8px}
+
+  /* Price tab */
+  .price-sum-card .psc-val{font-size:20px}
+  .section-title{flex-direction:column;align-items:flex-start;gap:6px}
+  .prob-wrap{width:80px}
+}
+
+@media(max-width:380px){
+  .pts-header{grid-template-columns:1fr 1fr;gap:6px}
+  .pts-val{font-size:28px}
+  .pl-meta{display:none}
+  .cap-gain{display:none}
+  .pl-shirt{width:24px;height:24px;font-size:10px}
+  .pr-shirt{width:22px;height:22px;font-size:9px}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub" id="headerSub">GW LIVE & PRICE CHANGES · Loading…</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Loading…</span></div>
+  </div>
+
+  <!-- PAGE INTRO -->
+  <div style="font-size:13px;color:rgba(240,236,227,0.5);line-height:1.7;margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:10px">
+    <strong style="color:var(--cream)">GW Live</strong> — enter your Team ID to track your squad's live points, minute-by-minute during matches, with auto-refresh every 60 seconds. <strong style="color:var(--cream)">Price Changes</strong> — monitors transfer traffic for all ~700 FPL players and shows which are closest to a £0.1m rise or drop. Load your squad to highlight the players you own.
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active live-tab" data-tab="live">🔴 GW Live</button>
+    <button class="tab-btn price-tab" data-tab="price">💰 Price Changes</button>
+  </div>
+
+  <!-- ══════════════ GW LIVE TAB ══════════════ -->
+  <div class="tab-content active" id="tab-live">
+
+    <div class="import-bar">
+      <span class="import-label">Your squad</span>
+      <input type="number" class="import-input" id="liveTeamId" placeholder="Team ID…" min="1" max="99999999">
+      <button class="import-btn" id="liveLoadBtn">Load squad</button>
+      <span class="import-status" id="liveStatus"></span>
+      <span class="import-hint">Find your Team ID at the FPL site: /entry/<strong style="color:var(--cream)">1234567</strong>/event/…</span>
+    </div>
+
+    <div class="live-status-bar inactive" id="liveStatusBar">
+      <div class="live-dot off" id="liveDot"></div>
+      <span id="liveStatusText">No active matches right now</span>
+      <span class="countdown" id="liveCountdown"></span>
+      <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+    </div>
+
+    <div id="liveContent">
+      <div class="no-squad-prompt">
+        <h3>Import your squad</h3>
+        <p>Enter your FPL Team ID above to see your live GW points,<br>captain comparison, and player-by-player breakdown.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ PRICE CHANGES TAB ══════════════ -->
+  <div class="tab-content" id="tab-price">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--muted);font-family:var(--font-m)" id="priceLastUpdate">Transfer data from page load</span>
+      <button onclick="refreshPriceData()" id="priceRefreshBtn" style="padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);cursor:pointer;font-family:var(--font-b)">↻ Refresh</button>
+    </div>
+    <div id="priceSummary" class="price-summary"></div>
+
+    <div class="pos-pill-row" id="pricePosPills">
+      <button class="pos-pill active" data-pos="ALL">All</button>
+      <button class="pos-pill" data-pos="GK">GK</button>
+      <button class="pos-pill" data-pos="DEF">DEF</button>
+      <button class="pos-pill" data-pos="MID">MID</button>
+      <button class="pos-pill" data-pos="FWD">FWD</button>
+    </div>
+
+    <!-- VIEW TOGGLE + UNIFIED SORT (shown in all-players mode) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="view-toggle" id="priceViewToggle">
+        <button class="view-toggle-btn active" data-view="split">Split view</button>
+        <button class="view-toggle-btn" data-view="all">All players</button>
+      </div>
+      <div class="sort-pills" id="allSortPills" style="display:none">
+        <button class="sort-pill active" data-sort="change">Most likely to change</button>
+        <button class="sort-pill" data-sort="rise">Rise prob</button>
+        <button class="sort-pill" data-sort="drop">Drop prob</button>
+        <button class="sort-pill" data-sort="net">Net transfers</button>
+        <button class="sort-pill" data-sort="price">Price</button>
+      </div>
+    </div>
+
+    <!-- SPLIT VIEW -->
+    <div id="splitView">
+      <div class="section-title">
+        <span>📈 Closest to price rise</span>
+        <div class="sort-pills" id="riseSortPills">
+          <button class="sort-pill active" data-sort="prob">Probability</button>
+          <button class="sort-pill" data-sort="net">Net transfers</button>
+          <button class="sort-pill" data-sort="price">Price</button>
+        </div>
+      </div>
+      <div id="riseList" class="price-list"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+
+      <div class="section-title" style="margin-top:24px">
+        <span>📉 Closest to price drop</span>
+        <div class="sort-pills" id="dropSortPills">
+          <button class="sort-pill active" data-sort="prob">Probability</button>
+          <button class="sort-pill" data-sort="net">Net transfers</button>
+          <button class="sort-pill" data-sort="price">Price</button>
+        </div>
+      </div>
+      <div id="dropList" class="price-list"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+
+      <div class="section-title" style="margin-top:24px">
+        <span>✅ Already changed this GW</span>
+      </div>
+      <div id="changedList" class="price-list"></div>
+    </div>
+
+    <!-- ALL PLAYERS VIEW -->
+    <div id="allView" style="display:none">
+      <div id="allList" class="price-list"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+/* ── STATE ─────────────────────────────────────────────── */
+const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
+const LS='pitchiq_live_';
+let ALL=[],TMAP={},GW=1,TOTAL_PLAYERS=10000000;
+let PICKS=[];
+let SQUAD_IDS=new Set();
+let LIVE_MAP={};
+let RANK_DATA=null;   // score distribution from fpl-results endpoint
+let POLL_TIMER=null;
+let POLL_COUNTDOWN=60;
+let BOOTSTRAP_TIMER=null;
+let PRICE_POS='ALL';
+let RISE_SORT='prob';
+let DROP_SORT='prob';
+let PRICE_VIEW='split';   // split | all
+let ALL_SORT='change';    // change | rise | drop | net | price
+
+function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
+function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
+function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
+async function fetchJ(url){
+  const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);
+  if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
+  return r.json();
+}
+
+/* ── BOOTSTRAP + PLAYER DATA ─────────────────────────── */
+async function loadBootstrap(){
+  setBadge('loading','Loading…');
+  try{
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
+    TOTAL_PLAYERS=bs.total_players??10000000;
+    TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+    ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
+      id:e.id,name:e.web_name,teamId:e.team,
+      pos:POS_ID[e.element_type]??'MID',
+      price:e.now_cost/10,
+      form:parseFloat(e.form)||0,
+      ownedPct:parseFloat(e.selected_by_percent)||0,
+      priceChg:e.cost_change_event??0,
+      priceChgStart:e.cost_change_start??0,
+      netIn:(e.transfers_in_event||0)-(e.transfers_out_event||0),
+      transfersIn:e.transfers_in_event||0,
+      transfersOut:e.transfers_out_event||0,
+      status:e.status,
+    }));
+    document.getElementById('headerSub').textContent=`GW LIVE & PRICE CHANGES · GW${GW}`;
+    setBadge('live',`Live · GW${GW}`);
+    // Restore saved squad and auto-fetch live data
+    const savedId=lsG('teamId','');
+    if(savedId){
+      document.getElementById('liveTeamId').value=savedId;
+      const savedPicks=lsG('picks',[]);
+      if(savedPicks.length){
+        PICKS=savedPicks;
+        renderLiveContent();
+        fetchLive(); // auto-refresh live data for saved squad
+      }
+    }
+  }catch(err){
+    const _exp=err.status===404||err.name==='AbortError'||err.message==='Failed to fetch';if(!_exp)console.warn('[GWLive]',err.message);
+    ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+    setBadge('fallback',err.status===404?'Static data · deploy for live':'Static data');
+    document.getElementById('headerSub').textContent='GW LIVE · Sample data — enter team ID for live';
+  }
+  renderPriceChanges();
+  // Auto-refresh bootstrap every 30 min — transfer volumes shift during the day
+  if(BOOTSTRAP_TIMER)clearInterval(BOOTSTRAP_TIMER);
+  BOOTSTRAP_TIMER=setInterval(refreshPriceData,30*60*1000);
+}
+
+/* ── SQUAD IMPORT ─────────────────────────────────────── */
+async function loadSquad(){
+  const raw=document.getElementById('liveTeamId').value.trim();
+  const id=parseInt(raw,10);
+  const btn=document.getElementById('liveLoadBtn');
+  const st=document.getElementById('liveStatus');
+  if(isNaN(id)||id<1||id>999999999){st.className='import-status err';st.textContent='⚠ Enter a valid Team ID';return;}
+  btn.disabled=true;st.className='import-status loading';st.textContent='Loading…';
+  try{
+    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    if(!data||!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
+    const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
+    if(!ids.length)throw new Error('No valid player IDs');
+    PICKS=data.picks;
+    SQUAD_IDS=new Set(PICKS.map(p=>p.element));
+    lsS('teamId',String(id));lsS('picks',PICKS);
+    st.className='import-status ok';st.textContent=`✓ ${PICKS.length} players loaded`;
+    renderLiveContent(); // show squad immediately with whatever live data we have
+    fetchLive();         // then fetch live data and re-render when it resolves
+  }catch(err){
+    st.className='import-status err';
+    if(err.status===404)      st.textContent='⚠ Team not found — check your ID';
+    else if(err.status===503||err.status===429) st.textContent='⚠ FPL API busy — try again';
+    else if(ALL===FB_PLAYERS) st.textContent='⚠ Requires Vercel deployment';
+    else                      st.textContent=`⚠ ${err.message||'Could not load'}`;
+  }finally{btn.disabled=false;}
+}
+
+/* ── LIVE RANK CALCULATION ────────────────────────────── */
+function calcApproxRank(myPts, totalPlayers){
+  // Uses score distribution from fpl-results to estimate rank
+  // Returns {rank, percentile, confidence}
+  if(!RANK_DATA||!myPts)return null;
+
+  // fpl-results returns {results:[{entry,event_total,...}]} for finished GWs
+  // During live GWs it returns partial data — we use total_players from bootstrap
+  // and estimate rank from the score distribution
+  let managersAbove=0;
+
+  // Try results array if available (finished GW)
+  if(Array.isArray(RANK_DATA.results)){
+    managersAbove=RANK_DATA.results.filter(r=>r.event_total>myPts).length;
+    const known=RANK_DATA.results.length;
+    if(known>0&&known<totalPlayers){
+      // Scale up from sample to full population
+      managersAbove=Math.round((managersAbove/known)*totalPlayers);
+    }
+    return{
+      rank: managersAbove+1,
+      percentile: ((totalPlayers-managersAbove)/totalPlayers*100),
+      confidence: known>=1000?'high':'low',
+      based: known,
+    };
+  }
+
+  return null;
+}
+
+function formatRank(rank){
+  if(!rank||rank<1)return'—';
+  if(rank>=1000000)return(rank/1000000).toFixed(1)+'M';
+  if(rank>=1000)return(rank/1000).toFixed(0)+'k';
+  return rank.toLocaleString();
+}
+
+function rankClass(rank, total){
+  if(!rank)return'';
+  const pct=rank/total*100;
+  if(pct<=0.01)return'top1';   // top 1% — gold
+  if(pct<=0.1) return'top10';  // top 10% — green
+  if(pct<=1)   return'top100'; // top 1% of total — blue
+  return'';
+}
+
+/* ── LIVE DATA FETCH + POLL ───────────────────────────── */
+async function fetchLive(){
+  if(!GW)return;
+  try{
+    // Fetch live data and score distribution in parallel
+    const[liveData, resultsData]=await Promise.allSettled([
+      fetchJ(`api/fpl-live?gw=${GW}`),
+      fetchJ(`api/fpl-results?gw=${GW}`),
+    ]);
+
+    if(liveData.status==='fulfilled'&&Array.isArray(liveData.value.elements)){
+      LIVE_MAP={};
+      liveData.value.elements.forEach(e=>{LIVE_MAP[e.id]=e.stats;});
+    }
+    if(resultsData.status==='fulfilled'){
+      RANK_DATA=resultsData.value;
+    }
+
+    renderLiveContent();
+    updateLiveStatusBar(liveData.status==='fulfilled');
+  }catch(err){
+    console.warn('[GWLive] Live fetch error:',err.message);
+    updateLiveStatusBar(false);
+  }
+}
+
+function updateLiveStatusBar(success){
+  const bar=document.getElementById('liveStatusBar');
+  const dot=document.getElementById('liveDot');
+  const text=document.getElementById('liveStatusText');
+  const hasPlaying=Object.values(LIVE_MAP).some(s=>s.minutes>0&&s.minutes<90);
+  if(success&&hasPlaying){
+    bar.className='live-status-bar active';
+    dot.className='live-dot pulsing';
+    text.textContent='Matches in progress — updating every 60 seconds';
+    startCountdown();
+  }else if(success){
+    bar.className='live-status-bar inactive';
+    dot.className='live-dot off';
+    const totalPts=PICKS.filter(p=>p.position<=11).reduce((s,p)=>{
+      const live=LIVE_MAP[p.element];
+      if(!live)return s;
+      return s+(live.total_points*(p.multiplier??(p.is_captain?2:1)));
+    },0);
+    text.textContent=`GW${GW} data loaded · ${totalPts} live pts · No matches currently in progress`;
+    stopCountdown();
+  }else{
+    bar.className='live-status-bar inactive';
+    dot.className='live-dot off';
+    text.textContent='Could not fetch live data — try refreshing manually';
+  }
+}
+
+function startCountdown(){
+  stopCountdown();
+  POLL_COUNTDOWN=60;
+  updateCountdownDisplay();
+  POLL_TIMER=setInterval(()=>{
+    POLL_COUNTDOWN--;
+    updateCountdownDisplay();
+    if(POLL_COUNTDOWN<=0){
+      POLL_COUNTDOWN=60; // reset immediately so display shows 60 while fetching
+      fetchLive();
+    }
+  },1000);
+}
+function stopCountdown(){
+  if(POLL_TIMER){clearInterval(POLL_TIMER);POLL_TIMER=null;}
+  document.getElementById('liveCountdown').textContent='';
+}
+function updateCountdownDisplay(){
+  const el=document.getElementById('liveCountdown');
+  if(POLL_COUNTDOWN>0)el.textContent=`· next update in ${POLL_COUNTDOWN}s`;
+  else el.textContent='· refreshing…';
+}
+
+/* ── LIVE CONTENT RENDER ──────────────────────────────── */
+function renderLiveContent(){
+  if(!PICKS.length){
+    document.getElementById('liveContent').innerHTML=`
+      <div class="no-squad-prompt">
+        <h3>Import your squad</h3>
+        <p>Enter your FPL Team ID above to see your live GW points,<br>captain comparison, and player-by-player breakdown.</p>
+      </div>`;
+    return;
+  }
+
+  const starters=PICKS.filter(p=>p.position<=11);
+  const bench=PICKS.filter(p=>p.position>11);
+  const captain=PICKS.find(p=>p.is_captain);
+
+  // Live point calculation
+  function getLivePts(pick){
+    const live=LIVE_MAP[pick.element];
+    if(!live)return 0;
+    return live.total_points*(pick.multiplier??( pick.is_captain?2:1));
+  }
+  function getBaseStats(pick){
+    return LIVE_MAP[pick.element]??{total_points:0,minutes:0,bonus:0,goals_scored:0,assists:0};
+  }
+  function getPlayer(id){return ALL.find(p=>p.id===id)??{name:`Player ${id}`,pos:'MID',teamId:0};}
+
+  const totalLive=starters.reduce((s,p)=>s+getLivePts(p),0);
+  const capPlayer=captain?getPlayer(captain.element):null;
+  const capLive=captain?LIVE_MAP[captain.element]:null;
+  const capCap=captain?.multiplier??2;
+  const capPts=capLive?capLive.total_points*capCap:0;
+
+  // Template captain benchmarks — top 3 most owned non-GK players by ownership
+  const templateCaps=ALL.filter(p=>p.pos!=='GK'&&p.pos!=='DEF')
+    .sort((a,b)=>(b.ownedPct??0)-(a.ownedPct??0))
+    .slice(0,3);
+
+  // Header stat cards
+  const hasLive=Object.keys(LIVE_MAP).length>0;
+  const totalLabel=hasLive?'Live GW pts':'Proj GW pts';
+
+  // Live rank calculation
+  const rankInfo=hasLive?calcApproxRank(totalLive,TOTAL_PLAYERS):null;
+  const rankHtml=rankInfo
+    ?`<div class="rank-val ${rankClass(rankInfo.rank,TOTAL_PLAYERS)}">${formatRank(rankInfo.rank)}</div>
+       <div class="pts-label">Live rank</div>
+       <div class="rank-accuracy">~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores</div>`
+    :hasLive
+      ?`<div class="rank-loading"></div>
+        <div class="pts-label" style="margin-top:6px">Live rank</div>
+        <div class="rank-accuracy">Calculating…</div>`
+      :`<div class="rank-val" style="color:var(--muted)">—</div>
+        <div class="pts-label">Live rank</div>
+        <div class="rank-accuracy">Available once GW starts</div>`;
+
+  document.getElementById('liveContent').innerHTML=`
+    <div class="pts-header">
+      <div class="pts-card highlight">
+        <div class="pts-val" style="color:var(--grass-l)">${totalLive}</div>
+        <div class="pts-label">${totalLabel}</div>
+      </div>
+      <div class="rank-card">
+        ${rankHtml}
+      </div>
+      <div class="pts-card">
+        <div class="pts-val" style="color:var(--gold)">${capPts}</div>
+        <div class="pts-label">Captain pts</div>
+        <div class="pts-sub">${capPlayer?.name??'—'}</div>
+      </div>
+      <div class="pts-card">
+        <div class="pts-val">${starters.filter(p=>{const s=LIVE_MAP[p.element];return s&&s.minutes>0&&s.minutes<90;}).length}</div>
+        <div class="pts-label">Playing now</div>
+      </div>
+      <div class="pts-card">
+        <div class="pts-val">${starters.filter(p=>!LIVE_MAP[p.element]||LIVE_MAP[p.element].minutes===0).length}</div>
+        <div class="pts-label">Yet to play</div>
+      </div>
+    </div>
+
+    <div class="cap-compare">
+      <div class="cap-compare-title">Captain comparison — your pick vs template options</div>
+      ${capPlayer?`<div class="cap-row">
+        <div class="pl-shirt ${SHIRT[capPlayer.pos]}">${capPlayer.name.charAt(0)}</div>
+        <div class="cap-name">${capPlayer.name}</div>
+        <span class="cap-badge yours">Your C</span>
+        <div class="cap-pts" style="color:var(--gold)">${capPts}</div>
+        <div class="cap-gain neu">—</div>
+      </div>`:''}
+      ${templateCaps.filter(p=>!captain||p.id!==captain.element).map(p=>{
+        const pts=(LIVE_MAP[p.id]?.total_points??0)*2;
+        const diff=capPts-pts;
+        const gainCls=diff>0?'pos':diff<0?'neg':'neu';
+        const gainStr=diff>0?`+${diff} ahead`:diff<0?`${diff} behind`:'level';
+        return`<div class="cap-row">
+          <div class="pl-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+          <div class="cap-name">${p.name}</div>
+          <span class="cap-badge template">${p.form.toFixed(1)} form</span>
+          <div class="cap-pts">${pts}</div>
+          <div class="cap-gain ${gainCls}">${gainStr}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="squad-section-title">
+      Starting XI ${hasLive?'<span class="status-live">LIVE</span>':''}
+    </div>
+    <div class="player-live-list">
+      ${starters.map(pick=>playerRowHtml(pick,getPlayer(pick.element),getBaseStats(pick),pick.is_captain,pick.is_vice_captain,false)).join('')}
+    </div>
+    <div class="squad-section-title" style="margin-top:14px">Bench</div>
+    <div class="player-live-list">
+      ${bench.map(pick=>playerRowHtml(pick,getPlayer(pick.element),getBaseStats(pick),false,false,true)).join('')}
+    </div>`;
+}
+
+function playerRowHtml(pick,p,stats,isCap,isVice,isBench){
+  const mult=pick.multiplier??(isCap?2:1);
+  const pts=stats.total_points*mult;
+  const mins=stats.minutes||0;
+  const isPlaying=mins>0&&mins<90;
+  const rowCls=isBench?'bench':isPlaying?'playing':'';
+  const ptsCls=isCap?'cap':pts>=10?'good':pts>=4?'ok':'zero';
+  const minsLabel=mins===0?'—':mins>=90?`90'`:`${mins}'`;
+  const bonusHtml=stats.bonus>0?`<span class="pl-bonus">+${stats.bonus}b</span>`:'';
+  const statLine=buildStatLine(stats,p.pos);
+  const capLabel=isCap?(mult===3?'TC':'C'):'V';
+  return`<div class="player-live-row ${rowCls}">
+    <div class="pl-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+    ${isCap?`<span class="captain-tag c">${capLabel}</span>`:isVice?'<span class="captain-tag v">V</span>':'<span style="width:18px"></span>'}
+    <div style="flex:1;min-width:0">
+      <div class="pl-name">${p.name}</div>
+      <div class="pl-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${statLine?' · '+statLine:''}</div>
+    </div>
+    <div class="pl-mins">${isPlaying?`<span class="status-live">${minsLabel}</span>`:minsLabel}</div>
+    <div class="pl-pts ${ptsCls}">${pts}${bonusHtml}</div>
+  </div>`;
+}
+
+function buildStatLine(s,pos){
+  const parts=[];
+  if(s.goals_scored>0)parts.push(`${s.goals_scored}G`);
+  if(s.assists>0)parts.push(`${s.assists}A`);
+  if(s.clean_sheets>0&&(pos==='GK'||pos==='DEF'))parts.push('CS');
+  if(s.yellow_cards>0)parts.push('YC');
+  if(s.red_cards>0)parts.push('RC');
+  if(s.saves>=3)parts.push(`${s.saves} saves`);
+  return parts.join(' · ');
+}
+
+/* ── PRICE CHANGES RENDER ─────────────────────────────── */
+function renderPriceChanges(){
+  if(!ALL.length)return;
+
+  // Rise threshold: approximately 1% of total managers net in
+  // FPL doesn't publish the exact threshold but ~1% is well-established
+  const RISE_THRESH=Math.round(TOTAL_PLAYERS*0.01);
+
+  // Split: changed already, rising candidates, dropping candidates
+  const alreadyRose=ALL.filter(p=>p.priceChg>0);
+  const alreadyFell=ALL.filter(p=>p.priceChg<0);
+  const unchanged=ALL.filter(p=>p.priceChg===0&&p.status!=='u');
+
+  // For unchanged players, calculate probability based on netIn vs threshold
+  function riseProb(p){return Math.min(100,Math.max(0,Math.round((p.netIn/RISE_THRESH)*100)));}
+  function dropProb(p){return Math.min(100,Math.max(0,Math.round((-p.netIn/RISE_THRESH)*100)));}
+
+  const riseCandidates=unchanged
+    .filter(p=>p.netIn>0)
+    .filter(p=>PRICE_POS==='ALL'||p.pos===PRICE_POS);
+
+  const dropCandidates=unchanged
+    .filter(p=>p.netIn<0)
+    .filter(p=>PRICE_POS==='ALL'||p.pos===PRICE_POS);
+
+  // Apply sort
+  function sortList(list,dir,sortKey){
+    return [...list].sort((a,b)=>{
+      if(sortKey==='prob'){
+        // Sort by absolute net transfer magnitude — closest to threshold first
+        return Math.abs(b.netIn)-Math.abs(a.netIn);
+      }
+      if(sortKey==='net'){
+        // Raw inbound for rises, raw outbound for drops
+        return dir==='rise'?b.transfersIn-a.transfersIn:b.transfersOut-a.transfersOut;
+      }
+      if(sortKey==='price'){
+        // Most expensive first for both — bigger price players more impactful
+        return b.price-a.price;
+      }
+      return 0;
+    }).slice(0,20);
+  }
+
+  const riseSorted=sortList(riseCandidates,'rise',RISE_SORT);
+  const dropSorted=sortList(dropCandidates,'drop',DROP_SORT);
+
+  const changed=[...alreadyRose,...alreadyFell]
+    .filter(p=>PRICE_POS==='ALL'||p.pos===PRICE_POS)
+    .sort((a,b)=>Math.abs(b.priceChg)-Math.abs(a.priceChg));
+
+  // Summary cards — include both rise and drop likely counts
+  document.getElementById('priceSummary').innerHTML=`
+    <div class="price-sum-card">
+      <div class="psc-val" style="color:var(--grass-l)">${alreadyRose.length}</div>
+      <div class="psc-label">Rose this GW</div>
+    </div>
+    <div class="price-sum-card">
+      <div class="psc-val" style="color:var(--accent)">${alreadyFell.length}</div>
+      <div class="psc-label">Fell this GW</div>
+    </div>
+    <div class="price-sum-card">
+      <div class="psc-val" style="color:var(--gold)">${riseCandidates.filter(p=>riseProb(p)>=50).length}</div>
+      <div class="psc-label">Likely to rise</div>
+    </div>
+    <div class="price-sum-card">
+      <div class="psc-val" style="color:var(--accent)">${dropCandidates.filter(p=>dropProb(p)>=50).length}</div>
+      <div class="psc-label">Likely to drop</div>
+    </div>
+    <div class="price-sum-card">
+      <div class="psc-val" style="color:var(--purple)">${Math.round(RISE_THRESH/1000)}k</div>
+      <div class="psc-label">Change threshold</div>
+    </div>`;
+
+  // Build list HTML — only insert threshold divider when sorted by probability
+  // (divider is meaningless when sorted by net transfers or price)
+  function buildListHtml(sorted,probFn,dir,sortKey){
+    if(!sorted.length)return`<div style="font-size:12px;color:var(--muted);padding:12px">No players trending towards a price ${dir==='rise'?'rise':'drop'}${PRICE_POS!=='ALL'?' in this position':''}.</div>`;
+    const showDivider=sortKey==='prob';
+    let html='';
+    let dividerInserted=false;
+    sorted.forEach(p=>{
+      const prob=probFn(p);
+      if(showDivider&&!dividerInserted&&prob<50){
+        html+=`<div class="threshold-divider unlikely">Below 50% — unlikely this GW</div>`;
+        dividerInserted=true;
+      }
+      html+=priceRowHtml(p,prob,dir);
+    });
+    // If everything was above 50% and divider wasn't inserted, that's fine — no need to show it
+    return html;
+  }
+
+  document.getElementById('riseList').innerHTML=buildListHtml(riseSorted,riseProb,'rise',RISE_SORT);
+  document.getElementById('dropList').innerHTML=buildListHtml(dropSorted,dropProb,'drop',DROP_SORT);
+
+  // ── ALL PLAYERS VIEW ──────────────────────────────────────────────────────
+  const allPlayers=[...ALL].filter(p=>PRICE_POS==='ALL'||p.pos===PRICE_POS);
+
+  const withProb=allPlayers.map(p=>({
+    ...p,
+    rProb: p.priceChg>0?100: p.netIn>0?riseProb(p):0,
+    dProb: p.priceChg<0?100: p.netIn<0?dropProb(p):0,
+    absProb: p.priceChg!==0?100: Math.max(
+      p.netIn>0?riseProb(p):0,
+      p.netIn<0?dropProb(p):0
+    ),
+  }));
+
+  const allSorted=[...withProb].sort((a,b)=>{
+    if(ALL_SORT==='change') return b.absProb-a.absProb;
+    if(ALL_SORT==='rise')   return b.rProb-a.rProb;
+    if(ALL_SORT==='drop')   return b.dProb-a.dProb;
+    if(ALL_SORT==='net')    return Math.abs(b.netIn)-Math.abs(a.netIn);
+    if(ALL_SORT==='price')  return b.price-a.price;
+    return 0;
+  }).slice(0,50);
+
+  document.getElementById('allList').innerHTML=allSorted.length
+    ?allSorted.map(p=>{
+      const team=TMAP[p.teamId]??{short:'?'};
+      const netK=Math.abs(Math.round(p.netIn/1000));
+      const alreadyChanged=p.priceChg!==0;
+      // Direction indicator
+      let dirCls,dirLabel;
+      if(p.priceChg>0){dirCls='changed-rose';dirLabel='↑';}
+      else if(p.priceChg<0){dirCls='changed-fell';dirLabel='↓';}
+      else if(p.netIn>0){dirCls='rising';dirLabel='↑';}
+      else if(p.netIn<0){dirCls='dropping';dirLabel='↓';}
+      else{dirCls='neutral';dirLabel='—';}
+      // Probability to show — whichever direction is active
+      const showProb=p.rProb>0?p.rProb:p.dProb>0?p.dProb:0;
+      const probColor=p.rProb>0?'var(--grass-l)':p.dProb>0?'var(--accent)':'var(--muted)';
+      const probLabel=p.rProb>0?'Rise':p.dProb>0?'Drop':alreadyChanged?'Done':'Neutral';
+      const netDisplay=p.netIn>0?`+${netK}k`:p.netIn<0?`−${netK}k`:'—';
+      const netCls=p.netIn>0?'pos':p.netIn<0?'neg':'neu';
+      const rowCls=alreadyChanged?(p.priceChg>0?'rising':'dropping'):p.netIn>0?'rising':p.netIn<0?'dropping':'';
+      return`<div class="price-row ${rowCls}">
+        <div class="change-dir ${dirCls}">${dirLabel}</div>
+        <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="pr-name">${p.name}${SQUAD_IDS.has(p.id)?` <span style="font-size:9px;font-family:var(--font-m);font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(240,180,41,0.12);color:var(--gold)">YOURS</span>`:''}</div>
+          <div class="pr-team">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m</div>
+        </div>
+        <div class="net-arrow ${netCls}">${netDisplay}</div>
+        <div class="prob-wrap">
+          ${alreadyChanged
+            ?`<div style="font-family:var(--font-m);font-size:11px;font-weight:600;color:${p.priceChg>0?'var(--grass-l)':'var(--accent)'};text-align:right">${p.priceChg>0?'↑ Rose':'↓ Fell'} £0.1m</div>`
+            :`<div class="prob-bar"><div class="prob-fill ${p.rProb>0?'rise':'drop'}" style="width:${showProb}%"></div></div>
+             <div class="prob-label"><span>${probLabel} prob</span><span style="color:${showProb>=75?probColor:showProb>=50?'var(--cream)':'var(--muted)'};font-weight:600">${showProb>0?showProb+'%':'—'}</span></div>`
+          }
+        </div>
+      </div>`;
+    }).join('')
+    :`<div style="font-size:12px;color:var(--muted);padding:12px">No players to show.</div>`;
+
+  // Show correct view
+  document.getElementById('splitView').style.display=PRICE_VIEW==='split'?'block':'none';
+  document.getElementById('allView').style.display=PRICE_VIEW==='all'?'block':'none';
+  document.getElementById('allSortPills').style.display=PRICE_VIEW==='all'?'flex':'none';
+
+  // Changed list
+  document.getElementById('changedList').innerHTML=changed.length
+    ?changed.map(p=>{
+      const team=TMAP[p.teamId]??{short:'?'};
+      const dir=p.priceChg>0;
+      return`<div class="price-row ${dir?'rising':'dropping'}">
+        <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div style="flex:1;min-width:0"><div class="pr-name">${p.name}</div><div class="pr-team">${p.pos} · ${team.short}</div></div>
+        <div class="pr-price">£${p.price.toFixed(1)}m</div>
+        <div class="pr-change ${dir?'rose':'fell'}">${dir?'↑ +':'↓ '}£0.1m</div>
+      </div>`;
+    }).join('')
+    :`<div style="font-size:12px;color:var(--muted);padding:12px">No price changes recorded yet this GW.</div>`;
+}
+
+function priceRowHtml(p,prob,dir){
+  const team=TMAP[p.teamId]??{short:'?'};
+  const netK=Math.abs(Math.round(p.netIn/1000));
+  const rawIn=Math.round(p.transfersIn/1000);
+  const rawOut=Math.round(p.transfersOut/1000);
+  const fillColor=dir==='rise'?'var(--grass-l)':'var(--accent)';
+  const rowCls=dir==='rise'?'rising':'dropping';
+  // Net arrow — show relevant direction clearly
+  const netDisplay=dir==='rise'
+    ?`+${netK}k net in`
+    :`−${netK}k net out`;
+  const netCls=dir==='rise'?'pos':'neg';
+  // Secondary stat line based on active sort
+  const sortKey=dir==='rise'?RISE_SORT:DROP_SORT;
+  const secondaryStat=sortKey==='net'
+    ?(dir==='rise'?`${rawIn}k transfers in`:` ${rawOut}k transfers out`)
+    :sortKey==='price'?`£${p.price.toFixed(1)}m`
+    :'';
+  const inSquad=SQUAD_IDS.has(p.id);
+  return`<div class="price-row ${rowCls}${inSquad?' in-squad':''}">
+    <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+    <div style="flex:1;min-width:0">
+      <div class="pr-name">${p.name}${inSquad?` <span style="font-size:9px;font-family:var(--font-m);font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(240,180,41,0.12);color:var(--gold)">YOUR SQUAD</span>`:''}</div>
+      <div class="pr-team">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m${secondaryStat?' · <span style="color:var(--muted)">'+secondaryStat+'</span>':''}</div>
+    </div>
+    <div class="net-arrow ${netCls}">${netDisplay}</div>
+    <div class="prob-wrap">
+      <div class="prob-bar"><div class="prob-fill ${dir}" style="width:${prob}%"></div></div>
+      <div class="prob-label">
+        <span>${dir==='rise'?'Rise':'Drop'} prob</span>
+        <span style="color:${prob>=75?fillColor:prob>=50?'var(--cream)':'var(--muted)'};font-weight:600">${prob}%</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── FALLBACK DATA ─────────────────────────────────────── */
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
+const FB_PLAYERS=[
+  {id:1,name:'Salah',teamId:12,pos:'MID',price:13.2,form:11.2,priceChg:0,priceChgStart:20,netIn:280000,transfersIn:310000,transfersOut:30000,status:'a'},
+  {id:2,name:'Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,priceChg:0,priceChgStart:15,netIn:90000,transfersIn:130000,transfersOut:40000,status:'a'},
+  {id:3,name:'Mbeumo',teamId:4,pos:'FWD',price:8.3,form:10.8,priceChg:1,priceChgStart:8,netIn:0,transfersIn:0,transfersOut:0,status:'a'},
+  {id:4,name:'Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,priceChg:0,priceChgStart:10,netIn:-85000,transfersIn:40000,transfersOut:125000,status:'a'},
+  {id:5,name:'Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,priceChg:0,priceChgStart:5,netIn:45000,transfersIn:70000,transfersOut:25000,status:'a'},
+  {id:6,name:'Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,priceChg:0,priceChgStart:0,netIn:22000,transfersIn:38000,transfersOut:16000,status:'a'},
+  {id:7,name:'Watkins',teamId:2,pos:'FWD',price:9.5,form:5.9,priceChg:-1,priceChgStart:-5,netIn:0,transfersIn:0,transfersOut:0,status:'a'},
+  {id:8,name:'Neto',teamId:6,pos:'MID',price:6.8,form:7.8,priceChg:0,priceChgStart:3,netIn:62000,transfersIn:75000,transfersOut:13000,status:'a'},
+  {id:9,name:'Trent A-A',teamId:12,pos:'DEF',price:7.2,form:7.1,priceChg:0,priceChgStart:7,netIn:55000,transfersIn:78000,transfersOut:23000,status:'a'},
+  {id:10,name:'Raya',teamId:1,pos:'GK',price:5.5,form:5.8,priceChg:0,priceChgStart:5,netIn:12000,transfersIn:22000,transfersOut:10000,status:'a'},
+  {id:11,name:'Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,priceChg:0,priceChgStart:0,netIn:-38000,transfersIn:8000,transfersOut:46000,status:'a'},
+  {id:12,name:'Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,priceChg:0,priceChgStart:2,netIn:19000,transfersIn:28000,transfersOut:9000,status:'a'},
+  {id:13,name:'Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,priceChg:-1,priceChgStart:-8,netIn:0,transfersIn:0,transfersOut:0,status:'d'},
+  {id:14,name:'Wood',teamId:16,pos:'FWD',price:6.5,form:6.2,priceChg:1,priceChgStart:4,netIn:0,transfersIn:0,transfersOut:0,status:'a'},
+  {id:15,name:'Andreas',teamId:9,pos:'MID',price:6.2,form:5.8,priceChg:0,priceChgStart:0,netIn:-28000,transfersIn:12000,transfersOut:40000,status:'a'},
+];
+
+
+async function refreshPriceData(){
+  const btn=document.getElementById('priceRefreshBtn');
+  const lbl=document.getElementById('priceLastUpdate');
+  if(btn){btn.textContent='Refreshing…';btn.disabled=true;}
+  try{
+    const bs=await fetchJ('api/fpl-bootstrap');
+    if(bs.teams)bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+    ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
+      id:e.id,name:e.web_name,teamId:e.team,
+      pos:POS_ID[e.element_type]??'MID',
+      price:e.now_cost/10,form:parseFloat(e.form)||0,
+      ownedPct:parseFloat(e.selected_by_percent)||0,
+      priceChg:e.cost_change_event??0,priceChgStart:e.cost_change_start??0,
+      netIn:(e.transfers_in_event||0)-(e.transfers_out_event||0),
+      transfersIn:e.transfers_in_event||0,transfersOut:e.transfers_out_event||0,
+      status:e.status,
+    }));
+    TOTAL_PLAYERS=bs.total_players??TOTAL_PLAYERS;
+    renderPriceChanges();
+    if(lbl)lbl.textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }catch(e){
+    if(lbl)lbl.textContent='Refresh failed — try again';
+    console.warn('[PriceRefresh]',e.message);
+  }finally{
+    if(btn){btn.textContent='↻ Refresh';btn.disabled=false;}
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+  renderPriceChanges();
+  loadBootstrap();
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active','live-tab','price-tab'));
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active',btn.dataset.tab+'-tab');
+      document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Squad load
+  document.getElementById('liveLoadBtn').addEventListener('click',loadSquad);
+  document.getElementById('liveTeamId').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadSquad();}});
+
+  // Manual refresh
+  document.getElementById('refreshBtn').addEventListener('click',()=>{
+    stopCountdown();
+    fetchLive();
+  });
+
+  // Price position pills
+  document.getElementById('pricePosPills').addEventListener('click',e=>{
+    const b=e.target.closest('.pos-pill');if(!b)return;
+    document.querySelectorAll('.pos-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');PRICE_POS=b.dataset.pos;
+    renderPriceChanges();
+  });
+
+  // View toggle
+  document.getElementById('priceViewToggle').addEventListener('click',e=>{
+    const b=e.target.closest('.view-toggle-btn');if(!b)return;
+    document.querySelectorAll('.view-toggle-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');PRICE_VIEW=b.dataset.view;
+    renderPriceChanges();
+  });
+
+  // All-players sort pills
+  document.getElementById('allSortPills').addEventListener('click',e=>{
+    const b=e.target.closest('.sort-pill');if(!b)return;
+    document.querySelectorAll('#allSortPills .sort-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');ALL_SORT=b.dataset.sort;
+    renderPriceChanges();
+  });
+
+  // Rise sort pills
+  document.getElementById('riseSortPills').addEventListener('click',e=>{
+    const b=e.target.closest('.sort-pill');if(!b)return;
+    document.querySelectorAll('#riseSortPills .sort-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');RISE_SORT=b.dataset.sort;
+    renderPriceChanges();
+  });
+
+  // Drop sort pills
+  document.getElementById('dropSortPills').addEventListener('click',e=>{
+    const b=e.target.closest('.sort-pill');if(!b)return;
+    document.querySelectorAll('#dropSortPills .sort-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');DROP_SORT=b.dataset.sort;
+    renderPriceChanges();
+  });
+
+  // Restore picks from localStorage for immediate display
+  const savedPicks=lsG('picks',[]);
+  if(savedPicks.length){PICKS=savedPicks;SQUAD_IDS=new Set(PICKS.map(p=>p.element));renderLiveContent();}
+});
+</script>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+        </div>
+      </a>
+      <a href="hit-calculator.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🎯</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Hit Calculator</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Is a -4 hit worth taking?</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+</body>
+</html>

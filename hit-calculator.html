@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta name="keywords" content="FPL hit calculator, FPL transfer hit worth it, -4 hit FPL, Fantasy Premier League transfer calculator">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/hit-calculator.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/hit-calculator.html">
+  <meta property="og:title" content="FPL Transfer Hit Calculator — Is It Worth It? | PitchIQ">
+  <meta property="og:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL Transfer Hit Calculator — Is It Worth It? | PitchIQ">
+  <meta name="twitter:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — Hit Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--purple:#a78bfa;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:960px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px;color:var(--cream)}.logo span{color:var(--grass)}
+.header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:blink 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* PAGE INTRO */
+.page-intro{font-size:13px;color:rgba(240,236,227,0.5);line-height:1.7;margin-bottom:28px;padding:14px 16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px}
+.page-intro strong{color:var(--cream)}
+
+/* TRANSFER SELECTOR */
+.transfer-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;margin-bottom:24px}
+.transfer-arrow{display:flex;align-items:center;justify-content:center;padding-top:38px;font-size:22px;color:var(--muted)}
+.transfer-card{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px}
+.transfer-card-label{font-family:var(--font-m);font-size:12px;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;font-weight:500}
+.transfer-card-label.out{color:var(--accent)}
+.transfer-card-label.in{color:var(--grass-l)}
+.player-search-wrap{position:relative}
+.player-search{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:9px 12px;border-radius:8px;font-family:var(--font-b);font-size:13px;outline:none;transition:border-color 0.2s}
+.player-search:focus{border-color:rgba(99,179,237,0.4)}
+.player-search::placeholder{color:var(--muted)}
+.player-search.out-active:focus{border-color:rgba(230,57,70,0.4)}
+.player-search.in-active:focus{border-color:rgba(39,174,96,0.4)}
+.autocomplete{position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--ink-3);border:1px solid rgba(255,255,255,0.1);border-radius:9px;z-index:100;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:none}
+.autocomplete.open{display:block}
+.ac-item{padding:9px 13px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:background 0.1s;border-bottom:1px solid rgba(255,255,255,0.04)}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover{background:rgba(255,255,255,0.04)}
+.ac-name{font-size:13px;font-weight:500;color:var(--cream)}
+.ac-meta{font-size:10px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.ac-shirt{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
+
+/* SELECTED PLAYER CARD */
+.selected-player{margin-top:10px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.03);display:none}
+.selected-player.visible{display:block}
+.sel-name{font-weight:600;font-size:14px;color:var(--cream);margin-bottom:2px}
+.sel-meta{font-size:11px;color:var(--muted)}
+.sel-stats{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.sel-stat{display:flex;flex-direction:column;gap:2px}
+.sel-stat-val{font-family:var(--font-d);font-size:18px;line-height:1}
+.sel-stat-label{font-size:9px;font-family:var(--font-m);letter-spacing:0.8px;text-transform:uppercase;color:var(--muted)}
+.fix-run-mini{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
+.frm-pill{display:inline-flex;padding:2px 6px;border-radius:4px;font-family:var(--font-m);font-size:9px;font-weight:600;border:1px solid}
+.fix-d1{background:rgba(15,76,41,0.6);border-color:rgba(74,222,128,0.2);color:#4ade80}
+.fix-d2{background:rgba(22,101,52,0.6);border-color:rgba(134,239,172,0.15);color:#86efac}
+.fix-d3{background:rgba(113,63,18,0.6);border-color:rgba(252,211,77,0.15);color:#fcd34d}
+.fix-d4{background:rgba(124,29,29,0.6);border-color:rgba(252,165,165,0.15);color:#fca5a5}
+.fix-d5{background:rgba(69,10,10,0.6);border-color:rgba(248,113,113,0.15);color:#f87171}
+
+/* OPTIONS ROW */
+.options-row{display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap;padding:14px 16px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px}
+.opt-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.hit-toggle{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:8px;padding:3px}
+.hit-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
+.hit-btn.active{background:var(--ink-3);color:var(--cream)}
+.hit-btn.active.yes{color:var(--accent)}
+.gw-range-wrap{display:flex;align-items:center;gap:10px}
+.gw-range{-webkit-appearance:none;width:120px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none}
+.gw-range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer}
+.gw-range-val{font-family:var(--font-m);font-size:11px;color:var(--blue);min-width:24px}
+
+/* RESULT PANEL */
+.result-panel{display:none}
+.result-panel.visible{display:block}
+.verdict-banner{display:flex;align-items:center;gap:20px;padding:20px 24px;border-radius:14px;border:1px solid;margin-bottom:20px;flex-wrap:wrap}
+.verdict-banner.worth{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25)}
+.verdict-banner.not-worth{background:rgba(230,57,70,0.07);border-color:rgba(230,57,70,0.2)}
+.verdict-banner.marginal{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2)}
+.verdict-icon{font-size:36px;flex-shrink:0}
+.verdict-text{flex:1}
+.verdict-title{font-family:var(--font-d);font-size:26px;letter-spacing:1px;line-height:1.1;margin-bottom:4px}
+.verdict-title.worth{color:var(--grass-l)}
+.verdict-title.not-worth{color:var(--accent)}
+.verdict-title.marginal{color:var(--gold)}
+.verdict-desc{font-size:12px;color:rgba(240,236,227,0.55);line-height:1.6}
+.verdict-desc strong{color:var(--cream)}
+.breakeven-badge{padding:10px 18px;border-radius:10px;text-align:center;flex-shrink:0}
+.breakeven-badge.worth{background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.25)}
+.breakeven-badge.not-worth{background:rgba(230,57,70,0.08);border:1px solid rgba(230,57,70,0.2)}
+.breakeven-badge.marginal{background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2)}
+.breakeven-val{font-family:var(--font-d);font-size:32px;line-height:1}
+.breakeven-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+
+/* GW CHART */
+.gw-chart-wrap{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.gw-chart-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.gw-chart{display:flex;gap:0;border-bottom:1px solid var(--border);padding-bottom:0;margin-bottom:12px}
+.gw-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.gw-col-label{font-family:var(--font-m);font-size:9px;color:var(--muted);text-align:center;padding-bottom:8px}
+.gw-bar-group{width:100%;display:flex;gap:3px;justify-content:center;align-items:flex-end;height:80px;padding:0 4px}
+.gw-bar-out{border-radius:3px 3px 0 0;transition:height 0.4s ease;min-height:2px;flex:1}
+.gw-bar-in{border-radius:3px 3px 0 0;transition:height 0.4s ease;min-height:2px;flex:1}
+.gw-bar-hit{border-radius:3px 3px 0 0;flex:1;min-height:2px;background:rgba(230,57,70,0.5)}
+.gw-pts-label{font-family:var(--font-m);font-size:9px;text-align:center;line-height:1.2}
+.gw-cumulative{display:flex;gap:0;margin-top:4px}
+.gw-cum-col{flex:1;text-align:center;font-family:var(--font-m);font-size:10px;font-weight:600;padding:6px 2px;border-radius:4px;transition:background 0.2s}
+.chart-legend{display:flex;gap:16px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* STATS COMPARISON */
+.stats-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.compare-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.compare-card-label{font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;font-weight:500}
+.compare-card-label.out{color:var(--accent)}
+.compare-card-label.in{color:var(--grass-l)}
+.compare-card-name{font-weight:600;font-size:15px;color:var(--cream);margin-bottom:8px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.stat-row:last-child{border-bottom:none}
+.stat-row-label{color:var(--muted)}
+.stat-row-val{font-family:var(--font-m);font-weight:500}
+.stat-row-val.better{color:var(--grass-l)}
+.stat-row-val.worse{color:var(--accent)}
+.stat-row-val.same{color:var(--cream)}
+
+/* EMPTY */
+.empty-hint{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;line-height:1.8}
+.empty-hint h3{font-family:var(--font-d);font-size:28px;letter-spacing:1px;color:rgba(240,236,227,0.15);margin-bottom:8px}
+
+@media(max-width:700px){
+  .transfer-grid{grid-template-columns:1fr;gap:10px;margin-bottom:14px}
+  .transfer-arrow{padding-top:0;font-size:18px;text-align:center}
+  .stats-compare{grid-template-columns:1fr}
+  .verdict-banner{flex-direction:column;align-items:flex-start}
+  .options-row{gap:8px}
+  .breakeven-badge{align-self:stretch;text-align:center}
+}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+@media(max-width:600px){
+  .page{padding:20px 14px 60px}
+  .gw-chart{overflow-x:auto}
+  .options-row{flex-direction:column;align-items:flex-start}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub">TRANSFER VALUE CALCULATOR</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Loading…</span></div>
+  </div>
+
+  <div class="page-intro">
+    <strong>Is the transfer worth it?</strong> Select the player you're selling and the player you're bringing in. We'll calculate the projected points difference and tell you whether taking a hit pays off — and exactly which gameweek you'd break even. <strong>Planning two transfers?</strong> Add a second swap below.
+  </div>
+
+  <!-- TRANSFER SELECTORS -->
+  <div class="transfer-grid">
+    <div class="transfer-card">
+      <div class="transfer-card-label out">📤 Transferring out</div>
+      <div class="player-search-wrap">
+        <input type="text" class="player-search out-active" id="outSearch" placeholder="Search player to sell…" autocomplete="off">
+        <div class="autocomplete" id="outAC"></div>
+      </div>
+      <div class="selected-player" id="outCard"></div>
+    </div>
+    <div class="transfer-arrow">→</div>
+    <div class="transfer-card">
+      <div class="transfer-card-label in">📥 Transferring in</div>
+      <div class="player-search-wrap">
+        <input type="text" class="player-search in-active" id="inSearch" placeholder="Search player to bring in…" autocomplete="off">
+        <div class="autocomplete" id="inAC"></div>
+      </div>
+      <div class="selected-player" id="inCard"></div>
+    </div>
+  </div>
+
+  <!-- SECOND TRANSFER TOGGLE -->
+  <div style="margin-bottom:12px">
+    <button id="addT2Btn" style="background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.15);color:var(--muted);padding:10px 20px;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;width:100%;transition:all 0.15s;font-family:var(--font-b)" onmouseover="this.style.borderColor='rgba(99,179,237,0.4)';this.style.color='var(--blue)'" onmouseout="if(!window._t2Active){this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='var(--muted)'}">+ Add second transfer</button>
+  </div>
+
+  <!-- SECOND TRANSFER ROW (hidden until toggled) -->
+  <div id="transfer2Wrap" style="display:none;margin-bottom:12px">
+    <div style="font-family:var(--font-m);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:8px;font-weight:500">
+      <span>Second transfer</span>
+      <button id="removeT2Btn" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--font-b);padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">✕ Remove</button>
+    </div>
+    <div class="transfer-grid">
+      <div class="transfer-card" style="border-color:rgba(99,179,237,0.2)">
+        <div class="transfer-card-label out">📤 Transferring out</div>
+        <div class="player-search-wrap">
+          <input type="text" class="player-search out-active" id="out2Search" placeholder="Search player to sell…" autocomplete="off">
+          <div class="autocomplete" id="out2AC"></div>
+        </div>
+        <div class="selected-player" id="out2Card"></div>
+      </div>
+      <div class="transfer-arrow">→</div>
+      <div class="transfer-card" style="border-color:rgba(99,179,237,0.2)">
+        <div class="transfer-card-label in">📥 Transferring in</div>
+        <div class="player-search-wrap">
+          <input type="text" class="player-search in-active" id="in2Search" placeholder="Search player to bring in…" autocomplete="off">
+          <div class="autocomplete" id="in2AC"></div>
+        </div>
+        <div class="selected-player" id="in2Card"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTIONS -->
+  <div class="options-row">
+    <span class="opt-label">Taking a hit?</span>
+    <div class="hit-toggle">
+      <button class="hit-btn active" data-hit="0">Free transfer</button>
+      <button class="hit-btn yes" data-hit="-4">-4 hit</button>
+      <button class="hit-btn yes" data-hit="-8">-8 hit</button>
+    </div>
+    <span class="opt-label" style="margin-left:12px">Gameweeks ahead</span>
+    <div class="gw-range-wrap">
+      <input type="range" class="gw-range" id="gwRange" min="3" max="8" step="1" value="5">
+      <span class="gw-range-val" id="gwRangeVal">5</span>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-panel" id="resultPanel">
+    <div class="verdict-banner" id="verdictBanner">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div class="verdict-text">
+        <div class="verdict-title" id="verdictTitle"></div>
+        <div class="verdict-desc" id="verdictDesc"></div>
+      </div>
+      <div class="breakeven-badge" id="breakevenBadge">
+        <div class="breakeven-val" id="breakevenVal"></div>
+        <div class="breakeven-label" id="breakevenLabel"></div>
+      </div>
+    </div>
+
+    <div class="gw-chart-wrap">
+      <div class="gw-chart-title">Projected points — gameweek by gameweek</div>
+      <div class="gw-chart" id="gwChart"></div>
+      <div class="gw-cumulative" id="gwCumulative"></div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div class="chart-legend" id="chartLegend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div><span id="legendOut">Out</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--grass-l)"></div><span id="legendIn">In</span></div>
+          <div class="legend-item" id="hitLegend" style="display:none"><div class="legend-dot" style="background:rgba(230,57,70,0.5)"></div>Hit cost</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--font-m)">Projections based on form + fixture difficulty</div>
+      </div>
+    </div>
+
+    <div class="stats-compare" id="statsCompare"></div>
+  </div>
+
+  <div class="empty-hint" id="emptyHint">
+    <h3>Pick two players</h3>
+    Search for the player you're selling and the player you're bringing in. Add a second transfer below to evaluate a double hit.
+  </div>
+
+</div>
+
+
+<script>
+const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
+const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
+const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+let ALL=[],TMAP={},GW=1;
+let OUT=null,IN=null,OUT2=null,IN2=null,HIT=0,GWS=5;
+window._t2Active=false;
+
+async function fetchJ(url){const r=await fetch(url);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+
+function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
+
+async function loadData(){
+  setBadge('loading','Fetching live data…');
+  try{
+    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
+    const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;
+    TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+    const fm=buildFixMap(fixes,GW,9);
+    ALL=buildPlayers(bs.elements,fm);
+    setBadge('live',`Live · GW${GW}`);
+  }catch(err){
+    const _exp=err.status===404||err.name==='AbortError'||err.message==='Failed to fetch';if(!_exp)console.warn('[HitCalc]',err.message);
+    ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+    setBadge('fallback',err.status===404?'Static data · deploy for live':'Static data');
+  }
+}
+
+function buildFixMap(fixtures,gw,count){
+  const m={};if(!Array.isArray(fixtures))return m;
+  fixtures.filter(f=>f.event>=gw&&f.event<gw+count&&!f.finished).forEach(f=>{
+    [f.team_h,f.team_a].forEach(tid=>{
+      if(!m[tid])m[tid]=[];
+      const isH=tid===f.team_h;
+      m[tid].push({gw:f.event,opp:TMAP[isH?f.team_a:f.team_h]?.short??'?',ha:isH?'H':'A',diff:isH?f.team_h_difficulty??3:f.team_a_difficulty??3});
+    });
+  });
+  Object.values(m).forEach(a=>a.sort((x,y)=>x.gw-y.gw));
+  return m;
+}
+
+function buildPlayers(els,fm){
+  return els.filter(e=>e.element_type>0&&e.status!=='u').map(e=>{
+    const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+    const xg90=Math.min(((parseFloat(e.expected_goals)||0)+(parseFloat(e.expected_assists)||0))/(mins/90),1.5);
+    const pos=POS_ID[e.element_type]??'MID';
+    return{
+      id:e.id,name:e.web_name,fullName:`${e.first_name} ${e.second_name}`,
+      teamId:e.team,pos,price:e.now_cost/10,
+      form:parseFloat(e.form)||0,xg90,
+      ict:parseFloat(e.ict_index)||0,
+      epNext:parseFloat(e.ep_next)||0,
+      totalPts:e.total_points||0,
+      ownedPct:parseFloat(e.selected_by_percent)||0,
+      status:e.status,
+      fixes:fm[e.team]??[],
+    };
+  });
+}
+
+/* ── PROJECTED POINTS ENGINE ─────────────────────────────────────────
+   For each upcoming GW, estimate pts using:
+   - ep_next for GW1 (FPL's own model)
+   - For GW2+: scale ep_next by fixture difficulty ratio
+     Easy fixture (diff 1-2) = +15% vs average (diff 3)
+     Hard fixture (diff 4-5) = -20% vs average
+   This gives a reasonable forward projection without needing
+   actual future ep data which isn't in the bootstrap.
+─────────────────────────────────────────────────────────────────── */
+function projectPoints(player,numGws){
+  const base=player.epNext>0?player.epNext:Math.max(player.form*0.9,1);
+  const pts=[];
+  const fixes=player.fixes.slice(0,numGws);
+  for(let i=0;i<numGws;i++){
+    const fix=fixes[i]??null;
+    if(!fix){pts.push(0);continue;} // blank GW
+    const diffMult=fix.diff<=2?1.18:fix.diff===3?1.0:fix.diff===4?0.82:0.65;
+    const gwMult=i===0?1.0:0.92; // slight decay for uncertainty
+    pts.push(Math.max(parseFloat((base*diffMult*gwMult).toFixed(2)),0.5));
+  }
+  return pts;
+}
+
+/* ── AUTOCOMPLETE ─────────────────────────────────────────────── */
+function setupSearch(inputId,acId,onSelect){
+  const inp=document.getElementById(inputId);
+  const ac=document.getElementById(acId);
+  inp.addEventListener('input',()=>{
+    const q=inp.value.trim().toLowerCase();
+    if(q.length<2){ac.classList.remove('open');return;}
+    const matches=ALL.filter(p=>
+      p.name.toLowerCase().includes(q)||
+      p.fullName.toLowerCase().includes(q)||
+      (TMAP[p.teamId]?.short??'').toLowerCase().includes(q)
+    ).slice(0,8);
+    if(!matches.length){ac.classList.remove('open');return;}
+    ac.innerHTML=matches.map(p=>{
+      const team=TMAP[p.teamId]??{short:'?'};
+      const statusIcon=p.status==='d'?'⚠ ':p.status==='i'?'✖ ':'';
+      return`<div class="ac-item" data-id="${p.id}">
+        <div class="ac-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div>
+          <div class="ac-name">${statusIcon}${p.name}</div>
+          <div style="font-size:10px;color:var(--muted)">${p.pos} · ${team.short}</div>
+        </div>
+        <div class="ac-meta">£${p.price.toFixed(1)}m · ${p.form.toFixed(1)} form</div>
+      </div>`;
+    }).join('');
+    ac.classList.add('open');
+    ac.querySelectorAll('.ac-item').forEach(item=>{
+      item.addEventListener('click',()=>{
+        const p=ALL.find(x=>x.id===+item.dataset.id);
+        if(p){onSelect(p);inp.value=p.name;ac.classList.remove('open');}
+      });
+    });
+  });
+  document.addEventListener('click',e=>{if(!inp.contains(e.target)&&!ac.contains(e.target))ac.classList.remove('open');});
+}
+
+function renderPlayerCard(player,cardId,accentColor){
+  const card=document.getElementById(cardId);
+  const team=TMAP[player.teamId]??{short:'?',name:'Unknown'};
+  const fixHtml=player.fixes.slice(0,GWS).map(f=>
+    `<span class="frm-pill ${FIX_CLS[f.diff]}" title="GW${f.gw} vs ${f.opp} (${f.ha})">${f.opp} ${f.ha}</span>`
+  ).join('');
+  const statusNote=player.status==='d'?'<span style="color:var(--gold);font-size:10px"> ⚠ Doubt</span>':
+    player.status==='i'?'<span style="color:var(--accent);font-size:10px"> ✖ Injured</span>':'';
+  card.innerHTML=`
+    <div class="sel-name">${player.name}${statusNote}</div>
+    <div class="sel-meta">${player.pos} · ${team.short} · £${player.price.toFixed(1)}m · ${player.ownedPct.toFixed(1)}% owned</div>
+    <div class="sel-stats">
+      <div class="sel-stat"><div class="sel-stat-val" style="color:${accentColor}">${player.form.toFixed(1)}</div><div class="sel-stat-label">Form</div></div>
+      <div class="sel-stat"><div class="sel-stat-val">${player.xg90.toFixed(2)}</div><div class="sel-stat-label">xG+xA/90</div></div>
+      <div class="sel-stat"><div class="sel-stat-val" style="color:var(--grass-l)">${player.epNext>0?player.epNext.toFixed(1):'—'}</div><div class="sel-stat-label">Proj pts</div></div>
+    </div>
+    <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:8px 0 4px">Next ${GWS} fixtures</div>
+    <div class="fix-run-mini">${fixHtml||'<span style="color:var(--muted);font-size:10px">No fixtures</span>'}</div>`;
+  card.classList.add('visible');
+}
+
+function calculate(){
+  if(!OUT||!IN){
+    document.getElementById('resultPanel').classList.remove('visible');
+    document.getElementById('emptyHint').style.display='block';
+    return;
+  }
+  // If second transfer row is active but incomplete, treat as single transfer
+  const hasT2=window._t2Active&&OUT2&&IN2;
+  document.getElementById('emptyHint').style.display='none';
+  document.getElementById('resultPanel').classList.add('visible');
+
+  const outPts=projectPoints(OUT,GWS);
+  const inPts=projectPoints(IN,GWS);
+  const out2Pts=OUT2&&IN2?projectPoints(OUT2,GWS):Array(GWS).fill(0);
+  const in2Pts =OUT2&&IN2?projectPoints(IN2, GWS):Array(GWS).fill(0);
+
+  // Cumulative differential — sum both transfers, apply hit in GW1
+  let cumDiff=HIT;
+  const cumData=[];
+  for(let i=0;i<GWS;i++){
+    const gain1=inPts[i]-outPts[i];
+    const gain2=in2Pts[i]-out2Pts[i];
+    cumDiff+=gain1+gain2;
+    cumData.push(parseFloat(cumDiff.toFixed(1)));
+  }
+
+  // Break-even GW
+  const breakEvenGw=cumData.findIndex(v=>v>0);
+  const breakEvenLabel=breakEvenGw===-1?'Never':breakEvenGw===0?`GW${GW}`:`GW${GW+breakEvenGw}`;
+  const finalDiff=cumData[GWS-1];
+
+  // Verdict
+  let cls,icon,title,desc;
+  if(HIT===0){
+    if(finalDiff>=6){cls='worth';icon='✅';title='Strong transfer';desc=`<strong>${IN.name}</strong> is projected to outscore <strong>${OUT.name}</strong> by <strong>${finalDiff.toFixed(1)} pts</strong> over ${GWS} GWs. A clear upgrade.`;}
+    else if(finalDiff>=2){cls='marginal';icon='🤔';title='Marginal upgrade';desc=`<strong>${IN.name}</strong> edges <strong>${OUT.name}</strong> by <strong>${finalDiff.toFixed(1)} pts</strong> — a modest gain. Consider whether the fixtures justify the switch.`;}
+    else if(finalDiff>=-2){cls='marginal';icon='⚖️';title='Roughly equal';desc=`These players project almost identically over ${GWS} GWs. The decision comes down to longer-term fixture runs and squad balance.`;}
+    else{cls='not-worth';icon='❌';title='Not worth it';desc=`<strong>${OUT.name}</strong> projects to outscore <strong>${IN.name}</strong> by <strong>${Math.abs(finalDiff).toFixed(1)} pts</strong>. Hold.`;}
+  } else {
+    const hitAbs=Math.abs(HIT);
+    if(breakEvenGw===-1){cls='not-worth';icon='❌';title=`Hit doesn't pay off`;desc=`The ${hitAbs}-point cost is never recovered within ${GWS} GWs. <strong>${IN.name}</strong> needs to outscore <strong>${OUT.name}</strong> by ${hitAbs}+ pts to justify this — the projections suggest that won't happen.`;}
+    else if(breakEvenGw<=1){cls='worth';icon='✅';title='Hit is worth it';desc=`Break-even comes in <strong>${breakEvenLabel}</strong> — just ${breakEvenGw+1} GW${breakEvenGw>0?'s':''} away. After that you're in profit. The ${hitAbs}-pt hit pays off.`;}
+    else if(breakEvenGw<=3){cls='marginal';icon='🤔';title='Borderline hit';desc=`Break-even isn't until <strong>${breakEvenLabel}</strong>. That's ${breakEvenGw+1} GWs of deficit. Worthwhile if <strong>${IN.name}</strong> has a long run of easy fixtures beyond that.`;}
+    else{cls='not-worth';icon='❌';title='Hit not worth it';desc=`Break-even is <strong>${breakEvenLabel}</strong> — too far away to justify the ${hitAbs}-pt cost this week. Wait for a free transfer.`;}
+  }
+
+  // Render verdict
+  const vb=document.getElementById('verdictBanner');
+  vb.className=`verdict-banner ${cls}`;
+  document.getElementById('verdictIcon').textContent=icon;
+  const vt=document.getElementById('verdictTitle');vt.className=`verdict-title ${cls}`;vt.textContent=title;
+  document.getElementById('verdictDesc').innerHTML=desc;
+  const bb=document.getElementById('breakevenBadge');bb.className=`breakeven-badge ${cls}`;
+  const bv=document.getElementById('breakevenVal');
+  if(HIT===0){bv.textContent=(finalDiff>=0?'+':'')+finalDiff.toFixed(1);document.getElementById('breakevenLabel').textContent=`pts gain over ${GWS} GWs`;}
+  else{bv.textContent=breakEvenGw===-1?'Never':breakEvenLabel;document.getElementById('breakevenLabel').textContent='break-even point';}
+
+  // GW Chart
+  // Combined totals per GW for chart
+  const totalOut=outPts.map((v,i)=>v+(out2Pts[i]||0));
+  const totalIn =inPts.map((v,i) =>v+(in2Pts[i]||0));
+  const maxPts=Math.max(...totalOut,...totalIn,1);
+  const chartEl=document.getElementById('gwChart');
+  const hitLabels=HIT<0?[Math.abs(HIT),...Array(GWS-1).fill(0)]:Array(GWS).fill(0);
+  chartEl.innerHTML=totalOut.map((op,i)=>{
+    const ip=totalIn[i],hp=hitLabels[i];
+    const oh=Math.max((op/maxPts)*76,2),ih=Math.max((ip/maxPts)*76,2),hh=Math.max((hp/(maxPts+4))*76,0);
+    const gw=GW+i;
+    const fix=IN.fixes[i];
+    const diff=ip-op-(i===0?Math.abs(HIT):0);
+    const diffCol=diff>0?'var(--grass-l)':diff<0?'var(--accent)':'var(--muted)';
+    return`<div class="gw-col">
+      <div class="gw-bar-group">
+        ${hp>0?`<div class="gw-bar-hit" style="height:${hh}px" title="-${hp}pt hit"></div>`:''}
+        <div class="gw-bar-out" style="height:${oh}px;background:rgba(230,57,70,0.5)" title="Out total: ${op.toFixed(1)} pts"></div>
+        <div class="gw-bar-in"  style="height:${ih}px;background:rgba(39,174,96,0.6)"  title="In total: ${ip.toFixed(1)} pts"></div>
+      </div>
+      <div class="gw-pts-label">
+        <div style="color:var(--accent);font-size:8px">${op.toFixed(1)}</div>
+        <div style="color:var(--grass-l);font-size:8px">${ip.toFixed(1)}</div>
+      </div>
+      <div class="gw-col-label">GW${gw}${fix?`<br><span style="font-size:8px">${fix.opp}</span>`:''}</div>
+    </div>`;
+  }).join('');
+
+  // Cumulative row
+  const cumEl=document.getElementById('gwCumulative');
+  cumEl.innerHTML=cumData.map((v,i)=>{
+    const col=v>0?'rgba(39,174,96,0.12)':v<0?'rgba(230,57,70,0.08)':'rgba(255,255,255,0.04)';
+    const tc=v>0?'var(--grass-l)':v<0?'var(--accent)':'var(--muted)';
+    return`<div class="gw-cum-col" style="background:${col}">
+      <div style="color:${tc};font-size:9px">${v>=0?'+':''}${v}</div>
+      <div style="font-size:8px;color:var(--muted);font-family:var(--font-m)">cum</div>
+    </div>`;
+  }).join('');
+
+  // Hit legend
+  document.getElementById('hitLegend').style.display=HIT<0?'flex':'none';
+  // Update legend names
+  const legOut=document.getElementById('legendOut');
+  const legIn=document.getElementById('legendIn');
+  if(legOut) legOut.textContent=hasT2?`${OUT.name} + ${OUT2.name}`:`${OUT.name}`;
+  if(legIn)  legIn.textContent =hasT2?`${IN.name} + ${IN2.name}`:`${IN.name}`;
+
+
+  // Stats comparison — show both transfers if active
+  const sc=document.getElementById('statsCompare');
+  function makeCompareCard(outP,inP){
+    const metrics=[
+      {label:'Form',outV:outP.form.toFixed(1),inV:inP.form.toFixed(1),hi:true},
+      {label:'xG+xA/90',outV:outP.xg90.toFixed(2),inV:inP.xg90.toFixed(2),hi:true},
+      {label:'Proj pts',outV:outP.epNext>0?outP.epNext.toFixed(1):'—',inV:inP.epNext>0?inP.epNext.toFixed(1):'—',hi:true},
+      {label:'Price',outV:`£${outP.price.toFixed(1)}m`,inV:`£${inP.price.toFixed(1)}m`,hi:false},
+      {label:'Owned',outV:`${outP.ownedPct.toFixed(1)}%`,inV:`${inP.ownedPct.toFixed(1)}%`,hi:false},
+    ].map(m=>{
+      const ov=parseFloat(m.outV),iv=parseFloat(m.inV);
+      const oc=!isNaN(ov)&&!isNaN(iv)?(m.hi?(ov>iv?'better':ov<iv?'worse':'same'):(ov<iv?'better':ov>iv?'worse':'same')):'same';
+      const ic=!isNaN(ov)&&!isNaN(iv)?(m.hi?(iv>ov?'better':iv<ov?'worse':'same'):(iv<ov?'better':iv>ov?'worse':'same')):'same';
+      return{...m,oc,ic};
+    });
+    return`
+      <div class="compare-card">
+        <div class="compare-card-label out">📤 ${outP.name}</div>
+        ${metrics.map(r=>`<div class="stat-row"><span class="stat-row-label">${r.label}</span><span class="stat-row-val ${r.oc}">${r.outV}</span></div>`).join('')}
+      </div>
+      <div class="compare-card">
+        <div class="compare-card-label in">📥 ${inP.name}</div>
+        ${metrics.map(r=>`<div class="stat-row"><span class="stat-row-label">${r.label}</span><span class="stat-row-val ${r.ic}">${r.inV}</span></div>`).join('')}
+      </div>`;
+  }
+  let statsHtml=makeCompareCard(OUT,IN);
+  if(hasT2) statsHtml+=`<div style="grid-column:1/-1;height:1px;background:var(--border);margin:4px 0"></div>`+makeCompareCard(OUT2,IN2);
+  sc.innerHTML=statsHtml;
+  sc.style.gridTemplateColumns=hasT2?'1fr 1fr':'1fr 1fr';
+}
+
+/* ── FALLBACK DATA ─────────────────────────────────────────── */
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
+const FB_PLAYERS=[
+  {id:1, name:'Salah',    fullName:'Mohamed Salah',          teamId:12,pos:'MID',price:13.2,form:11.2,xg90:0.82,ict:385,epNext:9.8, totalPts:226,ownedPct:73.2,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3},{gw:39,opp:'EVE',ha:'H',diff:1},{gw:40,opp:'BHA',ha:'A',diff:2},{gw:41,opp:'FUL',ha:'H',diff:2}]},
+  {id:2, name:'Haaland',  fullName:'Erling Haaland',         teamId:13,pos:'FWD',price:14.5,form:8.9, xg90:0.94,ict:312,epNext:8.2, totalPts:198,ownedPct:54.1,status:'a',fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'A',diff:3},{gw:37,opp:'IPS',ha:'A',diff:1},{gw:38,opp:'CHE',ha:'H',diff:3},{gw:39,opp:'BHA',ha:'A',diff:2},{gw:40,opp:'WOL',ha:'H',diff:1},{gw:41,opp:'NFO',ha:'A',diff:2}]},
+  {id:3, name:'Mbeumo',   fullName:'Bryan Mbeumo',           teamId:4, pos:'FWD',price:8.3, form:10.8,xg90:0.71,ict:289,epNext:7.6, totalPts:184,ownedPct:41.2,status:'a',fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2},{gw:39,opp:'LEI',ha:'A',diff:1},{gw:40,opp:'BHA',ha:'H',diff:2},{gw:41,opp:'EVE',ha:'A',diff:1}]},
+  {id:4, name:'Palmer',   fullName:'Cole Palmer',            teamId:6, pos:'MID',price:11.0,form:7.4, xg90:0.68,ict:341,epNext:7.1, totalPts:177,ownedPct:49.8,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4},{gw:39,opp:'CRY',ha:'H',diff:2},{gw:40,opp:'AVL',ha:'A',diff:3},{gw:41,opp:'SOU',ha:'H',diff:1}]},
+  {id:5, name:'Isak',     fullName:'Alexander Isak',         teamId:15,pos:'FWD',price:9.0, form:8.1, xg90:0.63,ict:268,epNext:6.4, totalPts:162,ownedPct:37.4,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3},{gw:39,opp:'BOU',ha:'A',diff:2},{gw:40,opp:'IPS',ha:'H',diff:1},{gw:41,opp:'MCI',ha:'A',diff:4}]},
+  {id:6, name:'Trossard', fullName:'Leandro Trossard',       teamId:1, pos:'MID',price:7.5, form:6.4, xg90:0.48,ict:212,epNext:5.8, totalPts:141,ownedPct:22.1,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2},{gw:39,opp:'NFO',ha:'A',diff:2},{gw:40,opp:'TOT',ha:'H',diff:3},{gw:41,opp:'LIV',ha:'A',diff:4}]},
+  {id:7, name:'Watkins',  fullName:'Ollie Watkins',          teamId:2, pos:'FWD',price:9.5, form:5.9, xg90:0.52,ict:232,epNext:5.4, totalPts:138,ownedPct:31.6,status:'a',fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2},{gw:38,opp:'BHA',ha:'A',diff:2},{gw:39,opp:'MUN',ha:'H',diff:3},{gw:40,opp:'TOT',ha:'A',diff:3},{gw:41,opp:'WOL',ha:'H',diff:1}]},
+  {id:8, name:'Neto',     fullName:'Pedro Neto',             teamId:6, pos:'MID',price:6.8, form:7.8, xg90:0.55,ict:195,epNext:5.2, totalPts:108,ownedPct:6.4, status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4},{gw:39,opp:'CRY',ha:'H',diff:2},{gw:40,opp:'AVL',ha:'A',diff:3},{gw:41,opp:'SOU',ha:'H',diff:1}]},
+  {id:9, name:'Solanke',  fullName:'Dominic Solanke',        teamId:18,pos:'FWD',price:7.5, form:4.2, xg90:0.38,ict:178,epNext:4.8, totalPts:112,ownedPct:12.3,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3},{gw:38,opp:'NEW',ha:'H',diff:3},{gw:39,opp:'BOU',ha:'A',diff:2},{gw:40,opp:'CHE',ha:'H',diff:3},{gw:41,opp:'IPS',ha:'A',diff:1}]},
+  {id:10,name:'Trent A-A',fullName:'Trent Alexander-Arnold', teamId:12,pos:'DEF',price:7.2, form:7.1, xg90:0.42,ict:198,epNext:6.2, totalPts:118,ownedPct:28.6,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3},{gw:39,opp:'EVE',ha:'H',diff:1},{gw:40,opp:'BHA',ha:'A',diff:2},{gw:41,opp:'FUL',ha:'H',diff:2}]},
+  {id:11,name:'Raya',     fullName:'David Raya',             teamId:1, pos:'GK', price:5.5, form:5.8, xg90:0,   ict:45, epNext:5.2, totalPts:97, ownedPct:26.1,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2},{gw:39,opp:'NFO',ha:'A',diff:2},{gw:40,opp:'TOT',ha:'H',diff:3},{gw:41,opp:'LIV',ha:'A',diff:4}]},
+  {id:12,name:'Trippier', fullName:'Kieran Trippier',        teamId:15,pos:'DEF',price:6.5, form:3.2, xg90:0.18,ict:142,epNext:4.1, totalPts:80, ownedPct:18.4,status:'d',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3},{gw:39,opp:'BOU',ha:'A',diff:2},{gw:40,opp:'IPS',ha:'H',diff:1}]},
+];
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ALL=FB_PLAYERS;TMAP=FB_TEAMS;
+
+  setupSearch('outSearch','outAC',p=>{OUT=p;renderPlayerCard(p,'outCard','var(--accent)');calculate();});
+  setupSearch('inSearch','inAC',p=>{IN=p;renderPlayerCard(p,'inCard','var(--grass-l)');calculate();});
+  setupSearch('out2Search','out2AC',p=>{OUT2=p;renderPlayerCard(p,'out2Card','var(--accent)');calculate();});
+  setupSearch('in2Search','in2AC',p=>{IN2=p;renderPlayerCard(p,'in2Card','var(--grass-l)');calculate();});
+
+  document.getElementById('addT2Btn').addEventListener('click',()=>{
+    window._t2Active=true;
+    document.getElementById('transfer2Wrap').style.display='block';
+    const btn=document.getElementById('addT2Btn');
+    btn.style.display='none';
+    // Auto-suggest -8 hit when second transfer added
+    if(HIT===0||HIT===-4){
+      document.querySelectorAll('.hit-btn').forEach(b=>b.classList.remove('active'));
+      const h8=document.querySelector('.hit-btn[data-hit="-8"]');
+      if(h8){h8.classList.add('active');HIT=-8;}
+    }
+    calculate();
+  });
+  document.getElementById('removeT2Btn').addEventListener('click',()=>{
+    window._t2Active=false;
+    OUT2=null;IN2=null;
+    document.getElementById('transfer2Wrap').style.display='none';
+    document.getElementById('addT2Btn').style.display='';
+    document.getElementById('out2Search').value='';
+    document.getElementById('in2Search').value='';
+    document.getElementById('out2Card').classList.remove('visible');
+    document.getElementById('in2Card').classList.remove('visible');
+    // Revert to -4 if was -8
+    if(HIT===-8){
+      document.querySelectorAll('.hit-btn').forEach(b=>b.classList.remove('active'));
+      const h4=document.querySelector('.hit-btn[data-hit="-4"]');
+      if(h4){h4.classList.add('active');HIT=-4;}
+    }
+    calculate();
+  });
+
+  document.querySelectorAll('.hit-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.hit-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      HIT=+btn.dataset.hit;
+      calculate();
+    });
+  });
+
+  document.getElementById('gwRange').addEventListener('input',function(){
+    GWS=+this.value;document.getElementById('gwRangeVal').textContent=GWS;calculate();
+  });
+
+  loadData().then(()=>{
+    // Re-render if players already selected with live data
+    if(OUT)OUT=ALL.find(p=>p.id===OUT.id)??OUT;
+    if(IN)IN=ALL.find(p=>p.id===IN.id)??IN;
+    if(OUT2)OUT2=ALL.find(p=>p.id===OUT2.id)??OUT2;
+    if(IN2)IN2=ALL.find(p=>p.id===IN2.id)??IN2;
+    calculate();
+  });
+});
+</script>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+        </div>
+      </a>
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+      <a href="player-scout.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🔍</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Player Scout</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Find the best transfer in</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

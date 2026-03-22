@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/api/fpl-bootstrap",      "destination": "/fpl-bootstrap.js" },
+    { "source": "/api/fpl-fixtures",        "destination": "/fpl-fixtures.js" },
+    { "source": "/api/fpl-picks",           "destination": "/fpl-picks.js" },
+    { "source": "/api/fpl-live",            "destination": "/fpl-live.js" },
+    { "source": "/api/fpl-player-summary",  "destination": "/fpl-player-summary.js" },
+    { "source": "/api/fpl-transfers",       "destination": "/fpl-transfers.js" },
+    { "source": "/api/fpl-results",         "destination": "/fpl-results.js" },
+    { "source": "/api/xg-data",             "destination": "/xg-data.js" },
+    { "source": "/api/fpl-data",            "destination": "/fpl-data.js" }
+  ]
+}

@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchIQ — FPL Tools. xG-Powered. Think Sharper.</title>
+<meta name="description" content="Fantasy Premier League tools powered by live xG data. Fixture difficulty ticker, captain picker, chip advisor, GW live scores and 6 more tools. Think sharper, rank higher.">
+<meta name="keywords" content="FPL tools, Fantasy Premier League, xG fixture difficulty, captain picker, FPL free tools, FPL differentials">
+<meta name="author" content="PitchIQ">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pitchiq.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pitchiq.vercel.app/">
+<meta property="og:title" content="PitchIQ — FPL Tools. xG-Powered. Think Sharper.">
+<meta property="og:description" content="Free FPL tools powered by live xG data. No signup, no paywall, ever.">
+<meta property="og:site_name" content="PitchIQ">
+<meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PitchIQ — FPL Tools. Think Sharper.">
+<meta name="twitter:description" content="10 free FPL tools. Live xG data. No paywall.">
+<meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="shortcut icon" href="favicon.svg">
+<meta name="theme-color" content="#27ae60">
+<!-- Google Analytics — replace G-XXXXXXXXXX -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;
+  --red:#e63946;--blue:#63b3ed;
+  --ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;
+  --cream:#f0ece3;--muted:#6b7280;
+  --border:rgba(255,255,255,0.07);
+  --font-d:'Bebas Neue',sans-serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.35;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.fi{opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s ease}
+.fi.vis{opacity:1;transform:none}
+
+.rule{height:1px;background:var(--border);margin:0 40px}
+.S{position:relative;z-index:1}
+
+/* HERO */
+.hero{position:relative;z-index:1;overflow:hidden;min-height:100vh;
+  display:flex;align-items:center;padding-top:56px}
+.hero-pitch{position:absolute;right:0;top:0;bottom:0;width:58%;z-index:0;overflow:hidden}
+.hero-pitch svg{width:100%;height:100%;display:block}
+.hero-pitch::before{content:'';position:absolute;inset:0;z-index:2;
+  background:linear-gradient(90deg,var(--ink) 0%,rgba(13,17,23,0.88) 28%,rgba(13,17,23,0.35) 65%,transparent 100%)}
+.hero-pitch::after{content:'';position:absolute;inset:0;z-index:2;
+  background:linear-gradient(180deg,rgba(13,17,23,0.6) 0%,transparent 18%,transparent 82%,rgba(13,17,23,0.7) 100%)}
+.hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;
+  gap:0;align-items:center;width:100%;max-width:1200px;margin:0 auto;padding:60px 40px}
+.hero-left{padding-right:48px}
+
+.live-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);
+  color:var(--grass-l);padding:6px 14px;border-radius:20px;
+  font-family:var(--font-m);font-size:11px;letter-spacing:0.8px;
+  margin-bottom:28px;animation:fadeUp 0.4s ease both}
+.live-badge::before{content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--grass);animation:pulse 2s infinite;flex-shrink:0}
+
+.hero h1{font-family:var(--font-d);font-size:clamp(72px,8vw,120px);
+  line-height:0.87;letter-spacing:2px;color:var(--cream);
+  margin-bottom:24px;animation:fadeUp 0.4s 0.08s ease both}
+.hero h1 em{font-style:normal;color:var(--grass);display:block}
+.hero h1 strong{font-weight:400;color:var(--gold)}
+
+
+.hero-hook{font-size:16px;color:rgba(240,236,227,0.55);line-height:1.8;
+  max-width:460px;margin-bottom:36px;animation:fadeUp 0.4s 0.15s ease both}
+.hero-hook b{color:var(--cream);font-weight:600}
+
+.hero-stats{display:flex;gap:0;border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;background:rgba(22,27,34,0.8);backdrop-filter:blur(8px);
+  animation:fadeUp 0.4s 0.22s ease both}
+.hstat{flex:1;padding:14px 18px;border-right:1px solid var(--border)}
+.hstat:last-child{border-right:none}
+.hstat-val{font-family:var(--font-d);font-size:26px;letter-spacing:1px;
+  color:var(--cream);line-height:1}
+.hstat-val span{color:var(--grass)}
+.hstat-lbl{font-size:10px;color:var(--muted);margin-top:3px;
+  font-family:var(--font-m);letter-spacing:0.5px;text-transform:uppercase}
+
+.hero-tools-label{font-family:var(--font-m);font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tl{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:14px 8px;border-radius:10px;text-decoration:none;
+  background:rgba(22,27,34,0.88);border:1px solid rgba(255,255,255,0.08);
+  color:rgba(240,236,227,0.72);font-size:11px;font-weight:600;
+  text-align:center;line-height:1.3;transition:all 0.18s;
+  backdrop-filter:blur(8px);min-height:68px}
+.tl:hover{background:rgba(39,174,96,0.14);border-color:rgba(39,174,96,0.38);
+  color:#fff;transform:translateY(-1px)}
+.tl-icon{font-size:20px;line-height:1}
+.tl-sub{display:block;font-size:9px;font-weight:400;color:rgba(240,236,227,0.35);margin-top:2px;letter-spacing:0.2px}
+
+/* DASHBOARD STRIP */
+.dash-strip{background:var(--ink-2);border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);position:relative;z-index:1}
+.dash-strip-header{max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px 0;border-bottom:1px solid var(--border)}
+.dash-strip-title{display:flex;align-items:center;gap:7px;
+  font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted)}
+.dash-live-dot{width:6px;height:6px;border-radius:50%;
+  background:var(--grass);animation:pulse 2s infinite;flex-shrink:0}
+.dash-strip-updated{font-family:var(--font-m);font-size:9px;
+  color:rgba(107,114,128,0.5);letter-spacing:0.5px}
+.dash-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(6,1fr)}
+.dc{padding:18px 20px;border-right:1px solid var(--border);min-width:0}
+.dc:last-child{border-right:none}
+.dc-lbl{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.dc-val{font-family:var(--font-d);font-size:22px;letter-spacing:0.5px;
+  color:var(--cream);line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc-sub{font-size:11px;color:var(--muted);margin-top:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc-val.green{color:var(--grass-l)}.dc-val.gold{color:var(--gold)}
+.dc-val.blue{color:var(--blue)}.dc-val.red{color:#f87171}
+.skel{height:20px;border-radius:4px;margin-bottom:4px;
+  background:linear-gradient(90deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.09) 50%,rgba(255,255,255,0.04) 100%);
+  background-size:400px 100%;animation:shimmer 1.4s infinite linear}
+.skel.sm{height:11px;width:65%}
+
+/* TOOL SPOTLIGHT */
+.spotlight{position:relative;z-index:1;padding:72px 40px;max-width:1200px;margin:0 auto}
+.spotlight-label{font-family:var(--font-m);font-size:9px;letter-spacing:2.5px;
+  text-transform:uppercase;color:var(--grass);margin-bottom:16px}
+.spotlight-heading{font-family:var(--font-d);font-size:clamp(36px,4vw,54px);
+  letter-spacing:1px;color:var(--cream);margin-bottom:48px;line-height:1}
+.spotlight-heading span{color:var(--grass)}
+.spotlight-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.sp-card{background:var(--ink-2);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;transition:border-color 0.2s,transform 0.2s;cursor:default}
+.sp-card:hover{border-color:rgba(39,174,96,0.35);transform:translateY(-3px)}
+.sp-preview{padding:28px 28px 0;position:relative;min-height:160px;overflow:hidden}
+.sp-preview-inner{background:var(--ink-3);border-radius:10px 10px 0 0;
+  border:1px solid rgba(255,255,255,0.06);border-bottom:none;
+  padding:14px;height:130px;overflow:hidden;position:relative}
+/* Fixture ticker mini */
+.mini-ticker{display:flex;flex-direction:column;gap:6px}
+.mini-row{display:flex;align-items:center;gap:6px;font-size:10px}
+.mini-name{font-family:var(--font-m);color:var(--cream);opacity:0.7;width:60px;font-size:9px}
+.mini-pill{height:16px;border-radius:3px;flex:1;display:flex;align-items:center;
+  justify-content:center;font-size:8px;font-weight:700;font-family:var(--font-m)}
+.pill-e{background:rgba(39,174,96,0.25);color:var(--grass-l)}
+.pill-m{background:rgba(240,180,41,0.2);color:var(--gold)}
+.pill-h{background:rgba(230,57,70,0.2);color:var(--red)}
+/* Captain picker mini */
+.mini-cap{display:flex;flex-direction:column;gap:7px}
+.mini-cap-row{display:flex;align-items:center;justify-content:space-between;
+  padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05)}
+.mini-cap-row.top{background:rgba(240,180,41,0.08);border-color:rgba(240,180,41,0.2)}
+.mini-cap-name{font-size:10px;font-weight:600;color:var(--cream)}
+.mini-cap-ep{font-family:var(--font-m);font-size:9px;color:var(--gold)}
+.mini-cap-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.06);
+  margin-top:8px;overflow:hidden;position:relative}
+.mini-cap-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--grass),var(--grass-l))}
+/* Hit calculator mini */
+.mini-hit{padding:4px 0}
+.mini-hit-eq{font-family:var(--font-d);font-size:22px;color:var(--cream);
+  letter-spacing:1px;margin-bottom:10px}
+.mini-hit-eq span{color:var(--grass)}
+.mini-hit-row{display:flex;justify-content:space-between;align-items:center;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:10px}
+.mini-hit-row:last-child{border-bottom:none}
+.mini-hit-lbl{color:var(--muted)}
+.mini-hit-val{font-family:var(--font-m);color:var(--cream)}
+.mini-hit-val.g{color:var(--grass-l)}.mini-hit-val.r{color:var(--red)}
+
+.sp-body{padding:22px 28px 28px}
+.sp-tag{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--grass);opacity:0.7;margin-bottom:8px}
+.sp-title{font-weight:700;font-size:17px;color:var(--cream);margin-bottom:8px}
+.sp-desc{font-size:13px;color:rgba(240,236,227,0.48);line-height:1.7}
+.sp-link{display:inline-flex;align-items:center;gap:6px;margin-top:16px;
+  font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--grass);text-decoration:none;opacity:0.8;transition:opacity 0.2s}
+.sp-link:hover{opacity:1}
+.sp-link::after{content:'→'}
+.skel-name{height:9px;width:44px;border-radius:3px;background:rgba(255,255,255,0.07);animation:shimmer 1.4s infinite linear;background-size:400px 100%}
+.skel-pill{background:rgba(255,255,255,0.06);animation:shimmer 1.4s infinite linear;background-size:400px 100%}
+.skel-text{height:9px;width:60px;border-radius:3px;display:inline-block;background:rgba(255,255,255,0.07);animation:shimmer 1.4s infinite linear;background-size:400px 100%}
+.spotlight-divider{height:1px;background:var(--border)}
+
+@media(max-width:860px){
+  .spotlight-cards{grid-template-columns:1fr}
+  .spotlight{padding:48px 24px}
+}
+@media(min-width:861px){
+  .spotlight-cards{grid-template-columns:repeat(3,1fr)}
+}
+/* COMPARISON */
+
+/* HERO GW PICKS (right column) */
+.hero-gw-picks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.hgwp-card{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:10px;
+  text-decoration:none;border:1px solid;transition:all 0.18s;backdrop-filter:blur(8px)}
+.hgwp-captain{background:rgba(240,180,41,0.06);border-color:rgba(240,180,41,0.18)}
+.hgwp-captain:hover{background:rgba(240,180,41,0.12);border-color:rgba(240,180,41,0.35)}
+.hgwp-diff{background:rgba(99,179,237,0.06);border-color:rgba(99,179,237,0.18)}
+.hgwp-diff:hover{background:rgba(99,179,237,0.12);border-color:rgba(99,179,237,0.35)}
+.hgwp-fix{background:rgba(39,174,96,0.06);border-color:rgba(39,174,96,0.18)}
+.hgwp-fix:hover{background:rgba(39,174,96,0.12);border-color:rgba(39,174,96,0.35)}
+.hgwp-form{background:rgba(230,57,70,0.05);border-color:rgba(230,57,70,0.15)}
+.hgwp-form:hover{background:rgba(230,57,70,0.1);border-color:rgba(230,57,70,0.3)}
+.hgwp-label{font-family:var(--font-m);font-size:9px;letter-spacing:0.5px;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+.hgwp-name{font-family:var(--font-d);font-size:20px;letter-spacing:0.5px;color:var(--cream);line-height:1.1}
+.hgwp-captain .hgwp-name{color:var(--gold)}
+.hgwp-diff .hgwp-name{color:var(--blue)}
+.hgwp-fix .hgwp-name{color:var(--grass-l)}
+.hgwp-form .hgwp-name{color:#f87171}
+.hgwp-meta{font-size:10px;color:var(--muted);line-height:1.4}
+.hero-all-tools-link{display:inline-block;font-family:var(--font-m);font-size:10px;
+  letter-spacing:1px;color:var(--muted);text-decoration:none;opacity:0.6;
+  transition:opacity 0.2s;text-transform:uppercase}
+.hero-all-tools-link:hover{opacity:1;color:var(--cream)}
+
+/* ALL TOOLS SECTION */
+.all-tools-section{background:var(--ink-2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.all-tools-inner{max-width:1200px;margin:0 auto;padding:28px 40px}
+.all-tools-label{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.all-tools-inner .tool-grid{grid-template-columns:repeat(5,1fr)}
+
+
+/* FOOTER */
+footer{background:var(--ink-2);border-top:1px solid var(--border);
+  padding:36px 40px;position:relative;z-index:1}
+.foot-inner{max-width:1200px;margin:0 auto;display:flex;
+  align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px}
+.foot-logo{font-family:var(--font-d);font-size:20px;letter-spacing:2px;
+  color:var(--cream);text-decoration:none}
+.foot-logo span{color:var(--grass);opacity:0.6}
+.foot-links{display:flex;gap:20px;list-style:none;flex-wrap:wrap}
+.foot-links a{color:rgba(240,236,227,0.55);text-decoration:none;font-size:13px;
+  font-weight:500;transition:color 0.2s}
+.foot-links a:hover{color:var(--cream)}
+.foot-copy{width:100%;font-size:11px;color:rgba(107,114,128,0.85);
+  padding-top:18px;border-top:1px solid var(--border)}
+.foot-copy a{color:rgba(107,114,128,0.85);text-decoration:none}
+
+/* RESPONSIVE */
+@media(max-width:1000px){
+  .hero-inner{grid-template-columns:1fr;padding:40px 24px 60px;min-height:auto}
+  .hero-pitch{width:100%;opacity:0.2}
+  .hero-left{padding-right:0;margin-bottom:40px}
+  .dash-inner{grid-template-columns:repeat(3,1fr)}
+  .dc:nth-child(3){border-right:none}
+  .dc:nth-child(4){border-top:1px solid var(--border)}
+  .spotlight-cards{grid-template-columns:1fr}
+  .spotlight{padding:48px 24px}
+  .dash-strip-header{padding:8px 16px 0}
+  .all-tools-inner{padding:24px 24px}
+  .all-tools-inner .tool-grid{grid-template-columns:repeat(5,1fr)}
+}
+@media(max-width:700px){
+  .all-tools-inner .tool-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:660px){
+  /* Hero */
+  .hero{min-height:auto}
+  .hero-inner{padding:32px 16px 48px}
+  .hero h1{font-size:clamp(48px,13vw,72px)}
+  .hero-gw-picks{grid-template-columns:1fr 1fr}
+  /* Hero stats — 2x2 grid */
+  .hero-stats{flex-wrap:wrap}
+  .hstat{flex:1 1 45%;border-bottom:1px solid var(--border)}
+  .hstat:nth-child(3),.hstat:nth-child(4){border-bottom:none}
+  .hstat:nth-child(2){border-right:none}
+  /* All tools */
+  .all-tools-inner{padding:20px 16px}
+  .all-tools-inner .tool-grid{grid-template-columns:repeat(2,1fr)}
+  /* Dash strip — 2 cols, hide last */
+  .dash-inner{grid-template-columns:repeat(2,1fr)}
+  .dc:nth-child(2){border-right:none}
+  .dc:nth-child(3){border-top:1px solid var(--border)}
+  .dc:nth-child(4){border-top:1px solid var(--border)}
+  .dc:nth-child(5){border-right:none;border-top:1px solid var(--border)}
+  .dc:nth-child(6){display:none}
+  /* Tool grid */
+  .tl{min-height:60px;font-size:10px}
+  /* Spotlight */
+  .spotlight{padding:36px 16px}
+  .sp-preview{padding:20px 20px 0}
+  .sp-body{padding:18px 20px 24px}
+  /* General */
+  .rule{margin:0 16px}
+  footer{padding:24px 16px}
+  .foot-inner{flex-direction:column;align-items:flex-start;gap:12px}
+  .foot-links{gap:14px}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS
+   All ad slots are hidden by default (display:none).
+   When AdSense is approved, add class="ads-enabled" to <body>
+   and uncomment the AdSense script in each placeholder.
+   No layout shift — space is pre-reserved.
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+/* Leaderboard 728x90 — homepage between tool grid and dashboard */
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+/* Content banner 728x90 — top of tool pages below nav */
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+/* Mobile sticky footer 320x50 */
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+/* Ensure content isn't hidden behind sticky ad on mobile */
+@media(max-width:760px){
+  body.ads-enabled{padding-bottom:50px}
+}
+/* Hide leaderboard on mobile — show mobile banner instead */
+@media(max-width:760px){
+  .ad-slot-leaderboard,.ad-slot-content{display:none!important}
+}
+</style>
+</head>
+<body>
+<script src="nav.js"></script>
+
+<!-- HERO -->
+<section class="S hero">
+
+  <!-- Atmospheric pitch — right side -->
+  <div class="hero-pitch">
+    <svg viewBox="0 0 700 900" preserveAspectRatio="xMidYMid slice" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="pg" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stop-color="#1e6636"/>
+          <stop offset="55%" stop-color="#123d20"/>
+          <stop offset="100%" stop-color="#0a2412"/>
+        </radialGradient>
+        <radialGradient id="fl1" cx="5%" cy="5%" r="42%"><stop offset="0%" stop-color="#fff" stop-opacity="0.24"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <radialGradient id="fl2" cx="95%" cy="5%" r="42%"><stop offset="0%" stop-color="#fff" stop-opacity="0.24"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <radialGradient id="fl3" cx="5%" cy="95%" r="42%"><stop offset="0%" stop-color="#fff" stop-opacity="0.18"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <radialGradient id="fl4" cx="95%" cy="95%" r="42%"><stop offset="0%" stop-color="#fff" stop-opacity="0.18"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient>
+        <radialGradient id="cg" cx="50%" cy="55%" r="22%"><stop offset="0%" stop-color="#27ae60" stop-opacity="0.22"/><stop offset="100%" stop-color="#27ae60" stop-opacity="0"/></radialGradient>
+        <filter id="b3"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter id="b2"><feGaussianBlur stdDeviation="2"/></filter>
+        <clipPath id="cp"><rect width="700" height="900"/></clipPath>
+      </defs>
+      <rect width="700" height="900" fill="url(#pg)"/>
+      <g clip-path="url(#cp)" opacity="0.55">
+        <rect y="0"   width="700" height="90" fill="rgba(0,0,0,0.09)"/>
+        <rect y="180" width="700" height="90" fill="rgba(0,0,0,0.09)"/>
+        <rect y="360" width="700" height="90" fill="rgba(0,0,0,0.09)"/>
+        <rect y="540" width="700" height="90" fill="rgba(0,0,0,0.09)"/>
+        <rect y="720" width="700" height="90" fill="rgba(0,0,0,0.09)"/>
+      </g>
+      <rect width="700" height="900" fill="url(#fl1)"/>
+      <rect width="700" height="900" fill="url(#fl2)"/>
+      <rect width="700" height="900" fill="url(#fl3)"/>
+      <rect width="700" height="900" fill="url(#fl4)"/>
+      <rect width="700" height="900" fill="url(#cg)"/>
+      <rect x="40" y="30" width="620" height="840" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none" rx="2"/>
+      <line x1="40" y1="450" x2="660" y2="450" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <circle cx="350" cy="450" r="80" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none"/>
+      <circle cx="350" cy="450" r="4" fill="rgba(255,255,255,0.6)"/>
+      <rect x="175" y="30" width="350" height="120" stroke="rgba(255,255,255,0.22)" stroke-width="1.5" fill="none"/>
+      <rect x="245" y="30" width="210" height="50" stroke="rgba(255,255,255,0.16)" stroke-width="1" fill="none"/>
+      <circle cx="350" cy="120" r="3" fill="rgba(255,255,255,0.45)"/>
+      <path d="M 215 150 A 80 80 0 0 0 485 150" stroke="rgba(255,255,255,0.16)" stroke-width="1" fill="none"/>
+      <rect x="175" y="750" width="350" height="120" stroke="rgba(255,255,255,0.22)" stroke-width="1.5" fill="none"/>
+      <rect x="245" y="820" width="210" height="50" stroke="rgba(255,255,255,0.16)" stroke-width="1" fill="none"/>
+      <circle cx="350" cy="780" r="3" fill="rgba(255,255,255,0.45)"/>
+      <path d="M 215 750 A 80 80 0 0 1 485 750" stroke="rgba(255,255,255,0.16)" stroke-width="1" fill="none"/>
+      <path d="M 40 48 A 14 14 0 0 1 54 30" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      <path d="M 646 30 A 14 14 0 0 1 660 48" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      <path d="M 660 852 A 14 14 0 0 1 646 870" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      <path d="M 54 870 A 14 14 0 0 1 40 852" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      <rect x="300" y="22" width="100" height="10" rx="2" fill="rgba(255,255,255,0.4)"/>
+      <rect x="300" y="868" width="100" height="10" rx="2" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="350" cy="820" r="12" fill="#27ae60" opacity="0.9" filter="url(#b3)"/><circle cx="350" cy="820" r="9" fill="#2ecc71"/>
+      <circle cx="130" cy="680" r="11" fill="#27ae60" opacity="0.85" filter="url(#b2)"/><circle cx="130" cy="680" r="8" fill="#2ecc71"/>
+      <circle cx="245" cy="660" r="11" fill="#27ae60" opacity="0.85" filter="url(#b2)"/><circle cx="245" cy="660" r="8" fill="#2ecc71"/>
+      <circle cx="455" cy="660" r="11" fill="#27ae60" opacity="0.85" filter="url(#b2)"/><circle cx="455" cy="660" r="8" fill="#2ecc71"/>
+      <circle cx="570" cy="680" r="11" fill="#27ae60" opacity="0.85" filter="url(#b2)"/><circle cx="570" cy="680" r="8" fill="#2ecc71"/>
+      <circle cx="175" cy="510" r="11" fill="#f0b429" opacity="0.85" filter="url(#b2)"/><circle cx="175" cy="510" r="8" fill="#f5c842"/>
+      <circle cx="350" cy="490" r="12" fill="#f0b429" opacity="0.9" filter="url(#b2)"/><circle cx="350" cy="490" r="9" fill="#f5c842"/>
+      <circle cx="525" cy="510" r="11" fill="#f0b429" opacity="0.85" filter="url(#b2)"/><circle cx="525" cy="510" r="8" fill="#f5c842"/>
+      <circle cx="190" cy="310" r="12" fill="#e63946" opacity="0.85" filter="url(#b2)"/><circle cx="190" cy="310" r="9" fill="#ff6b6b"/>
+      <circle cx="350" cy="275" r="14" fill="#e63946" opacity="0.95" filter="url(#b3)"/><circle cx="350" cy="275" r="10" fill="#ff6b6b"/>
+      <circle cx="510" cy="310" r="12" fill="#e63946" opacity="0.85" filter="url(#b2)"/><circle cx="510" cy="310" r="9" fill="#ff6b6b"/>
+      <circle cx="350" cy="130" r="11" fill="rgba(99,179,237,0.5)" filter="url(#b2)"/>
+      <circle cx="200" cy="190" r="9" fill="rgba(99,179,237,0.4)" filter="url(#b2)"/>
+      <circle cx="500" cy="190" r="9" fill="rgba(99,179,237,0.4)" filter="url(#b2)"/>
+      <circle cx="140" cy="350" r="9" fill="rgba(99,179,237,0.35)" filter="url(#b2)"/>
+      <circle cx="560" cy="350" r="9" fill="rgba(99,179,237,0.35)" filter="url(#b2)"/>
+      <circle cx="350" cy="450" r="8" fill="white" opacity="0.95" filter="url(#b2)"/>
+      <circle cx="350" cy="450" r="5" fill="white"/>
+    </svg>
+  </div>
+
+  <div class="hero-inner">
+    <!-- LEFT: headline + stats -->
+    <div class="hero-left">
+      <div class="live-badge" id="heroBadge">&#9917; 2025/26 FPL Season &mdash; Live</div>
+      <h1>THINK<br><em>SHARPER.</em></h1>
+      <p class="hero-hook">
+        10 tools powered by <b>live xG data.</b>
+        Fixture difficulty, captain picks and player analysis —
+        built for real FPL decisions.
+      </p>
+
+      <div class="hero-stats">
+        <div class="hstat">
+          <div class="hstat-val" id="heroGW">&mdash;<span>gw</span></div>
+          <div class="hstat-lbl">Gameweek</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val">10<span>+</span></div>
+          <div class="hstat-lbl">Tools</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val">xG<span> model</span></div>
+          <div class="hstat-lbl">Fixture ratings</div>
+        </div>
+        <div class="hstat">
+          <div class="hstat-val">GW<span> live</span></div>
+          <div class="hstat-lbl">Real-time data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: this gameweek picks — above the fold value -->
+    <div class="fi" style="transition-delay:0.1s">
+      <div class="hero-tools-label">// Quick picks &mdash; GW<span id="heroGwLabel">—</span></div>
+      <div class="hero-gw-picks">
+        <a href="captain-picker.html" class="hgwp-card hgwp-captain">
+          <div class="hgwp-label">⚡ Best captain</div>
+          <div class="hgwp-name" id="hgwpCapName"><div class="skel" style="width:70px;height:18px;margin:2px 0"></div></div>
+          <div class="hgwp-meta" id="hgwpCapMeta"><div class="skel sm"></div></div>
+        </a>
+        <a href="differential-finder.html" class="hgwp-card hgwp-diff">
+          <div class="hgwp-label">💎 Top differential</div>
+          <div class="hgwp-name" id="hgwpDiffName"><div class="skel" style="width:70px;height:18px;margin:2px 0"></div></div>
+          <div class="hgwp-meta" id="hgwpDiffMeta"><div class="skel sm"></div></div>
+        </a>
+        <a href="fixture-ticker.html" class="hgwp-card hgwp-fix">
+          <div class="hgwp-label">📊 Best fixture run</div>
+          <div class="hgwp-name" id="hgwpFixName"><div class="skel" style="width:70px;height:18px;margin:2px 0"></div></div>
+          <div class="hgwp-meta" id="hgwpFixMeta"><div class="skel sm"></div></div>
+        </a>
+        <a href="player-scout.html" class="hgwp-card hgwp-form">
+          <div class="hgwp-label">🔥 In-form pick</div>
+          <div class="hgwp-name" id="hgwpFormName"><div class="skel" style="width:70px;height:18px;margin:2px 0"></div></div>
+          <div class="hgwp-meta" id="hgwpFormMeta"><div class="skel sm"></div></div>
+        </a>
+      </div>
+      <a href="#all-tools" class="hero-all-tools-link">↓ All 10 tools</a>
+    </div>
+  </div>
+</section>
+
+<!-- ALL TOOLS GRID -->
+<div class="spotlight-divider"></div>
+<div id="all-tools" class="all-tools-section">
+  <div class="all-tools-inner">
+    <div class="all-tools-label">// 10 tools &mdash; click to open</div>
+    <div class="tool-grid">
+      <a href="fixture-ticker.html" class="tl"><span class="tl-icon">&#128202;</span><span>Fixture Ticker<span class="tl-sub">Who has the best run?</span></span></a>
+      <a href="captain-picker.html" class="tl"><span class="tl-icon">&#9889;</span><span>Captain Picker<span class="tl-sub">Armband by the numbers</span></span></a>
+      <a href="gw-live.html"        class="tl"><span class="tl-icon">&#128308;</span><span>GW Live<span class="tl-sub">Real-time squad scores</span></span></a>
+      <a href="player-scout.html"   class="tl"><span class="tl-icon">&#128269;</span><span>Player Scout<span class="tl-sub">Filter every player</span></span></a>
+      <a href="my-team.html"        class="tl"><span class="tl-icon">&#128085;</span><span>My Team<span class="tl-sub">Squad form &amp; fixtures</span></span></a>
+      <a href="hit-calculator.html" class="tl"><span class="tl-icon">&#127919;</span><span>Hit Calculator<span class="tl-sub">Is the -4 worth it?</span></span></a>
+      <a href="differential-finder.html" class="tl"><span class="tl-icon">&#128142;</span><span>Differentials<span class="tl-sub">Low owned, high upside</span></span></a>
+      <a href="value-tracker.html"  class="tl"><span class="tl-icon">&#128176;</span><span>Value Tracker<span class="tl-sub">Rising &amp; falling prices</span></span></a>
+      <a href="chip-advisor.html"   class="tl"><span class="tl-icon">&#127183;</span><span>Chip Advisor<span class="tl-sub">When to use your chips</span></span></a>
+      <a href="template-trap.html"  class="tl"><span class="tl-icon">&#129518;</span><span>Template Trap<span class="tl-sub">Beat the 50% squad</span></span></a>
+    </div>
+  </div>
+</div>
+
+<!-- AD SLOT: Leaderboard (728x90) — between tools and dashboard strip -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-leaderboard" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+<!-- LIVE DASHBOARD STRIP -->
+<div class="dash-strip">
+  <div class="dash-strip-header">
+    <div class="dash-strip-title">
+      <span class="dash-live-dot"></span>
+      Live GW data
+    </div>
+    <div class="dash-strip-updated" id="dUpdated">Loading&hellip;</div>
+  </div>
+  <div class="dash-inner">
+    <div class="dc">
+      <div class="dc-lbl">Top captain</div>
+      <div class="dc-val gold" id="dCaptain"><div class="skel"></div></div>
+      <div class="dc-sub" id="dCaptainSub"><div class="skel sm"></div></div>
+    </div>
+    <div class="dc">
+      <div class="dc-lbl">Most owned</div>
+      <div class="dc-val green" id="dOwned"><div class="skel"></div></div>
+      <div class="dc-sub" id="dOwnedSub"><div class="skel sm"></div></div>
+    </div>
+    <div class="dc">
+      <div class="dc-lbl">Top differential</div>
+      <div class="dc-val red" id="dDiff"><div class="skel"></div></div>
+      <div class="dc-sub" id="dDiffSub"><div class="skel sm"></div></div>
+    </div>
+    <div class="dc">
+      <div class="dc-lbl">Price rise</div>
+      <div class="dc-val blue" id="dRising"><div class="skel"></div></div>
+      <div class="dc-sub" id="dRisingSub"><div class="skel sm"></div></div>
+    </div>
+    <div class="dc">
+      <div class="dc-lbl">In-form player</div>
+      <div class="dc-val green" id="dForm"><div class="skel"></div></div>
+      <div class="dc-sub" id="dFormSub"><div class="skel sm"></div></div>
+    </div>
+    <div class="dc">
+      <div class="dc-lbl">Best value</div>
+      <div class="dc-val gold" id="dValue"><div class="skel"></div></div>
+      <div class="dc-sub" id="dValueSub"><div class="skel sm"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOL SPOTLIGHTS -->
+<div class="spotlight-divider"></div>
+<div class="S fi">
+  <div class="spotlight">
+    <div class="spotlight-label">// Built different</div>
+    <div class="spotlight-heading">Ten tools.<br><span>Endless edge.</span></div>
+    <div class="spotlight-cards">
+
+      <!-- Card 1: Fixture Ticker -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner">
+            <div class="mini-ticker" id="spTicker">
+              <div class="mini-row"><div class="mini-name skel-name"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div></div>
+              <div class="mini-row"><div class="mini-name skel-name"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div></div>
+              <div class="mini-row"><div class="mini-name skel-name"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div></div>
+              <div class="mini-row"><div class="mini-name skel-name"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div><div class="mini-pill skel-pill"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">Fixture Ticker</div>
+          <div class="sp-title">Fixture difficulty that actually means something</div>
+          <div class="sp-desc">Rated by live xG and xGC data — separately for attackers and defenders. Know exactly who has a run to exploit before everyone else does.</div>
+          <a href="fixture-ticker.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+      <!-- Card 2: Captain Picker -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner">
+            <div class="mini-cap" id="spCaptain">
+              <div class="mini-cap-row top"><span class="mini-cap-name skel-text"></span><span class="mini-cap-ep skel-text"></span></div>
+              <div class="mini-cap-bar"><div class="mini-cap-fill" style="width:0%"></div></div>
+              <div class="mini-cap-row"><span class="mini-cap-name skel-text"></span><span class="mini-cap-ep skel-text"></span></div>
+              <div class="mini-cap-bar"><div class="mini-cap-fill" style="width:0%;opacity:0.55"></div></div>
+              <div class="mini-cap-row"><span class="mini-cap-name skel-text"></span><span class="mini-cap-ep skel-text"></span></div>
+              <div class="mini-cap-bar"><div class="mini-cap-fill" style="width:0%;opacity:0.35"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">Captain Picker</div>
+          <div class="sp-title">Your armband, decided by data</div>
+          <div class="sp-desc">Load your squad with your Team ID and every player is scored by form, projected points and ICT index — ranked for your specific gameweek.</div>
+          <a href="captain-picker.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+      <!-- Card 3: Hit Calculator -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner">
+            <div class="mini-hit" id="spHit">
+              <div class="mini-hit-eq">−4 <span>pts</span></div>
+              <div class="mini-hit-row">
+                <span class="mini-hit-lbl">Transfer in</span>
+                <span class="mini-hit-val" id="spHitPlayer">&mdash;</span>
+              </div>
+              <div class="mini-hit-row">
+                <span class="mini-hit-lbl">Exp. pts gain</span>
+                <span class="mini-hit-val" id="spHitGain">&mdash;</span>
+              </div>
+              <div class="mini-hit-row">
+                <span class="mini-hit-lbl">Break-even</span>
+                <span class="mini-hit-val g" id="spHitBE">&mdash;</span>
+              </div>
+              <div class="mini-hit-row">
+                <span class="mini-hit-lbl">Verdict</span>
+                <span class="mini-hit-val g" id="spHitVerdict">&mdash;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">Hit Calculator</div>
+          <div class="sp-title">Stop guessing if a hit is worth it</div>
+          <div class="sp-desc">Enter the transfer, see the break-even gameweek. Supports double transfers with an -8 hit. A clear answer, not a gut call. Now with squad comparison.</div>
+          <a href="hit-calculator.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SECOND ROW OF SPOTLIGHTS -->
+    <div class="spotlight-cards" style="margin-top:20px">
+
+      <!-- Card 4: Differential Finder -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner" style="display:flex;flex-direction:column;gap:7px;padding:14px">
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px">
+              <div style="width:22px;height:22px;border-radius:5px;background:#10b981;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">N</div>
+              <div style="flex:1"><div style="font-size:10px;font-weight:600;color:#f0ece3">Neto</div><div style="font-size:9px;color:#6b7280">MID · CHE · 6.4% owned</div></div>
+              <div style="font-family:monospace;font-size:16px;color:#2ecc71;line-height:1">6.4%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px">
+              <div style="width:22px;height:22px;border-radius:5px;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">W</div>
+              <div style="flex:1"><div style="font-size:10px;font-weight:600;color:#f0ece3">Wood</div><div style="font-size:9px;color:#6b7280">FWD · NFO · 7.2% owned</div></div>
+              <div style="font-family:monospace;font-size:16px;color:#2ecc71;line-height:1">7.2%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(255,255,255,0.03);border:1px solid rgba(99,179,237,0.15);border-radius:6px">
+              <div style="width:22px;height:22px;border-radius:5px;background:#10b981;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">A</div>
+              <div style="flex:1"><div style="font-size:10px;font-weight:600;color:#f0ece3">Andreas</div><div style="font-size:9px;color:#6b7280">MID · FUL · 8.8% owned</div></div>
+              <div style="font-family:monospace;font-size:16px;color:#2ecc71;line-height:1">8.8%</div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">Differential Finder</div>
+          <div class="sp-title">Low ownership. High upside. Found for you.</div>
+          <div class="sp-desc">Momentum picks, hidden gems and hidden assets — scored by form, xG and fixture run vs ownership. Load your squad to see under-owned players already in your team.</div>
+          <a href="differential-finder.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+      <!-- Card 5: GW Live -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner" style="display:flex;flex-direction:column;gap:6px;padding:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px">
+              <div style="background:rgba(39,174,96,0.08);border:1px solid rgba(39,174,96,0.2);border-radius:7px;padding:8px;text-align:center">
+                <div style="font-family:monospace;font-size:20px;color:#2ecc71;line-height:1">47</div>
+                <div style="font-size:8px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Live pts</div>
+              </div>
+              <div style="background:rgba(22,27,34,0.6);border:1px solid rgba(255,255,255,0.07);border-radius:7px;padding:8px;text-align:center">
+                <div style="font-family:monospace;font-size:20px;color:#f0b429;line-height:1">18</div>
+                <div style="font-size:8px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px">Captain</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:6px;font-size:9px">
+              <span style="display:inline-flex;align-items:center;gap:3px;color:#2ecc71"><span style="width:5px;height:5px;border-radius:50%;background:#2ecc71;animation:pulse 1s infinite"></span>67'</span>
+              <span style="color:#f0ece3;font-weight:600;flex:1">Salah</span>
+              <span style="font-family:monospace;color:#f0b429">18 pts</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:6px;font-size:9px">
+              <span style="color:#6b7280;width:24px">90'</span>
+              <span style="color:#f0ece3;font-weight:600;flex:1">Trent A-A</span>
+              <span style="font-family:monospace;color:#2ecc71">9 pts</span>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">GW Live</div>
+          <div class="sp-title">Your squad's live points, every 60 seconds</div>
+          <div class="sp-desc">Real-time GW scores with captain comparison, player-by-player breakdown and price change tracker for all 700+ FPL players — updated automatically during matches.</div>
+          <a href="gw-live.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+      <!-- Card 6: Chip Advisor -->
+      <div class="sp-card">
+        <div class="sp-preview">
+          <div class="sp-preview-inner" style="display:flex;flex-direction:column;gap:6px;padding:12px">
+            <div style="padding:8px 10px;background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);border-radius:7px">
+              <div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Recommended GW</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#f0b429;line-height:1">GW36</div>
+              <div style="font-size:9px;color:rgba(240,236,227,0.4);margin-top:4px;line-height:1.5">6 teams with double fixtures — your bench players included</div>
+            </div>
+            <div style="display:flex;gap:5px">
+              <div style="flex:1;padding:6px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;font-size:9px;text-align:center">
+                <div style="color:#2ecc71;font-weight:600">⚡ TC</div><div style="color:#6b7280;margin-top:2px">GW35</div>
+              </div>
+              <div style="flex:1;padding:6px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;font-size:9px;text-align:center">
+                <div style="color:#f0b429;font-weight:600">🔋 BB</div><div style="color:#6b7280;margin-top:2px">GW36</div>
+              </div>
+              <div style="flex:1;padding:6px 8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;font-size:9px;text-align:center">
+                <div style="color:#63b3ed;font-weight:600">🎯 FH</div><div style="color:#6b7280;margin-top:2px">GW38</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sp-body">
+          <div class="sp-tag">Chip Advisor</div>
+          <div class="sp-title">When to play your chips — with reasons</div>
+          <div class="sp-desc">Squad-aware chip timing for TC, BB, FH and Wildcard. Validates your own plans, compares windows head-to-head, and guides execution once you've decided.</div>
+          <a href="chip-advisor.html" class="sp-link">Open tool</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="spotlight-divider"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-inner">
+    <a href="index.html" class="foot-logo">PITCH<span>IQ</span></a>
+    <ul class="foot-links">
+      <li><a href="methodology.html">How it works</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="https://www.reddit.com/r/FantasyPL/" target="_blank" rel="noopener">r/FantasyPL</a></li>
+      <li><a href="https://fantasy.premierleague.com" target="_blank" rel="noopener">FPL Official</a></li>
+    </ul>
+    <div class="foot-copy">
+      &copy; 2026 PitchIQ &middot; Not affiliated with the Premier League or FPL &middot;
+      <a href="privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+async function fetchFPL(url) {
+  const route = url.includes('bootstrap') ? 'api/fpl-bootstrap' : 'api/fpl-fixtures';
+  const r = await fetch(route);
+  if (r.ok) return r.json();
+  throw new Error('API unavailable');
+}
+
+function set(id, v) { const el = document.getElementById(id); if (el) el.innerHTML = v; }
+
+function showOffline() {
+  ['dCaptain','dOwned','dDiff','dRising','dForm','dValue'].forEach(id => set(id, '&mdash;'));
+  ['dCaptainSub','dOwnedSub','dDiffSub','dRisingSub','dFormSub','dValueSub'].forEach(id => set(id, 'Unavailable'));
+  set('dUpdated', 'Could not load &mdash; check back shortly');
+  const dot = document.querySelector('.dash-live-dot');
+  if (dot) { dot.style.background = 'var(--muted)'; dot.style.animation = 'none'; }
+  ['hgwpCapName','hgwpDiffName','hgwpFixName','hgwpFormName'].forEach(id => set(id, '&mdash;'));
+  ['hgwpCapMeta','hgwpDiffMeta','hgwpFixMeta','hgwpFormMeta'].forEach(id => set(id, 'Data unavailable'));
+  set('heroGwLabel', '?');
+}
+
+async function loadData() {
+  try {
+    const bs = await fetchFPL('https://fantasy.premierleague.com/api/bootstrap-static/');
+    const gw = (bs.events?.find(e => e.is_current) ?? bs.events?.find(e => e.is_next))?.id ?? null;
+    const teamMap = {};
+    bs.teams.forEach(t => { teamMap[t.id] = t.short_name; });
+    const players = bs.elements.filter(e => e.status !== 'u').map(e => ({
+      name: e.web_name, team: teamMap[e.team] || '?',
+      pos: ['','GK','DEF','MID','FWD'][e.element_type],
+      pts: e.total_points || 0, form: parseFloat(e.form) || 0,
+      price: (e.now_cost || 0) / 10, sel: parseFloat(e.selected_by_percent) || 0,
+      ep: parseFloat(e.ep_next) || 0,
+      ppm: e.now_cost > 0 ? (e.total_points || 0) / (e.now_cost / 10) : 0,
+      priceChange: e.cost_change_event || 0,
+    }));
+    if (gw) {
+      set('heroBadge', '&#9917; 2025/26 FPL Season &mdash; GW' + gw + ' live');
+      set('heroGW', gw + '<span>gw</span>');
+    }
+    const cap    = [...players].filter(p=>p.pos!=='GK'&&p.form>0).sort((a,b)=>b.ep-a.ep)[0];
+    const owned  = [...players].sort((a,b)=>b.sel-a.sel)[0];
+    const diff   = ([...players].filter(p=>p.sel<10&&p.form>4&&p.pos!=='GK').sort((a,b)=>b.form-a.form)[0])
+              ?? ([...players].filter(p=>p.sel<15&&p.form>2&&p.pos!=='GK').sort((a,b)=>b.form-a.form)[0]);
+    const rising = [...players].filter(p=>p.priceChange>0).sort((a,b)=>b.priceChange-a.priceChange)[0];
+    const fwd    = [...players].filter(p=>p.pos!=='GK').sort((a,b)=>b.form-a.form)[0];
+    const value  = [...players].filter(p=>p.price<7).sort((a,b)=>b.ppm-a.ppm)[0];
+    if (cap)    { set('dCaptain', cap.name); set('dCaptainSub', cap.team + ' &middot; EP ' + cap.ep.toFixed(1)); }
+    if (owned)  { set('dOwned', owned.sel.toFixed(1) + '%'); set('dOwnedSub', owned.name); }
+    if (diff)   { set('dDiff', diff.name.split(' ').pop()); set('dDiffSub', diff.sel.toFixed(1) + '% owned'); }
+    if (rising) { set('dRising', rising.name.split(' ').pop()); set('dRisingSub', '&pound;' + rising.price.toFixed(1) + 'm &uarr;'); }
+    else        { set('dRising', '&mdash;'); set('dRisingSub', 'No rises this GW'); }
+    if (fwd)    { set('dForm', fwd.name.split(' ').pop()); set('dFormSub', fwd.pos + ' &middot; Form ' + fwd.form.toFixed(1)); }
+    if (value)  { set('dValue', value.ppm.toFixed(1) + 'pts/&pound;m'); set('dValueSub', value.name + ' &middot; &pound;' + value.price.toFixed(1) + 'm'); }
+    const now = new Date();
+    set('dUpdated', 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+
+    // THIS GAMEWEEK PICKS — hero right column
+    if (gw) {
+      set('heroGwLabel', gw);
+    }
+    // Captain pick
+    if (cap) {
+      set('hgwpCapName', cap.name);
+      set('hgwpCapMeta', cap.team + ' · EP ' + cap.ep.toFixed(1) + ' · ' + cap.sel.toFixed(1) + '% owned');
+    }
+    // Differential
+    if (diff) {
+      set('hgwpDiffName', diff.name);
+      set('hgwpDiffMeta', diff.pos + ' · ' + diff.sel.toFixed(1) + '% owned');
+    }
+    // In-form pick
+    if (fwd) {
+      set('hgwpFormName', fwd.name);
+      set('hgwpFormMeta', fwd.pos + ' · ' + fwd.team + ' · Form ' + fwd.form.toFixed(1));
+    }
+
+    // SPOTLIGHT: Captain Picker card — top 3 by EP
+    const top3 = [...players].filter(p=>p.pos!=='GK'&&p.ep>0).sort((a,b)=>b.ep-a.ep).slice(0,3);
+    if (top3.length) {
+      const maxEP = top3[0].ep;
+      const capEl = document.getElementById('spCaptain');
+      if (capEl) {
+        const rows = top3.map((p,i) => {
+          const pct = ((p.ep / maxEP) * 100).toFixed(0);
+          const opacities = [1, 0.55, 0.35];
+          const isTop = i === 0;
+          return `<div class="mini-cap-row${isTop?' top':''}">
+            <span class="mini-cap-name">${isTop?'⚡ ':''}${p.name}</span>
+            <span class="mini-cap-ep">EP ${p.ep.toFixed(1)}</span>
+          </div>
+          <div class="mini-cap-bar"><div class="mini-cap-fill" style="width:${pct}%;opacity:${opacities[i]}"></div></div>`;
+        }).join('');
+        capEl.innerHTML = rows;
+      }
+    }
+
+    // SPOTLIGHT: Fixture Ticker card — top 4 most-owned outfield players + next 5 fixtures
+    try {
+      const fixturesData = await fetchFPL('https://fantasy.premierleague.com/api/fixtures/');
+      const upcomingFix = fixturesData.filter(f => !f.finished && f.event >= (gw||1));
+      const teamFixMap = {};
+      bs.teams.forEach(t => { teamFixMap[t.id] = []; });
+      upcomingFix.forEach(f => {
+        if (teamFixMap[f.team_h]) teamFixMap[f.team_h].push({opp: teamMap[f.team_a], diff: f.team_h_difficulty, home: true});
+        if (teamFixMap[f.team_a]) teamFixMap[f.team_a].push({opp: teamMap[f.team_h], diff: f.team_a_difficulty, home: false});
+      });
+      // Best fixture run — team with lowest avg difficulty next 3 GWs
+      const teamFixScores = bs.teams.map(t => {
+        const fixes = (teamFixMap[t.id] || []).slice(0, 3);
+        if (!fixes.length) return null;
+        const avgDiff = fixes.reduce((s, f) => s + f.diff, 0) / fixes.length;
+        return { team: t.short_name, avgDiff, fixes };
+      }).filter(Boolean).sort((a, b) => a.avgDiff - b.avgDiff);
+      const bestFix = teamFixScores[0];
+      if (bestFix) {
+        set('hgwpFixName', bestFix.team);
+        const oppStr = bestFix.fixes.map(f => f.opp + (f.home ? '(H)' : '(A)')).join(' · ');
+        set('hgwpFixMeta', 'Avg diff ' + bestFix.avgDiff.toFixed(1) + '/5 · ' + oppStr);
+      }
+
+      const tickerPlayers = [...players].filter(p=>p.pos!=='GK').sort((a,b)=>b.sel-a.sel).slice(0,4);
+      const tickerEl = document.getElementById('spTicker');
+      if (tickerEl && tickerPlayers.length) {
+        const pillClass = d => d<=2?'pill-e':d===3?'pill-m':'pill-h';
+        const rows = tickerPlayers.map(p => {
+          const teamId = bs.elements.find(e=>e.web_name===p.name)?.team;
+          const fixes = teamId ? (teamFixMap[teamId]||[]).slice(0,5) : [];
+          const pills = fixes.map(f=>`<div class="mini-pill ${pillClass(f.diff)}">${f.opp}</div>`).join('');
+          const emptyPills = fixes.length < 5 ? Array(5-fixes.length).fill('<div class="mini-pill skel-pill"></div>').join('') : '';
+          return `<div class="mini-row"><div class="mini-name">${p.name.split(' ').pop()}</div>${pills}${emptyPills}</div>`;
+        }).join('');
+        tickerEl.innerHTML = rows;
+      }
+    } catch(e) {}
+
+    // SPOTLIGHT: Hit Calculator card — use the top form FWD as the example transfer target
+    if (fwd) {
+      const epGain = (fwd.ep - 4).toFixed(1);
+      const beGW = epGain > 0 ? Math.ceil(4 / fwd.ep) : null;
+      const worth = beGW && beGW <= 3;
+      set('spHitPlayer', fwd.name + ' (&pound;' + fwd.price.toFixed(1) + 'm)');
+      set('spHitGain', '+' + fwd.ep.toFixed(1) + ' EP / GW');
+      set('spHitBE', beGW ? 'GW +' + beGW : 'Not worth it');
+      set('spHitVerdict', worth ? 'Worth it ✓' : 'Hold your transfer');
+      const beEl = document.getElementById('spHitBE');
+      const vEl = document.getElementById('spHitVerdict');
+      if (beEl) beEl.className = 'mini-hit-val ' + (worth?'g':'r');
+      if (vEl) vEl.className = 'mini-hit-val ' + (worth?'g':'r');
+    }
+  } catch(e) { showOffline(); }
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.06 });
+document.querySelectorAll('.fi').forEach(el => obs.observe(el));
+
+setTimeout(() => document.querySelectorAll('.hero .fi').forEach(el => el.classList.add('vis')), 80);
+
+loadData();
+</script>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

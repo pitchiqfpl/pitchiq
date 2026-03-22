@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchIQ — How It Works</title>
+<meta name="description" content="How PitchIQ calculates fixture difficulty, captain scores and player ratings. Our xG-powered model explained in plain English for FPL managers.">
+<meta name="keywords" content="FPL methodology, fixture difficulty explained, xG FPL, PitchIQ how it works, FPL model">
+<meta name="author" content="PitchIQ">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pitchiq.vercel.app/methodology.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pitchiq.vercel.app/methodology.html">
+<meta property="og:title" content="How PitchIQ Works — The Model Explained | PitchIQ">
+<meta property="og:description" content="Our xG-powered fixture difficulty model and captain scoring system explained in plain English.">
+<meta property="og:site_name" content="PitchIQ">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="shortcut icon" href="favicon.svg">
+<meta name="theme-color" content="#27ae60">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:15px;line-height:1.7;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:780px;margin:0 auto;padding:60px 28px 100px;position:relative;z-index:1}
+h1{font-family:var(--font-d);font-size:clamp(42px,8vw,72px);letter-spacing:2px;color:var(--cream);line-height:1;margin-bottom:16px}
+h1 span{color:var(--grass)}
+.intro{font-size:17px;color:rgba(240,236,227,0.6);line-height:1.8;margin-bottom:56px;max-width:620px;border-left:3px solid var(--grass);padding-left:20px}
+h2{font-family:var(--font-d);font-size:32px;letter-spacing:1.5px;color:var(--cream);margin:48px 0 16px}
+h3{font-size:15px;font-weight:600;color:var(--grass-l);margin:28px 0 10px;font-family:var(--font-m);letter-spacing:0.5px;text-transform:uppercase}
+p{color:rgba(240,236,227,0.72);margin-bottom:16px}
+p strong{color:var(--cream)}
+.formula-box{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:20px 0;font-family:var(--font-m);font-size:13px;color:rgba(240,236,227,0.6);line-height:1.9}
+.formula-box .var{color:var(--gold)}
+.formula-box .result{color:var(--grass-l)}
+.source-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:20px 0}
+.source-card{background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:18px 20px}
+.source-name{font-weight:600;font-size:14px;color:var(--cream);margin-bottom:4px}
+.source-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.source-tag{display:inline-block;font-family:var(--font-m);font-size:10px;padding:2px 8px;border-radius:4px;margin-top:8px;background:rgba(39,174,96,0.12);color:var(--grass-l)}
+.faq-item{border-bottom:1px solid var(--border);padding:22px 0}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-weight:600;font-size:15px;color:var(--cream);margin-bottom:10px}
+.faq-a{font-size:14px;color:rgba(240,236,227,0.62);line-height:1.7}
+.bucket-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+.bucket{border-radius:9px;padding:14px 10px;text-align:center}
+.bucket-num{font-family:var(--font-d);font-size:28px;line-height:1}
+.bucket-label{font-size:11px;margin-top:4px;opacity:0.8}
+.b1{background:var(--a1,#0f4c29);color:#4ade80}
+.b2{background:var(--a2,#166534);color:#86efac}
+.b3{background:var(--a3,#713f12);color:#fcd34d}
+.b4{background:var(--a4,#7c1d1d);color:#fca5a5}
+.b5{background:var(--a5,#450a0a);color:#f87171}
+.divider{height:1px;background:var(--border);margin:48px 0}
+footer{text-align:center;padding:40px 28px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--cream)}
+@media(max-width:600px){.source-grid{grid-template-columns:1fr}.bucket-grid{grid-template-columns:repeat(5,1fr);gap:4px}.bucket{padding:10px 4px}.bucket-num{font-size:22px}.page{padding:40px 16px 80px}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<div class="page">
+
+<h1>HOW PITCH<span>IQ</span> WORKS</h1>
+<p class="intro">Every number on this site comes from a real calculation. This page explains exactly how — no black boxes.</p>
+
+<h2>FIXTURE DIFFICULTY RATINGS</h2>
+<p>The Fixture Ticker uses <strong>three independent difficulty models</strong>, not just FPL's own FDR. You can switch between them with the view controls.</p>
+
+<h3>Overall (FPL's own ratings)</h3>
+<p>The default view uses FPL's official difficulty values — the same numbers visible on the FPL website. We display these as-is because they're what managers are already familiar with.</p>
+
+<h3>Attacking difficulty (xG model)</h3>
+<p>For attackers and midfielders, this rating tells you how leaky the opponent's defence has been — combining their season-long xGC with their last 5 games, weighted toward recent form. Home advantage is factored in. A green rating means the opponent has been conceding chances freely.</p>
+
+<h3>Defensive difficulty (xG model)</h3>
+<p>For defenders and goalkeepers, this rating tells you how dangerous the opponent's attack has been — again blending season and recent xG, adjusted for home and away. A green rating means the opponent has struggled to create chances.</p>
+
+<h3>The 1–5 difficulty buckets</h3>
+<div class="bucket-grid">
+  <div class="bucket b1"><div class="bucket-num">1</div><div class="bucket-label">Very easy</div></div>
+  <div class="bucket b2"><div class="bucket-num">2</div><div class="bucket-label">Easy</div></div>
+  <div class="bucket b3"><div class="bucket-num">3</div><div class="bucket-label">Medium</div></div>
+  <div class="bucket b4"><div class="bucket-num">4</div><div class="bucket-label">Hard</div></div>
+  <div class="bucket b5"><div class="bucket-num">5</div><div class="bucket-label">Very hard</div></div>
+</div>
+<p>Buckets use percentile thresholds rather than equal intervals, so roughly the bottom 15% of fixture scores become a 1, next 20% a 2, and so on. This prevents ratings clustering in the middle.</p>
+
+<div class="divider"></div>
+
+<h2>CAPTAIN SCORE</h2>
+<p>The Captain Picker ranks players using a composite score across three signals — recent form, FPL's own predicted points for the next gameweek, and ICT index. Expected points is weighted most heavily because it already accounts for fixture difficulty and form. Form and ICT are added to capture recent momentum and goal threat that predicted points can sometimes lag on.</p>
+<p>The result is a single ranked list. The higher the score, the stronger the captain recommendation for your specific gameweek.</p>
+
+<div class="divider"></div>
+
+<h2>FREQUENTLY ASKED QUESTIONS</h2>
+<div class="faq-item">
+  <div class="faq-q">Why do your difficulty ratings sometimes differ from FPL's?</div>
+  <div class="faq-a">FPL's overall ratings are based on general team strength as assessed at the start of the season and updated periodically. Our Attacking and Defensive ratings are recalculated from live xG and xGC data, so they respond faster to a team's recent run of form — a striker whose team has conceded in 8 straight games will show a harder defensive rating in our model before FPL updates theirs.</div>
+</div>
+<div class="faq-item">
+  <div class="faq-q">How often does the data refresh?</div>
+  <div class="faq-a">Player data (prices, ownership, form, ICT) refreshes every 60 minutes. Fixtures refresh every 30 minutes. The xG model data refreshes every 6 hours. All refreshes happen automatically via cached Vercel serverless functions — you never need to reload manually mid-gameweek.</div>
+</div>
+<div class="faq-item">
+  <div class="faq-q">Does PitchIQ store my FPL team data?</div>
+  <div class="faq-a">No. When you enter your Team ID, your squad data is fetched from FPL's public API and stored only in your browser's local storage. It never touches our servers. You can clear it at any time using the "Clear squad" button on tools that use it.</div>
+</div>
+<div class="faq-item">
+  <div class="faq-q">Is PitchIQ affiliated with the Premier League or FPL?</div>
+  <div class="faq-a">No. PitchIQ is an independent fan-made project. We use FPL's public API under their terms of service. "Fantasy Premier League" and "FPL" are trademarks of the Premier League.</div>
+</div>
+<div class="faq-item">
+  <div class="faq-q">Why is it free?</div>
+  <div class="faq-a">Because good FPL tools should be accessible to everyone. PitchIQ is an independent fan-made project built because the existing options were either paywalled, ugly, or both.</div>
+</div>
+
+</div>
+
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+</body>
+</html>

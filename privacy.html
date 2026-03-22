@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — PitchIQ</title>
+<meta name="description" content="PitchIQ privacy policy. How we handle your data and cookies.">
+<meta name="author" content="PitchIQ">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pitchiq.vercel.app/privacy.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pitchiq.vercel.app/privacy.html">
+<meta property="og:title" content="Privacy Policy — PitchIQ">
+<meta property="og:description" content="How PitchIQ handles your data, cookies, and advertising.">
+<meta property="og:site_name" content="PitchIQ">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="shortcut icon" href="favicon.svg">
+<meta name="theme-color" content="#27ae60">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;
+  --cream:#f0ece3;--muted:#6b7280;
+  --border:rgba(255,255,255,0.07);
+  --grass:#27ae60;--grass-l:#2ecc71;
+  --gold:#f0b429;--accent:#e63946;--blue:#63b3ed;
+  --font-d:'Bebas Neue',sans-serif;
+  --font-b:'DM Sans',sans-serif;
+  --font-m:'DM Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:15px;line-height:1.7;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+
+/* PAGE */
+.page{max-width:760px;margin:0 auto;padding:60px 28px 100px;position:relative;z-index:1}
+
+/* HEADER */
+.page-header{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+.eyebrow{font-family:var(--font-m);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--grass);margin-bottom:12px}
+h1{font-family:var(--font-d);font-size:clamp(40px,8vw,64px);letter-spacing:2px;color:var(--cream);line-height:1;margin-bottom:16px}
+h1 span{color:var(--grass)}
+.last-updated{font-family:var(--font-m);font-size:12px;color:var(--muted)}
+
+/* CONTENT */
+h2{font-family:var(--font-d);font-size:26px;letter-spacing:1.5px;color:var(--cream);margin:44px 0 12px;padding-top:4px}
+h3{font-size:14px;font-weight:600;color:var(--grass-l);margin:24px 0 8px;font-family:var(--font-m);letter-spacing:0.5px;text-transform:uppercase}
+p{color:rgba(240,236,227,0.72);margin-bottom:14px}
+p strong{color:var(--cream)}
+a{color:var(--grass-l);text-decoration:none}
+a:hover{text-decoration:underline}
+ul{margin:0 0 14px 20px;color:rgba(240,236,227,0.72)}
+ul li{margin-bottom:6px;line-height:1.6}
+ul li strong{color:var(--cream)}
+
+/* INFO BOX */
+.info-box{background:rgba(39,174,96,0.07);border:1px solid rgba(39,174,96,0.2);border-radius:12px;padding:18px 22px;margin:20px 0}
+.info-box p{margin:0;color:rgba(240,236,227,0.75)}
+
+/* SECTION DIVIDER */
+.section-rule{height:1px;background:var(--border);margin:8px 0 0}
+
+/* TABLE OF CONTENTS */
+.toc{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:40px}
+.toc-title{font-family:var(--font-m);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.toc ol{margin:0 0 0 16px;color:var(--muted)}
+.toc li{margin-bottom:5px;font-size:13px}
+.toc a{color:var(--muted);transition:color 0.15s}
+.toc a:hover{color:var(--cream);text-decoration:none}
+
+/* CONTACT CARD */
+.contact-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-top:20px}
+.contact-card p{margin:0;font-size:13px;color:var(--muted)}
+.contact-card p+p{margin-top:6px}
+
+/* FOOTER */
+footer{background:var(--ink-2);border-top:1px solid var(--border);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;position:relative;z-index:1}
+.footer-logo{font-family:var(--font-d);font-size:20px;letter-spacing:2px;color:var(--cream)}
+.footer-logo span{color:var(--grass);opacity:0.6}
+.footer-links{display:flex;gap:24px;list-style:none;flex-wrap:wrap}
+.footer-links a{color:rgba(240,236,227,0.45);text-decoration:none;font-size:13px;font-weight:500;transition:color 0.2s}
+.footer-links a:hover{color:var(--cream)}
+.footer-copy{font-size:12px;color:var(--muted);width:100%;padding-top:16px;border-top:1px solid var(--border)}
+
+@media(max-width:600px){
+  .page{padding:40px 16px 80px}
+  footer{padding:24px 20px;flex-direction:column;align-items:flex-start}
+}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+
+<script src="nav.js"></script>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="eyebrow">Legal</div>
+    <h1>PRIVACY<br><span>POLICY</span></h1>
+    <p class="last-updated">Last updated: March 2026</p>
+  </div>
+
+  <div class="info-box">
+    <p><strong>The short version:</strong> PitchIQ does not collect or store any personal data on its servers. Your FPL team ID (if you enter one) is stored only in your own browser. We use Google AdSense to display adverts, which uses cookies. You can opt out at any time.</p>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#who-we-are">Who we are</a></li>
+      <li><a href="#data-we-collect">Data we collect</a></li>
+      <li><a href="#data-we-do-not-collect">Data we do not collect</a></li>
+      <li><a href="#cookies">Cookies &amp; tracking</a></li>
+      <li><a href="#advertising">Advertising (Google AdSense)</a></li>
+      <li><a href="#third-party">Third-party services</a></li>
+      <li><a href="#your-rights">Your rights</a></li>
+      <li><a href="#data-retention">Data retention</a></li>
+      <li><a href="#children">Children's privacy</a></li>
+      <li><a href="#changes">Changes to this policy</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="who-we-are">1. Who We Are</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ (<strong>pitchiq.vercel.app</strong>) is a free Fantasy Premier League tools website. It is an independent fan-made project and is not affiliated with, endorsed by, or connected to the Premier League, Fantasy Premier League, or EA Sports.</p>
+  <p>For privacy enquiries, please use the contact details at the bottom of this page.</p>
+
+  <!-- 2 -->
+  <h2 id="data-we-collect">2. Data We Collect</h2>
+  <div class="section-rule"></div>
+
+  <h3>Browser local storage</h3>
+  <p>Some tools on PitchIQ allow you to enter your FPL Team ID so that your squad can be loaded. If you use this feature, your Team ID and squad data are stored in your browser's <strong>local storage</strong> — a mechanism that keeps data on your own device only. This data is never transmitted to PitchIQ's servers.</p>
+  <p>You can clear this data at any time using the "Clear squad" button within the relevant tool, or by clearing your browser's local storage for this site.</p>
+
+  <h3>Server logs</h3>
+  <p>PitchIQ is hosted on Vercel. Vercel may collect basic server log data including IP addresses, browser type, pages visited, and timestamps as part of normal web server operation. This data is governed by <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel's Privacy Policy</a>. PitchIQ does not have access to or control over this data.</p>
+
+  <h3>Analytics</h3>
+  <p>PitchIQ does not currently use any analytics platform (such as Google Analytics). If this changes, this policy will be updated accordingly.</p>
+
+  <!-- 3 -->
+  <h2 id="data-we-do-not-collect">3. Data We Do Not Collect</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ does not collect, store, or process:</p>
+  <ul>
+    <li>Your name, email address, or any contact information</li>
+    <li>Account credentials or passwords</li>
+    <li>Payment or financial information</li>
+    <li>Your precise location</li>
+    <li>Any data from children under 13</li>
+  </ul>
+  <p>No account registration is required or offered. You can use all tools anonymously.</p>
+
+  <!-- 4 -->
+  <h2 id="cookies">4. Cookies &amp; Tracking</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ itself does not set any first-party cookies.</p>
+  <p>However, third-party services embedded in PitchIQ — specifically Google AdSense — set their own cookies to serve and measure adverts. These cookies are set by Google, not by PitchIQ, and are governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
+
+  <h3>Types of cookies used by Google AdSense</h3>
+  <ul>
+    <li><strong>Advertising cookies:</strong> Used to show you relevant ads based on your browsing history and interests across websites.</li>
+    <li><strong>Measurement cookies:</strong> Used to measure ad performance, such as whether an ad was seen or clicked.</li>
+    <li><strong>Preference cookies:</strong> Used to remember your ad personalisation preferences.</li>
+  </ul>
+
+  <h3>Managing cookies</h3>
+  <p>You can control and delete cookies through your browser settings. Most browsers allow you to block or delete cookies. Note that blocking advertising cookies may mean you see less relevant adverts rather than no adverts.</p>
+  <p>You can also opt out of personalised advertising from Google via <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google's Ad Settings</a>, or use the <a href="https://optout.networkadvertising.org" target="_blank" rel="noopener">NAI opt-out tool</a>.</p>
+
+  <!-- 5 -->
+  <h2 id="advertising">5. Advertising (Google AdSense)</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ uses <strong>Google AdSense</strong> to display advertisements. AdSense is operated by Google LLC. By visiting PitchIQ, you may be shown personalised or non-personalised ads served by Google.</p>
+  <p>Google AdSense uses cookies and similar tracking technologies to:</p>
+  <ul>
+    <li>Show ads relevant to your interests</li>
+    <li>Limit how often you see the same ad</li>
+    <li>Measure the effectiveness of advertising campaigns</li>
+    <li>Prevent fraudulent clicks</li>
+  </ul>
+  <p>PitchIQ does not have access to the data Google collects for advertising purposes. For full details, see <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">How Google uses data when you use our partners' sites or apps</a>.</p>
+  <p>If you are located in the European Economic Area (EEA) or UK, Google will seek your consent before serving personalised ads in accordance with GDPR requirements.</p>
+
+  <!-- 6 -->
+  <h2 id="third-party">6. Third-Party Services</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ fetches live data from the following external services. No personal data is sent to these services — only technical requests for game data.</p>
+  <ul>
+    <li><strong>Fantasy Premier League API</strong> (fantasy.premierleague.com) — player stats, fixtures, and team data. Governed by the <a href="https://www.premierleague.com/privacy-policy" target="_blank" rel="noopener">Premier League Privacy Policy</a>.</li>
+    <li><strong>API-Football</strong> (api-football.com) — xG and fixture data for the Fixture Ticker's difficulty model. Governed by <a href="https://www.api-football.com/terms-and-conditions" target="_blank" rel="noopener">API-Football's Terms</a>.</li>
+    <li><strong>Vercel</strong> — hosting and serverless functions. Governed by <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener">Vercel's Privacy Policy</a>.</li>
+    <li><strong>Google Fonts</strong> — the DM Sans and Bebas Neue fonts are loaded from Google's servers. Google may collect your IP address as a result. Governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+  </ul>
+
+  <!-- 7 -->
+  <h2 id="your-rights">7. Your Rights</h2>
+  <div class="section-rule"></div>
+  <p>Under UK GDPR and the Data Protection Act 2018 (if applicable to you), you have the following rights regarding any personal data processed about you:</p>
+  <ul>
+    <li><strong>Right of access:</strong> You can request a copy of any personal data we hold about you.</li>
+    <li><strong>Right to erasure:</strong> You can request deletion of your personal data.</li>
+    <li><strong>Right to rectification:</strong> You can request correction of inaccurate data.</li>
+    <li><strong>Right to object:</strong> You can object to processing of your personal data.</li>
+    <li><strong>Right to data portability:</strong> You can request your data in a portable format.</li>
+  </ul>
+  <p>In practice, because PitchIQ stores no personal data on its servers, most of these rights can be exercised simply by clearing your browser's local storage. For any other requests, please use the contact details below.</p>
+  <p>You also have the right to lodge a complaint with the UK Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a> if you believe your data rights have been violated.</p>
+
+  <!-- 8 -->
+  <h2 id="data-retention">8. Data Retention</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ does not retain any personal data. Any data stored in your browser's local storage (such as your FPL Team ID) persists until you clear it yourself, or until you clear your browser data. It never leaves your device.</p>
+
+  <!-- 9 -->
+  <h2 id="children">9. Children's Privacy</h2>
+  <div class="section-rule"></div>
+  <p>PitchIQ is not directed at children under the age of 13. We do not knowingly collect personal information from children. If you believe a child has provided personal information through this site, please contact us and we will take steps to remove it.</p>
+
+  <!-- 10 -->
+  <h2 id="changes">10. Changes to This Policy</h2>
+  <div class="section-rule"></div>
+  <p>We may update this Privacy Policy from time to time — for example, if we add new features, introduce analytics, or change advertising providers. When we do, we will update the "Last updated" date at the top of this page.</p>
+  <p>We encourage you to review this page periodically. Continued use of PitchIQ after changes are posted constitutes your acceptance of the updated policy.</p>
+
+  <!-- 11 -->
+  <h2 id="contact">11. Contact</h2>
+  <div class="section-rule"></div>
+  <p>If you have any questions about this Privacy Policy or how PitchIQ handles data, please get in touch:</p>
+  <div class="contact-card">
+    <p><strong style="color:var(--cream)">PitchIQ</strong></p>
+    <p>Website: <a href="https://pitchiq.vercel.app">pitchiq.vercel.app</a></p>
+    <p>For privacy enquiries, use the contact form on the website or reach out via the r/FantasyPL community.</p>
+    <p style="margin-top:10px;font-size:12px">PitchIQ is an independent project and is not affiliated with, endorsed by, or connected to the Premier League, Fantasy Premier League, or EA Sports. "Fantasy Premier League" and "FPL" are trademarks of the Premier League.</p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITCH<span>IQ</span></div>
+  <ul class="footer-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="methodology.html">How it works</a></li>
+    <li><a href="privacy.html" style="color:var(--cream)">Privacy Policy</a></li>
+    <li><a href="https://www.reddit.com/r/FantasyPL/" target="_blank" rel="noopener">r/FantasyPL</a></li>
+    <li><a href="https://fantasy.premierleague.com" target="_blank" rel="noopener">FPL Official</a></li>
+  </ul>
+  <div class="footer-copy">© 2026 PitchIQ · Not affiliated with the Premier League or FPL</div>
+</footer>
+
+</body>
+</html>

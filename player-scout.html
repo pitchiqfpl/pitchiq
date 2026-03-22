@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search and filter every FPL player by position, price, form and ICT index. Find the best transfers with live data from the official FPL API.">
+  <meta name="keywords" content="FPL player search, FPL player stats, Fantasy Premier League players, FPL player filter, best FPL transfers">
+  <meta name="author" content="PitchIQ">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://pitchiq.vercel.app/player-scout.html">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pitchiq.vercel.app/player-scout.html">
+  <meta property="og:title" content="FPL Player Scout — Search & Filter All Players | PitchIQ">
+  <meta property="og:description" content="Search and filter every FPL player by position, price, form and ICT index. Find the best transfers with live data from the official FPL API.">
+  <meta property="og:site_name" content="PitchIQ">
+  <meta property="og:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FPL Player Scout — Search & Filter All Players | PitchIQ">
+  <meta name="twitter:description" content="Search and filter every FPL player by position, price, form and ICT index. Find the best transfers with live data from the official FPL API.">
+  <meta name="twitter:image" content="https://pitchiq.vercel.app/og-image.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <meta name="theme-color" content="#27ae60">
+<title>PitchIQ — Player Scout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
+.page{max-width:1320px;margin:0 auto;padding:36px 28px 80px;transition:margin-right 0.3s cubic-bezier(0.16,1,0.3,1)}
+.page.panel-open{margin-right:388px;max-width:none}
+.main-layout{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+.logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px;color:var(--cream)}.logo span{color:var(--grass)}
+.header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
+.data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500;transition:all 0.3s}
+.data-badge.live{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25);color:var(--grass-l)}
+.data-badge.loading{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2);color:var(--gold)}
+.data-badge.fallback{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--muted)}
+.data-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.data-badge.live .data-dot{background:var(--grass);animation:blink 2s infinite}
+.data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
+.data-badge.fallback .data-dot{background:var(--muted)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.mode-strip{display:flex;gap:8px;margin-bottom:20px;padding:12px 16px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;align-items:center;flex-wrap:wrap}
+.mode-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.mode-btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:rgba(240,236,227,0.5);cursor:pointer;transition:all 0.18s;font-family:var(--font-b)}
+.mode-btn:hover{color:var(--cream)}
+.mode-btn.active.buy{background:rgba(39,174,96,0.12);border-color:rgba(39,174,96,0.3);color:var(--grass-l)}
+.mode-btn.active.sell{background:rgba(230,57,70,0.1);border-color:rgba(230,57,70,0.25);color:var(--accent)}
+.mode-desc{font-size:11px;color:var(--muted);margin-left:8px;flex:1}
+.filter-sidebar{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:18px;position:sticky;top:80px}
+.filter-section{margin-bottom:18px}
+.filter-section:last-child{margin-bottom:0}
+.filter-label{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.pill-group{display:flex;flex-wrap:wrap;gap:4px}
+.pos-tab-group{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-top:4px}
+.pos-tab{padding:8px 4px;border-radius:8px;font-size:12px;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.15s;font-family:var(--font-b);text-align:center;letter-spacing:0.5px}
+.pos-tab:hover{color:var(--cream);border-color:rgba(255,255,255,0.2)}
+.pos-tab.active{background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.5);color:var(--grass-l)}
+.fpill:hover{color:var(--cream)}
+.fpill.active{background:rgba(39,174,96,0.12);border-color:rgba(39,174,96,0.3);color:var(--grass-l)}
+.range-row{display:flex;flex-direction:column;gap:6px}
+.range-track{-webkit-appearance:none;width:100%;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none}
+.range-track::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--grass);cursor:pointer}
+.range-val{font-family:var(--font-m);font-size:11px;color:var(--grass-l)}
+.search-box{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:8px 12px;border-radius:8px;font-family:var(--font-b);font-size:12px;outline:none;transition:border-color 0.2s}
+.search-box:focus{border-color:rgba(39,174,96,0.4)}
+.search-box::placeholder{color:var(--muted)}
+.team-select{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:7px 10px;border-radius:8px;font-family:var(--font-b);font-size:12px;outline:none;cursor:pointer}
+.team-select option{background:var(--ink-3);color:var(--cream)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+.toggle-lbl{font-size:12px;color:rgba(240,236,227,0.6)}
+.toggle{width:32px;height:18px;background:rgba(255,255,255,0.1);border-radius:9px;cursor:pointer;position:relative;transition:background 0.2s;border:none;flex-shrink:0}
+.toggle.on{background:var(--grass)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:white;transition:transform 0.2s}
+.toggle.on::after{transform:translateX(14px)}
+.filter-section-divider{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grass-l);opacity:0.7;margin:16px 0 10px;padding-top:14px;border-top:1px solid rgba(39,174,96,0.15)}
+.adv-toggle{width:100%;background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-b);text-align:left;display:flex;align-items:center;justify-content:space-between;margin:8px 0 0;transition:color 0.15s,border-color 0.15s}
+.adv-toggle:hover{color:var(--cream);border-color:rgba(255,255,255,0.15)}
+.adv-toggle .adv-arrow{transition:transform 0.2s;font-size:10px}
+.adv-toggle.open .adv-arrow{transform:rotate(180deg)}
+.adv-filters{display:none;margin-top:2px}
+.adv-filters.open{display:block}
+.result-count{font-family:var(--font-m);font-size:11px;color:var(--muted);padding-top:14px;border-top:1px solid var(--border);margin-top:14px}
+.player-table-wrap{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;overflow:visible}
+.player-table{width:100%;border-collapse:collapse;min-width:1000px}
+.player-table th{padding:9px 8px;font-family:var(--font-m);font-size:9px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-weight:400;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;vertical-align:middle}
+.player-table th:first-child,.player-table th:nth-child(2){text-align:left}
+.player-table th:hover{color:var(--cream)}
+/* Ensure .ip inside th doesn't affect header height */
+.player-table th .ii{vertical-align:middle}
+.player-table th .ip{display:none !important}
+.player-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s}
+.player-table tbody tr:last-child{border-bottom:none}
+.player-table tbody tr:hover{background:rgba(255,255,255,0.025)}
+.player-table tbody tr.selected{background:rgba(39,174,96,0.04)}
+.player-table td{padding:9px 8px;font-size:12px;text-align:right;white-space:nowrap;vertical-align:middle}
+.player-table td:first-child,.player-table td:nth-child(2){text-align:left}
+.player-shirt{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
+.player-name{font-weight:600;font-size:13px;color:var(--cream);line-height:1.2}
+.player-team{font-size:10px;color:var(--muted);margin-top:1px}
+.stat-good{color:var(--grass-l)}.stat-ok{color:var(--cream)}.stat-warn{color:var(--gold)}.stat-bad{color:var(--accent)}
+.price-up{color:var(--grass-l);font-size:10px;margin-left:2px}.price-down{color:var(--accent);font-size:10px;margin-left:2px}
+.fix-mini{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-family:var(--font-m);font-size:9px;font-weight:600;border:1px solid}
+.fix-d1{background:rgba(15,76,41,0.6);border-color:rgba(74,222,128,0.2);color:#4ade80}
+.fix-d2{background:rgba(22,101,52,0.6);border-color:rgba(134,239,172,0.15);color:#86efac}
+.fix-d3{background:rgba(113,63,18,0.6);border-color:rgba(252,211,77,0.15);color:#fcd34d}
+.fix-d4{background:rgba(124,29,29,0.6);border-color:rgba(252,165,165,0.15);color:#fca5a5}
+.fix-d5{background:rgba(69,10,10,0.6);border-color:rgba(248,113,113,0.15);color:#f87171}
+.status-d{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:4px;vertical-align:middle}
+.status-i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle}
+.pin-cell-btn{padding:3px 8px;border-radius:5px;font-size:10px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.pin-cell-btn:hover{border-color:rgba(99,179,237,0.3);color:var(--blue)}
+.pin-cell-btn.pinned{background:rgba(99,179,237,0.1);border-color:rgba(99,179,237,0.25);color:var(--blue)}
+/* Squad import */
+.squad-import{display:flex;flex-direction:column;gap:8px}
+.squad-input-row{display:flex;gap:6px}
+.squad-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:7px 10px;border-radius:7px;font-family:var(--font-m);font-size:12px;outline:none;transition:border-color 0.2s;min-width:0}
+.squad-input:focus{border-color:rgba(39,174,96,0.4)}
+.squad-input::placeholder{color:var(--muted)}
+.squad-btn{padding:7px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:var(--grass);color:var(--ink);transition:background 0.15s;white-space:nowrap;font-family:var(--font-b)}
+.squad-btn:hover{background:var(--grass-l)}
+.squad-status{font-size:11px;padding:6px 10px;border-radius:7px;display:none;align-items:center;gap:6px}
+.squad-status.loaded{background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.2);color:var(--grass-l);display:flex}
+.squad-status.loading{background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.2);color:var(--gold);display:flex}
+.squad-status.error{background:rgba(230,57,70,0.08);border:1px solid rgba(230,57,70,0.2);color:var(--accent);display:flex}
+/* In/not-in squad badges on table rows */
+.badge-in-squad{display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:4px;background:rgba(39,174,96,0.12);color:var(--grass-l);margin-left:4px;vertical-align:middle}
+.row-in-squad{background:rgba(39,174,96,0.03) !important}
+.row-in-squad.selected{background:rgba(39,174,96,0.06) !important}
+/* Sell card accent */
+.target-card.rank-sell{border-color:rgba(230,57,70,0.2);background:linear-gradient(135deg,rgba(230,57,70,0.05) 0%,var(--ink-2) 60%)}
+.skeleton-row{height:46px;background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.03) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-bottom:1px solid var(--border)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.detail-panel{position:fixed;right:0;top:0;bottom:0;width:380px;background:var(--ink-2);border-left:1px solid var(--border);z-index:200;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;display:flex;flex-direction:column}
+.detail-panel.open{transform:translateX(0)}
+.detail-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.detail-close{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px}
+.detail-close:hover{color:var(--cream)}
+.detail-pos-badge{display:inline-block;font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:6px}
+.detail-name{font-family:var(--font-d);font-size:30px;letter-spacing:1px;color:var(--cream);line-height:1.1;margin-bottom:3px}
+.detail-meta{font-size:12px;color:var(--muted)}
+.detail-body{padding:16px 20px;flex:1}
+.detail-section{margin-bottom:20px}
+.detail-section-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.verdict-card{padding:14px 16px;border-radius:10px;border:1px solid;margin-bottom:20px}
+.verdict-card.buy{background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.25)}
+.verdict-card.sell{background:rgba(230,57,70,0.07);border-color:rgba(230,57,70,0.2)}
+.verdict-card.hold{background:rgba(240,180,41,0.07);border-color:rgba(240,180,41,0.2)}
+.verdict-card.monitor{background:rgba(99,179,237,0.06);border-color:rgba(99,179,237,0.15)}
+.verdict-label{font-family:var(--font-d);font-size:20px;letter-spacing:1px;margin-bottom:4px}
+.verdict-label.buy{color:var(--grass-l)}.verdict-label.sell{color:var(--accent)}.verdict-label.hold{color:var(--gold)}.verdict-label.monitor{color:var(--blue)}
+.verdict-reason{font-size:12px;color:rgba(240,236,227,0.6);line-height:1.6}
+.verdict-reason strong{color:var(--cream)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-tile{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.stat-tile-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.stat-tile-val{font-family:var(--font-d);font-size:22px;line-height:1;color:var(--cream)}
+.stat-tile-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.fix-run{display:flex;gap:6px;flex-wrap:wrap}
+.fix-run-item{display:flex;flex-direction:column;align-items:center;gap:3px}
+.fix-run-gw{font-family:var(--font-m);font-size:8px;color:var(--muted)}
+.fix-run-pill{padding:4px 8px;border-radius:6px;font-family:var(--font-m);font-size:10px;font-weight:600;border:1px solid;white-space:nowrap}
+.gw-history{display:flex;gap:6px;align-items:flex-end;height:52px}
+.gw-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.gw-bar{width:100%;border-radius:3px 3px 0 0;transition:height 0.3s ease;min-height:3px}
+.gw-bar-gw{font-family:var(--font-m);font-size:8px;color:var(--muted)}
+.gw-bar-pts{font-family:var(--font-m);font-size:9px;color:var(--cream)}
+.compare-strip{position:fixed;bottom:0;left:0;right:0;z-index:190;background:var(--ink-2);border-top:1px solid rgba(99,179,237,0.2);padding:0 28px;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
+.compare-strip.open{transform:translateY(0)}
+.compare-strip-inner{max-width:1320px;margin:0 auto;padding:12px 0 16px;display:flex;gap:14px;align-items:stretch}
+.compare-strip-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);align-self:center;flex-shrink:0}
+.compare-player{background:var(--ink-3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;flex:1;min-width:0;position:relative}
+.compare-player-name{font-weight:600;font-size:13px;color:var(--cream)}
+.compare-player-meta{font-size:10px;color:var(--muted);margin-top:1px}
+.compare-player-stats{display:flex;gap:12px;margin-top:6px;font-family:var(--font-m);font-size:10px;flex-wrap:wrap}
+.compare-stat{display:flex;flex-direction:column;gap:1px}
+.compare-stat-label{color:var(--muted);font-size:9px}
+.compare-stat-val{color:var(--cream)}
+.compare-stat-val.best{color:var(--grass-l);font-weight:600}
+.compare-remove{position:absolute;top:6px;right:8px;background:none;border:none;color:rgba(230,57,70,0.5);cursor:pointer;font-size:12px;padding:2px}
+.compare-remove:hover{color:var(--accent)}
+.btn{padding:8px 16px;border-radius:8px;font-family:var(--font-b);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all 0.18s;white-space:nowrap}
+.btn-ghost{background:rgba(255,255,255,0.06);color:rgba(240,236,227,0.6);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--cream)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;line-height:1.7}
+.empty-state h3{font-family:var(--font-d);font-size:26px;color:rgba(240,236,227,0.25);letter-spacing:1px;margin-bottom:6px}
+
+/* TOP TARGETS BANNER */
+.targets-banner{margin-bottom:20px}
+.targets-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.targets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.target-card{background:var(--ink-2);border:1px solid var(--border);border-radius:13px;padding:16px 18px;cursor:pointer;transition:border-color 0.2s,transform 0.15s,box-shadow 0.15s;position:relative}
+.target-card:hover{border-color:rgba(39,174,96,0.3);transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,0.3)}
+.target-card.rank-1{border-color:rgba(39,174,96,0.25);background:linear-gradient(135deg,rgba(39,174,96,0.06) 0%,var(--ink-2) 60%)}
+.target-card.rank-value{border-color:rgba(240,180,41,0.2);background:linear-gradient(135deg,rgba(240,180,41,0.05) 0%,var(--ink-2) 60%)}
+.target-card.rank-gem{border-color:rgba(99,179,237,0.2);background:linear-gradient(135deg,rgba(99,179,237,0.05) 0%,var(--ink-2) 60%)}
+.target-rank{position:absolute;top:12px;right:14px;font-family:var(--font-d);font-size:36px;color:rgba(255,255,255,0.05);line-height:1;user-select:none}
+.target-card.rank-1 .target-rank{color:rgba(39,174,96,0.1)}
+.target-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.target-shirt{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.target-name{font-weight:600;font-size:14px;color:var(--cream);line-height:1.2}
+.target-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.target-score-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.target-score{font-family:var(--font-d);font-size:36px;color:var(--grass-l);line-height:1}
+.target-score-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}
+.target-stats{display:flex;gap:14px;margin-bottom:10px;font-family:var(--font-m);font-size:10px}
+.target-stat-val{color:var(--cream);font-size:12px}
+.target-stat-label{color:var(--muted);font-size:9px;margin-top:1px}
+.target-reason{font-size:11px;color:rgba(240,236,227,0.45);line-height:1.55;margin-bottom:10px}
+.target-reason strong{color:var(--cream)}
+/* Multi-GW fixture run */
+.fix-run-strip{display:flex;gap:4px;align-items:center}
+.fix-run-gw-label{font-family:var(--font-m);font-size:8px;color:var(--muted);margin-right:2px}
+.frs-pill{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-family:var(--font-m);font-size:9px;font-weight:600;border:1px solid;white-space:nowrap}
+/* Table multi-fix run */
+.tbl-fix-run{display:flex;gap:3px;justify-content:flex-end;align-items:center}
+.ii{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);font-size:8px;color:var(--muted);cursor:default;position:relative;flex-shrink:0;vertical-align:middle;margin-left:3px}
+/* Tooltip rendered as a fixed overlay — escapes all overflow/clip contexts */
+#scout-tooltip{
+  position:fixed;z-index:9999;pointer-events:none;
+  background:#1e2530;border:1px solid rgba(255,255,255,0.14);
+  border-radius:9px;padding:10px 13px;
+  max-width:260px;min-width:180px;
+  font-size:11px;color:rgba(240,236,227,0.75);
+  line-height:1.6;font-family:var(--font-b);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  opacity:0;transition:opacity 0.12s;
+  white-space:normal;
+}
+#scout-tooltip.visible{opacity:1}
+#scout-tooltip strong{color:var(--cream)}
+@media(max-width:900px){.main-layout{grid-template-columns:1fr;display:flex;flex-direction:column}.filter-sidebar{position:static;order:2}.main-layout>div{order:1}.detail-panel{width:100%}.page.panel-open{margin-right:0;max-width:1320px}}
+@media(max-width:600px){.page{padding:20px 14px 100px}.mode-strip{flex-direction:column;align-items:flex-start}}
+@media(max-width:900px){.filter-toggle-btn{display:flex}.filter-sidebar-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease}.filter-sidebar-body.open{max-height:2000px}.filter-sidebar{padding:14px}}
+@media(min-width:901px){.filter-toggle-btn{display:none}.filter-sidebar-body{display:block!important;max-height:none!important}}
+@media(max-width:480px){.targets-grid{grid-template-columns:1fr}.stat-grid{grid-template-columns:1fr 1fr}.filter-sidebar{padding:14px}}
+/* VALUE PICKS SECTION */
+.value-picks{margin-bottom:20px;display:none}
+.value-picks.visible{display:block}
+.value-picks-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.value-picks-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.value-pos-tabs{display:flex;gap:4px}
+.vp-tab{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.15s;font-family:var(--font-b);letter-spacing:0.5px}
+.vp-tab:hover{color:var(--cream)}
+.vp-tab.active{background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.5);color:var(--grass-l)}
+.value-picks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.value-picks-grid{grid-template-columns:1fr}}
+.vp-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color 0.18s,transform 0.15s,box-shadow 0.15s;position:relative;overflow:hidden}
+.vp-card:hover{border-color:rgba(240,180,41,0.35);transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,0.3)}
+.vp-rank{position:absolute;top:10px;right:14px;font-family:var(--font-d);font-size:42px;color:rgba(255,255,255,0.04);line-height:1;user-select:none}
+.vp-card:nth-child(1) .vp-rank{color:rgba(240,180,41,0.09)}
+.vp-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.vp-shirt{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.vp-name{font-weight:600;font-size:14px;color:var(--cream);line-height:1.2}
+.vp-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.vp-stats{display:flex;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.vp-stat{display:flex;flex-direction:column;gap:1px}
+.vp-stat-val{font-family:var(--font-d);font-size:20px;line-height:1;color:var(--cream)}
+.vp-stat-label{font-family:var(--font-m);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+.vp-value-score{font-family:var(--font-d);font-size:26px;color:var(--gold);line-height:1}
+.vp-fix-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.sell-bad{color:var(--accent)}.sell-warn{color:var(--gold)}.sell-ok{color:var(--muted)}
+
+/* TRANSFER SUGGESTER */
+.transfer-suggester{margin-bottom:24px;display:none}
+.transfer-suggester.visible{display:block}
+.ts-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.ts-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
+.ts-budget{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--font-m)}
+.ts-budget-val{color:var(--gold);font-size:12px;font-weight:600;min-width:28px}
+.ts-grid{display:flex;flex-direction:column;gap:10px}
+.ts-card{background:var(--ink-2);border:1px solid rgba(230,57,70,0.15);border-radius:13px;padding:16px 18px;transition:border-color 0.2s}
+.ts-card:hover{border-color:rgba(230,57,70,0.3)}
+.ts-card-inner{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+@media(max-width:640px){.ts-card-inner{grid-template-columns:1fr;gap:8px}.ts-arrow{transform:rotate(90deg)}}
+.ts-player{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s}
+.ts-player:hover{border-color:rgba(255,255,255,0.15)}
+.ts-player-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px}
+.ts-shirt{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.ts-player-name{font-weight:600;font-size:13px;color:var(--cream);line-height:1.2}
+.ts-player-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.ts-player-stats{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--font-m);font-size:10px}
+.ts-stat{display:flex;flex-direction:column;gap:1px}
+.ts-stat-val{color:var(--cream);font-size:11px}
+.ts-stat-label{color:var(--muted);font-size:9px}
+.ts-arrow{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:18px;flex-shrink:0}
+.ts-arrow-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.ts-delta-pos{color:var(--grass-l)}.ts-delta-neg{color:var(--accent)}.ts-delta-neu{color:var(--muted)}
+.ts-sell-tag{display:inline-block;font-family:var(--font-m);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(230,57,70,0.1);color:var(--accent);margin-bottom:5px}
+.ts-buy-tag{display:inline-block;font-family:var(--font-m);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(39,174,96,0.1);color:var(--grass-l);margin-bottom:5px}
+.ts-reason{font-size:11px;color:rgba(240,236,227,0.45);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.ts-reason strong{color:var(--cream)}
+.ts-no-squad{padding:28px 24px;border-radius:13px;background:rgba(240,180,41,0.04);border:1px solid rgba(240,180,41,0.15);text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+.ts-no-squad strong{color:var(--gold)}
+/* SELL SIDEBAR FILTERS — shown/hidden by mode */
+.sell-filter-section{display:none}
+.buy-filter-section{display:block}
+
+/* SQUAD REQUIRED NOTICE */
+.squad-required{display:none}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+/* ═══════════════════════════════════════════════════════════
+   AD PLACEHOLDERS — hidden by default, enable with body.ads-enabled
+═══════════════════════════════════════════════════════════ */
+.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+body.ads-enabled .ad-slot{display:block}
+.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
+  z-index:400;background:var(--ink-2,#161b22);
+  border-top:1px solid rgba(255,255,255,0.07);
+  display:none;align-items:center;justify-content:center}
+body.ads-enabled .ad-slot-sticky{display:flex}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
+@media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
+</style>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+</head>
+<body>
+<script src="nav.js"></script>
+<!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
+      <div class="header-sub" id="headerSub">PLAYER SCOUT · Loading…</div>
+    </div>
+    <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Fetching live data…</span></div>
+  </div>
+
+  <div class="mode-strip">
+    <span class="mode-label">Mode</span>
+    <button class="mode-btn active buy" data-mode="buy">🟢 Transfers in</button>
+    <button class="mode-btn sell" data-mode="sell">🔴 Transfers out</button>
+    <span class="mode-desc" id="modeDesc">Sorted by Scout score — best transfer targets this week.</span>
+  </div>
+
+  <!-- TRANSFER SUGGESTER -->
+  <div class="transfer-suggester" id="transferSuggester">
+    <div class="ts-header">
+      <div class="ts-eyebrow">🔄 Transfer suggestions</div>
+      <div class="ts-budget" id="tsBudgetRow" style="display:none">
+        Budget cap
+        <input type="range" class="range-track" id="tsBudgetRange" min="0" max="3" step="0.1" value="0" style="width:90px">
+        <span class="ts-budget-val" id="tsBudgetDisplay">Any</span>
+      </div>
+    </div>
+    <div id="transferSuggesterBody"></div>
+  </div>
+
+  <!-- TOP TRANSFER TARGETS BANNER -->
+  <div class="targets-banner" id="targetsBanner" style="display:none">
+    <div class="targets-eyebrow">
+      🎯 Top transfer targets this week
+      <span style="margin-left:auto;display:flex;align-items:center;gap:10px;font-family:var(--font-m);font-size:10px;letter-spacing:0;text-transform:none;color:var(--muted)">
+        Max price
+        <input type="range" class="range-track" id="bannerPriceRange" min="4" max="15" step="0.5" value="15" style="width:100px">
+        <span id="bannerPriceDisplay" style="color:var(--grass-l);min-width:32px">Any</span>
+      </span>
+    </div>
+    <div class="targets-grid" id="targetsGrid"></div>
+  </div>
+
+  <!-- VALUE PICKS SECTION -->
+  <div class="value-picks" id="valuePicks">
+    <div class="value-picks-header">
+      <div class="value-picks-eyebrow">💰 Top value picks</div>
+      <div class="value-pos-tabs" id="vpPosTabs">
+        <button class="vp-tab" data-pos="GK">GK</button>
+        <button class="vp-tab" data-pos="DEF">DEF</button>
+        <button class="vp-tab active" data-pos="MID">MID</button>
+        <button class="vp-tab" data-pos="FWD">FWD</button>
+      </div>
+    </div>
+    <div class="value-picks-grid" id="valuePicksGrid"></div>
+  </div>
+
+  <div class="main-layout">
+    <aside class="filter-sidebar">
+      <button class="filter-toggle-btn" id="filterToggleBtn" onclick="(function(){var b=document.getElementById('filterBody');var o=b.classList.toggle('open');document.getElementById('filterToggleBtn').textContent=o?'▲ Hide filters':'▼ Show filters';})()" style="display:none;width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;font-family:var(--font-b);text-align:left">▼ Show filters</button>
+      <div class="filter-sidebar-body" id="filterBody">
+
+      <!-- SEARCH -->
+      <div class="filter-section">
+        <input type="text" class="search-box" id="searchInput" placeholder="Search player or team…">
+      </div>
+
+      <!-- POSITION TABS -->
+      <div class="filter-section">
+        <div class="filter-label">Position</div>
+        <div class="pos-tab-group" id="pgPos">
+          <button class="pos-tab" data-pos="GK">GK</button>
+          <button class="pos-tab" data-pos="DEF">DEF</button>
+          <button class="pos-tab active" data-pos="MID">MID</button>
+          <button class="pos-tab" data-pos="FWD">FWD</button>
+        </div>
+      </div>
+
+      <!-- COMMON FILTERS -->
+      <div class="filter-section">
+        <div class="filter-label">Max price <span class="range-val" id="priceDisplay">Any</span></div>
+        <div class="range-row"><input type="range" class="range-track" id="priceRange" min="4" max="15" step="0.5" value="15"></div>
+      </div>
+      <div class="filter-section buy-filter-section">
+        <div class="filter-label">Min form <span class="range-val" id="formDisplay">Any</span></div>
+        <div class="range-row"><input type="range" class="range-track" id="formRange" min="0" max="12" step="0.5" value="0"></div>
+      </div>
+      <div class="filter-section buy-filter-section">
+        <div class="filter-label">Max ownership <span class="range-val" id="ownDisplay">Any</span></div>
+        <div class="range-row"><input type="range" class="range-track" id="ownRange" min="0" max="80" step="5" value="80"></div>
+      </div>
+
+      <div class="filter-section">
+        <div class="toggle-row"><span class="toggle-lbl">Hide injuries</span><button class="toggle on" id="availToggle"></button></div>
+        <div class="toggle-row"><span class="toggle-lbl">My squad only</span><button class="toggle" id="squadOnlyToggle"></button></div>
+      </div>
+
+      <!-- FIXTURE DIFFICULTY FILTER -->
+      <div class="filter-section">
+        <div class="filter-label">Max next 3 GW difficulty <span class="range-val" id="fixDiffDisplay">Any</span></div>
+        <div class="range-row"><input type="range" class="range-track" id="fixDiffRange" min="1" max="5" step="0.5" value="5"></div>
+      </div>
+
+      <!-- ADVANCED FILTERS TOGGLE -->
+      <button class="adv-toggle" id="advToggle">
+        <span>Advanced stat filters</span>
+        <span class="adv-arrow">▼</span>
+      </button>
+      <div class="adv-filters" id="advFilters">
+
+      <!-- POSITION STAT FILTERS -->
+      <div id="pos-filters-GK" style="display:none">
+        <div class="filter-section-divider">GK filters</div>
+        <div class="filter-section">
+          <div class="filter-label">Max xGC/90 <span class="range-val" id="xgcDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xgcRange" min="0" max="3" step="0.1" value="3"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min clean sheets/game <span class="range-val" id="csDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="csRange" min="0" max="0.8" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min saves/90 <span class="range-val" id="savesDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="savesRange" min="0" max="6" step="0.5" value="0"></div>
+        </div>
+      </div>
+
+      <div id="pos-filters-DEF" style="display:none">
+        <div class="filter-section-divider">DEF filters</div>
+        <div class="filter-section">
+          <div class="filter-label">Max xGC/90 <span class="range-val" id="xgcDisplay2">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xgcRange2" min="0" max="3" step="0.1" value="3"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min CS/game <span class="range-val" id="csDisplay2">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="csRange2" min="0" max="0.8" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min xG/90 <span class="range-val" id="xgDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xgRange" min="0" max="0.8" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min DC/90 <span class="range-val" id="defContribDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="defContribRange" min="0" max="8" step="0.5" value="0"></div>
+        </div>
+      </div>
+
+      <div id="pos-filters-MID">
+        <div class="filter-section-divider">MID filters</div>
+        <div class="filter-section">
+          <div class="filter-label">Min xG/90 <span class="range-val" id="xgDisplay2">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xgRange2" min="0" max="0.8" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min xA/90 <span class="range-val" id="xaDisplay">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xaRange" min="0" max="0.5" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min DC/90 <span class="range-val" id="defContribDisplay2">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="defContribRange2" min="0" max="8" step="0.5" value="0"></div>
+        </div>
+      </div>
+
+      <div id="pos-filters-FWD" style="display:none">
+        <div class="filter-section-divider">FWD filters</div>
+        <div class="filter-section">
+          <div class="filter-label">Min xG/90 <span class="range-val" id="xgDisplay3">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xgRange3" min="0" max="0.8" step="0.05" value="0"></div>
+        </div>
+        <div class="filter-section">
+          <div class="filter-label">Min xA/90 <span class="range-val" id="xaDisplay3">Any</span></div>
+          <div class="range-row"><input type="range" class="range-track" id="xaRange3" min="0" max="0.5" step="0.05" value="0"></div>
+        </div>
+      </div>
+
+      </div><!-- /adv-filters -->
+
+      <!-- SQUAD -->
+      <div class="filter-section">
+        <div class="filter-label">My squad</div>
+        <div class="squad-input-row">
+          <input type="number" class="squad-input" id="squadIdInput" placeholder="Team ID…" min="1">
+          <button class="squad-btn" id="squadLoadBtn">Load</button>
+        </div>
+        <div class="squad-status" id="squadStatus"></div>
+        <div id="squadHint" style="font-size:10px;color:var(--muted);margin-top:6px">
+          Find your ID at fantasy.premierleague.com → Points → URL
+        </div>
+      </div>
+
+      <div class="result-count" id="resultCount">—</div>
+    </aside>
+
+    <div>
+      <div class="player-table-wrap" style="overflow-x:auto">
+        <table class="player-table">
+          <thead id="playerThead"><tr></tr></thead>
+          <tbody id="playerTbody">
+            <tr class="skeleton-row"><td colspan="13"></td></tr>
+            <tr class="skeleton-row"><td colspan="13"></td></tr>
+            <tr class="skeleton-row"><td colspan="13"></td></tr>
+            <tr class="skeleton-row"><td colspan="13"></td></tr>
+            <tr class="skeleton-row"><td colspan="13"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <button class="detail-close" id="detailClose">×</button>
+    <div class="detail-pos-badge" id="detailPosBadge"></div>
+    <div class="detail-name" id="detailName">—</div>
+    <div class="detail-meta" id="detailMeta"></div>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<div class="compare-strip" id="compareStrip">
+  <div class="compare-strip-inner">
+    <span class="compare-strip-title">📌 Compare</span>
+    <div id="compareCards" style="display:flex;gap:14px;flex:1;min-width:0;overflow-x:auto"></div>
+    <button class="btn btn-ghost btn-sm" id="compareClear">Clear</button>
+  </div>
+</div>
+
+<script>
+const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
+const FIX_LABEL=['','Very easy','Easy','Medium','Hard','Very hard'];
+const SORT_FN = {
+  price:           (a,b)=>b.price-a.price,
+  form:            (a,b)=>b.form-a.form,
+  xg90:            (a,b)=>b.xg90-a.xg90,
+  xa90:            (a,b)=>b.xa90-a.xa90,
+  xgl6:            (a,b)=>(L6_CACHE.get(b.id)?.xg90L6??0)-(L6_CACHE.get(a.id)?.xg90L6??0),
+  xal6:            (a,b)=>(L6_CACHE.get(b.id)?.xa90L6??0)-(L6_CACHE.get(a.id)?.xa90L6??0),
+  gl6:             (a,b)=>(L6_CACHE.get(b.id)?.goals90L6??0)-(L6_CACHE.get(a.id)?.goals90L6??0),
+  al6:             (a,b)=>(L6_CACHE.get(b.id)?.assists90L6??0)-(L6_CACHE.get(a.id)?.assists90L6??0),
+  xgc90:           (a,b)=>a.xgc90-b.xgc90,
+  cleanSheetsPer90:(a,b)=>b.cleanSheetsPer90-a.cleanSheetsPer90,
+  savesPer90:      (a,b)=>b.savesPer90-a.savesPer90,
+  defContribPer90: (a,b)=>b.defContribPer90-a.defContribPer90,
+  fixes:           (a,b)=>(a.fix?.diff??3)-(b.fix?.diff??3),
+  ep:              (a,b)=>b.epNext-a.epNext,
+  own:             (a,b)=>a.ownedPct-b.ownedPct,
+  scout:           (a,b)=>b.score-a.score,
+};
+const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
+const LS='pitchiq_scout_';
+const MODE_DESC={
+  buy:  'Sorted by Scout score — best transfer targets this week.',
+  sell: 'Import your squad ID to get paired sell → buy transfer suggestions.',
+};
+
+let ALL=[],TMAP={},GW=1,SEL=null;
+const PINNED    = new Set(lsG('pins',[]));
+const SQUAD_IDS = new Set(lsG('squad',[]));
+const F={pos:'MID',team:'ALL',price:15,form:0,own:80,xg:0,xa:0,xgc:3,cs:0,saves:0,defContrib:0,avail:true,squadOnly:false,sort:'scout',sortDir:1,search:'',mode:'buy',bannerPrice:15,fixDiff:5};
+
+function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):fb;}catch{return fb;}}
+function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
+function savePins(){lsS('pins',[...PINNED]);}
+
+
+/* Sell urgency score — higher = stronger sell signal
+   Combines: hard upcoming fixtures, low/falling form, falling price, low xG+xA */
+function sellUrgency(p){
+  const Z=2.5;
+  // We compute inline rather than needing a full pool normalisation
+  // Return a raw composite — will be sorted relatively
+  const fixScore = p.fixes.length
+    ? p.fixes.slice(0,3).reduce((s,f)=>s+f.diff,0)/p.fixes.length  // avg diff, higher=harder
+    : 3;
+  const formPenalty = Math.max(0, 10 - p.form);    // low form = high penalty
+  const pricePenalty = p.priceChg < 0 ? 2 : 0;    // falling price
+  const netOutPenalty = p.netIn < -20000 ? 1.5 : 0; // being sold by managers
+  return parseFloat((fixScore*2 + formPenalty*1.5 + pricePenalty + netOutPenalty).toFixed(2));
+}
+
+async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+
+async function loadData(){
+  setBadge('loading','Fetching live FPL data…');
+  try{
+    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    if(!Array.isArray(bs.teams)||!Array.isArray(bs.elements))throw new Error('Bad bootstrap');
+    GW=resolveGw(bs);
+    TMAP=buildTmap(bs.teams);
+    fillTeamSel(bs.teams);
+    const fm=buildFixMap(fixes,GW,TMAP);
+    ALL=buildPlayers(bs.elements,fm);
+    scoreAll();
+    
+    document.getElementById('headerSub').textContent=`PLAYER SCOUT · GW${GW} · ${ALL.length} players`;
+    setBadge('live',`Live · GW${GW}`);
+  }catch(err){
+    const expected = err.status===404 || err.name==='AbortError' || err.message==='Failed to fetch' || err.message?.includes('NetworkError');
+    if(!expected) console.warn('[Scout]',err.message);
+    ALL=patchFallbackPlayers(FB_PLAYERS);TMAP=FB_TEAMS;
+    fillTeamSel(Object.entries(FB_TEAMS).map(([id,t])=>({id:+id,short_name:t.short,name:t.name})));
+    scoreAll();
+    setBadge('fallback',err.status===404?'Static data · deploy to Vercel for live':'Static data · API unavailable');
+    document.getElementById('headerSub').textContent='PLAYER SCOUT · Sample data';
+  }
+  renderTable();renderTargets();renderCompare();
+  if(F.mode==='sell') renderTransferSuggester();
+}
+
+function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next))?.id??1;}
+
+async function loadSquad(teamId){
+  const el=document.getElementById('squadStatus');
+  const hint=document.getElementById('squadHint');
+  const btn=document.getElementById('squadLoadBtn');
+
+  // Validate
+  const id=parseInt(String(teamId),10);
+  if(isNaN(id)||id<1||id>999999999){
+    el.className='squad-status error';el.style.display='flex';
+    el.textContent='⚠ Enter a valid FPL Team ID (e.g. 1234567)';
+    return;
+  }
+
+  btn.disabled=true;btn.textContent='Loading…';
+  el.className='squad-status loading';el.style.display='flex';el.textContent='Loading squad…';
+
+  try{
+    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    if(!data||!Array.isArray(data.picks))throw new Error('Unexpected response format');
+    if(!data.picks.length)throw new Error('Squad is empty — check your Team ID');
+    const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
+    if(!ids.length)throw new Error('No valid player IDs found');
+    SQUAD_IDS.clear();
+    ids.forEach(i=>SQUAD_IDS.add(i));
+    lsS('squad',[...SQUAD_IDS]);lsS('squadTeamId',String(id));
+    el.className='squad-status loaded';el.style.display='flex';
+    el.textContent=`✓ ${SQUAD_IDS.size} players loaded`;
+    hint.style.display='none';
+    renderAll();
+  }catch(err){
+    el.className='squad-status error';el.style.display='flex';
+    if(err.status===404)el.textContent='⚠ Squad not found — check your Team ID is correct';
+    else if(err.status===503||err.status===429)el.textContent='⚠ FPL API busy — try again in a moment';
+    else if(ALL===FB_PLAYERS)el.textContent='⚠ Squad loading requires Vercel deployment';
+    else el.textContent=`⚠ ${err.message||'Could not load squad — try again'}`;
+  }finally{
+    btn.disabled=false;btn.textContent='Load';
+  }
+}
+function buildTmap(teams){const m={};teams.forEach(t=>{m[t.id]={name:t.name,short:t.short_name};});return m;}
+function fillTeamSel(teams){
+  const sel=document.getElementById('teamSelect');
+  if(!sel)return;
+  [...teams].sort((a,b)=>(a.short_name||a.short||'').localeCompare(b.short_name||b.short||'')).forEach(t=>{
+    const o=document.createElement('option');o.value=t.id;o.textContent=t.short_name||t.short||t.name;sel.appendChild(o);
+  });
+}
+function buildFixMap(fixtures,gw,tmap){
+  // Build a 4-GW fixture run per team: [{opp, ha, diff, gw}]
+  const m={};if(!Array.isArray(fixtures))return m;
+  const upcoming=fixtures.filter(f=>f.event>=gw&&f.event<gw+4&&!f.finished);
+  upcoming.forEach(f=>{
+    [f.team_h,f.team_a].forEach(tid=>{
+      if(!m[tid])m[tid]=[];
+      const isHome=tid===f.team_h;
+      m[tid].push({
+        gw:f.event,
+        opp:tmap[isHome?f.team_a:f.team_h]?.short??'?',
+        ha:isHome?'H':'A',
+        diff:isHome?f.team_h_difficulty??3:f.team_a_difficulty??3,
+      });
+    });
+  });
+  // Sort each team's fixtures by GW ascending
+  Object.values(m).forEach(arr=>arr.sort((a,b)=>a.gw-b.gw));
+  return m;
+}
+function buildPlayers(els,fm){
+  return els.filter(e=>e.element_type>0).map(e=>{
+    const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+    const xg90=Math.min((parseFloat(e.expected_goals)||0)/(mins/90),1.0);
+    const xa90=Math.min((parseFloat(e.expected_assists)||0)/(mins/90),0.8);
+    const goals90=Math.min((e.goals_scored||0)/(mins/90),1.5);
+    const assists90=Math.min((e.assists||0)/(mins/90),1.0);
+    const xg90Season=xg90, xa90Season=xa90;
+    // expected_goals_per_90 from bootstrap is sometimes populated as a rolling value
+    // expected_assists_per_90 is unreliable (often 0) — skip it, use L6 from player summary instead
+    const xg90Recent=Math.min(parseFloat(e.expected_goals_per_90)||0,1.0);
+    const xa90Recent=0; // not reliable from bootstrap — populated via L6_CACHE from player summary
+    const hasRecent=xg90Recent>0;
+    const xgCombined=hasRecent
+      ? Math.min(xg90*0.60 + xg90Recent*0.40, 1.5)
+      : Math.min(xg90+xa90, 1.5);
+    const pos=POS_ID[e.element_type]??'MID';
+    const price=e.now_cost/10;
+    return{
+      id:e.id,name:e.web_name,fullName:`${e.first_name} ${e.second_name}`,teamId:e.team,
+      pos,price,form:parseFloat(e.form)||0,
+      xg90,xa90,xg90Season,xa90Season,xg90Recent,xa90Recent,
+      xgCombined,
+      goals90, assists90,
+      ict:parseFloat(e.ict_index)||0,
+      epNext:parseFloat(e.ep_next)||0,ppm:price>0?(e.total_points||0)/price:0,
+      priceChg:e.cost_change_event??0,netIn:(e.transfers_in_event||0)-(e.transfers_out_event||0),
+      minsRel:Math.min(mins/games,90),ownedPct:parseFloat(e.selected_by_percent)||0,
+      totalPts:e.total_points||0,starts:e.starts??games,status:e.status,
+      // Defensive stats
+      xgc90:Math.min((parseFloat(e.expected_goals_conceded)||0)/(mins/90),3.0),
+      xgc90Season:Math.min((parseFloat(e.expected_goals_conceded)||0)/(mins/90),3.0),
+      cleanSheets:e.clean_sheets||0,
+      cleanSheetsPer90:games>0?(e.clean_sheets||0)/games:0,
+      saves:e.saves||0,
+      savesPer90:Math.min((e.saves||0)/(mins/90),10),
+      bps:e.bps||0,
+      bonusPts:e.bonus||0,
+      defContrib:e.defensive_contribution||0,
+      defContribPer90:Math.min((e.defensive_contribution||0)/(mins/90),10),
+      fix:fm[e.team]?.[0]??null,
+      fixes:fm[e.team]??[],
+      score:0
+    };
+  });
+}
+
+function scoreAll(){
+  if(!ALL.length)return;
+  const Z=2.5;
+  const zn=vs=>{const m=vs.reduce((s,v)=>s+v,0)/vs.length,sd=Math.sqrt(vs.reduce((s,v)=>s+(v-m)**2,0)/vs.length)||1;return vs.map(v=>(Math.max(-Z,Math.min(Z,(v-m)/sd))+Z)/(Z*2));};
+  const nF=zn(ALL.map(p=>p.form));
+  const nX=zn(ALL.map(p=>p.xgCombined));
+  // Use average difficulty across the 4-GW run for fixture score — more predictive than just next GW
+  const nFx=zn(ALL.map(p=>{
+    if(!p.fixes.length)return 3;
+    return p.fixes.reduce((s,f)=>s+(6-f.diff),0)/p.fixes.length;
+  }));
+  const nE=zn(ALL.map(p=>p.epNext));
+  const nM=zn(ALL.map(p=>p.minsRel));
+  const nP=zn(ALL.map(p=>p.priceChg));
+  ALL.forEach((p,i)=>{p.score=Math.round((nF[i]*0.28+nX[i]*0.25+nFx[i]*0.22+nE[i]*0.12+nM[i]*0.08+nP[i]*0.05)*100);});
+}
+
+function getFiltered(){
+  let pool=[...ALL];
+
+  // SELL MODE — show full squad, sorted by urgency, with optional search
+  if(F.mode==='sell'){
+    if(SQUAD_IDS.size) pool=pool.filter(p=>SQUAD_IDS.has(p.id));
+    if(F.search.trim()){const q=F.search.toLowerCase();pool=pool.filter(p=>p.name.toLowerCase().includes(q)||p.fullName.toLowerCase().includes(q)||(TMAP[p.teamId]?.short??'').toLowerCase().includes(q));}
+    pool.sort((a,b)=>sellUrgency(b)-sellUrgency(a));
+    return pool;
+  }
+
+  // BUY MODE — all existing filters
+  pool=pool.filter(p=>p.pos===F.pos);
+  if(F.team!=='ALL') pool=pool.filter(p=>String(p.teamId)===String(F.team));
+  if(F.price<15) pool=pool.filter(p=>p.price<=F.price);
+  if(F.form>0) pool=pool.filter(p=>p.form>=F.form);
+  if(F.own<80) pool=pool.filter(p=>p.ownedPct<=F.own);
+  if(F.avail) pool=pool.filter(p=>p.status!=='i'&&p.status!=='u');
+  if(F.squadOnly&&SQUAD_IDS.size) pool=pool.filter(p=>SQUAD_IDS.has(p.id));
+  if(F.xg>0) pool=pool.filter(p=>p.xg90>=F.xg);
+  if(F.xa>0) pool=pool.filter(p=>p.xa90>=F.xa);
+  if(F.xgc<3) pool=pool.filter(p=>p.xgc90<=F.xgc);
+  if(F.cs>0) pool=pool.filter(p=>p.cleanSheetsPer90>=F.cs);
+  if(F.saves>0) pool=pool.filter(p=>p.savesPer90>=F.saves);
+  if(F.defContrib>0) pool=pool.filter(p=>p.defContribPer90>=F.defContrib);
+  if(F.fixDiff<5) pool=pool.filter(p=>{
+    if(!p.fixes||!p.fixes.length)return F.fixDiff>=3;
+    const avg=p.fixes.slice(0,3).reduce((s,f)=>s+f.diff,0)/Math.min(p.fixes.slice(0,3).length,3);
+    return avg<=F.fixDiff;
+  });
+  if(F.search.trim()){const q=F.search.toLowerCase();pool=pool.filter(p=>p.name.toLowerCase().includes(q)||p.fullName.toLowerCase().includes(q)||(TMAP[p.teamId]?.short??'').toLowerCase().includes(q));}
+  pool.sort((a,b)=>(SORT_FN[F.sort]||((a,b)=>b.score-a.score))(a,b)*F.sortDir);
+  return pool;
+}
+
+function swapPosFilters(pos){
+  ['GK','DEF','MID','FWD'].forEach(p=>{
+    const el=document.getElementById('pos-filters-'+p);
+    if(el) el.style.display=p===pos?'block':'none';
+  });
+}
+function resetPosFilterDisplays(){
+  ['xgDisplay','xgDisplay2','xgDisplay3','xaDisplay','xaDisplay3',
+   'xgcDisplay','xgcDisplay2','csDisplay','csDisplay2',
+   'savesDisplay','defContribDisplay','defContribDisplay2'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Any';});
+  ['xgRange','xgRange2','xgRange3','xaRange','xaRange3',
+   'csRange','csRange2','savesRange','defContribRange','defContribRange2'
+  ].forEach(id=>{const el=document.getElementById(id);if(el)el.value=0;});
+  ['xgcRange','xgcRange2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=3;});
+}
+
+function renderAll(){
+  const isBuy=F.mode==='buy', isSell=F.mode==='sell';
+  document.getElementById('targetsBanner').style.display='none';
+  document.getElementById('transferSuggester').classList.toggle('visible',false);
+  document.getElementById('valuePicks').classList.toggle('visible',false);
+  document.querySelectorAll('.buy-filter-section').forEach(el=>el.style.display=isBuy?'block':'none');
+  document.querySelectorAll('.sell-filter-section').forEach(el=>el.style.display=isSell?'block':'none');
+  swapPosFilters(F.pos);
+  if(isBuy){renderTargets();renderValuePicks(VP_POS);}
+  else if(isSell) renderTransferSuggester();
+  renderTable();
+  renderCompare();
+}
+
+let VP_POS='MID';
+
+function valueScore(p){
+  // Composite: form (30%) + xG+xA per 90 (25%) + fixture ease (25%) + ep_next (20%), all divided by price
+  const fixEase=p.fixes.length ? p.fixes.slice(0,3).reduce((s,f)=>s+(6-f.diff),0)/p.fixes.length : 3;
+  const raw=(p.form*0.30)+(p.xgCombined*25*0.25)+(fixEase*2*0.25)+(p.epNext*0.20);
+  return p.price>0 ? raw/p.price : 0;
+}
+
+function renderValuePicks(pos){
+  const section=document.getElementById('valuePicks');
+  const grid=document.getElementById('valuePicksGrid');
+  if(!ALL.length){section.classList.remove('visible');return;}
+
+  const pool=ALL
+    .filter(p=>p.pos===pos && p.status!=='i' && p.status!=='u')
+    .sort((a,b)=>valueScore(b)-valueScore(a))
+    .slice(0,3);
+
+  if(!pool.length){section.classList.remove('visible');return;}
+  section.classList.add('visible');
+
+  // Update tab active state
+  document.querySelectorAll('.vp-tab').forEach(t=>t.classList.toggle('active',t.dataset.pos===pos));
+
+  const RANK_LABELS=['🥇 Best value','🥈 2nd pick','🥉 3rd pick'];
+  grid.innerHTML=pool.map((p,i)=>{
+    const team=TMAP[p.teamId]??{short:'?'};
+    const vs=valueScore(p);
+    const priceTag=p.priceChg>0?`<span class="price-up">↑</span>`:p.priceChg<0?`<span class="price-down">↓</span>`:'';
+    const fixHtml=p.fixes.length
+      ?p.fixes.slice(0,3).map(f=>`<span class="frs-pill ${FIX_CLS[f.diff]}" title="GW${f.gw} vs ${f.opp} (${f.ha})">${f.opp} <span style="opacity:0.6;font-size:8px">${f.ha}</span></span>`).join('')
+      :`<span style="color:var(--muted);font-size:10px">BGW</span>`;
+    // Contextual stat labels by position
+    const statA = pos==='GK'  ? {val:p.savesPer90.toFixed(1),     lbl:'Saves/90'}
+                : pos==='DEF' ? {val:p.xgc90.toFixed(2),           lbl:'xGC/90'}
+                :               {val:p.xg90.toFixed(2),             lbl:'xG/90'};
+    const statB = pos==='GK'  ? {val:p.cleanSheetsPer90.toFixed(2),lbl:'CS/game'}
+                : pos==='DEF' ? {val:p.cleanSheetsPer90.toFixed(2), lbl:'CS/game'}
+                :               {val:p.xa90.toFixed(2),             lbl:'xA/90'};
+    return`<div class="vp-card" data-id="${p.id}">
+      <div class="vp-rank">${i+1}</div>
+      <div class="vp-top">
+        <div class="vp-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div>
+          <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">${RANK_LABELS[i]}</div>
+          <div class="vp-name">${p.name}</div>
+          <div class="vp-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m${priceTag} · ${p.ownedPct.toFixed(1)}% owned</div>
+        </div>
+      </div>
+      <div class="vp-stats">
+        <div class="vp-stat">
+          <div class="vp-value-score">${vs.toFixed(2)}</div>
+          <div class="vp-stat-label">Value score</div>
+        </div>
+        <div class="vp-stat">
+          <div class="vp-stat-val" style="color:${p.form>=7?'var(--grass-l)':p.form>=4?'var(--cream)':'var(--gold)'}">${p.form.toFixed(1)}</div>
+          <div class="vp-stat-label">Form</div>
+        </div>
+        <div class="vp-stat">
+          <div class="vp-stat-val">${statA.val}</div>
+          <div class="vp-stat-label">${statA.lbl}</div>
+        </div>
+        <div class="vp-stat">
+          <div class="vp-stat-val">${statB.val}</div>
+          <div class="vp-stat-label">${statB.lbl}</div>
+        </div>
+        <div class="vp-stat">
+          <div class="vp-stat-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div>
+          <div class="vp-stat-label">Proj pts</div>
+        </div>
+      </div>
+      <div class="vp-fix-row">${fixHtml}</div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.vp-card[data-id]').forEach(card=>{
+    card.addEventListener('click',()=>openDetail(+card.dataset.id));
+  });
+}
+
+let TS_BUDGET=0; // 0 = any
+
+function renderTransferSuggester(){
+  const section=document.getElementById('transferSuggester');
+  const body=document.getElementById('transferSuggesterBody');
+  const budgetRow=document.getElementById('tsBudgetRow');
+
+  if(!SQUAD_IDS.size){
+    section.classList.add('visible');
+    budgetRow.style.display='none';
+    body.innerHTML=`<div class="ts-no-squad">
+      <div style="font-size:28px;margin-bottom:10px">⚽</div>
+      <strong>Load your squad to get transfer suggestions</strong><br>
+      Enter your FPL Team ID in the sidebar — we'll pair up your worst-value players with the best available replacements.
+    </div>`;
+    return;
+  }
+
+  section.classList.add('visible');
+  budgetRow.style.display='flex';
+
+  const squadPool=[...ALL].filter(p=>SQUAD_IDS.has(p.id)&&p.status!=='i');
+  if(!squadPool.length){
+    body.innerHTML=`<div class="ts-no-squad">No eligible squad players found.</div>`;
+    return;
+  }
+
+  // Rank squad by sell urgency descending — worst 4 candidates
+  const urgScores=squadPool.map(p=>({p,u:sellUrgency(p)})).sort((a,b)=>b.u-a.u);
+  const sellCandidates=urgScores.slice(0,4).map(x=>x.p);
+
+  // For each sell candidate, find best available replacement at same position
+  // within budget (their price + TS_BUDGET headroom), not in squad, available
+  const suggestions=sellCandidates.map(sell=>{
+    const budget=sell.price+(TS_BUDGET>0?TS_BUDGET:99);
+    const replacements=[...ALL]
+      .filter(p=>
+        p.pos===sell.pos &&
+        !SQUAD_IDS.has(p.id) &&
+        p.status!=='i' && p.status!=='u' &&
+        p.price<=budget &&
+        p.id!==sell.id
+      )
+      .sort((a,b)=>b.score-a.score);
+    const buy=replacements[0]??null;
+    return{sell,buy};
+  }).filter(x=>x.buy!==null);
+
+  if(!suggestions.length){
+    body.innerHTML=`<div class="ts-no-squad">No transfer suggestions available with current budget settings.</div>`;
+    return;
+  }
+
+  body.innerHTML=`<div class="ts-grid">${suggestions.map(({sell,buy})=>{
+    const sellTeam=TMAP[sell.teamId]??{short:'?'};
+    const buyTeam=TMAP[buy.teamId]??{short:'?'};
+    const scoreDelta=buy.score-sell.score;
+    const priceDiff=buy.price-sell.price;
+    const deltaClass=scoreDelta>10?'ts-delta-pos':scoreDelta<-5?'ts-delta-neg':'ts-delta-neu';
+    const deltaSign=scoreDelta>=0?'+':'';
+
+    // Build sell reasons
+    const reasons=[];
+    if(sell.fixes.length){const avgD=sell.fixes.slice(0,3).reduce((s,f)=>s+f.diff,0)/sell.fixes.length;if(avgD>=3.5)reasons.push(`tough fixtures (avg ${avgD.toFixed(1)}/5)`);}
+    if(sell.form<4)reasons.push(`poor form (${sell.form.toFixed(1)} pts/gm)`);
+    if(sell.priceChg<0)reasons.push('price falling');
+    if(sell.netIn<-30000)reasons.push(`${Math.abs(Math.round(sell.netIn/1000))}k transfers out`);
+    if(sell.status==='d')reasons.push('fitness doubt');
+    const sellReason=reasons.length?reasons.join(' · '):'low scout score vs alternatives';
+
+    // Build buy reasons
+    const buyReasons=[];
+    if(buy.fixes.length){const avgD=buy.fixes.slice(0,3).reduce((s,f)=>s+f.diff,0)/buy.fixes.length;if(avgD<=2.5)buyReasons.push(`easy fixtures (avg ${avgD.toFixed(1)}/5)`);}
+    if(buy.form>=7)buyReasons.push(`in-form (${buy.form.toFixed(1)} pts/gm)`);
+    if(buy.priceChg>0)buyReasons.push('price rising');
+    if(buy.xgCombined>=0.4)buyReasons.push(`strong xG+xA (${buy.xgCombined.toFixed(2)}/90)`);
+    if(buy.ownedPct<12)buyReasons.push('differential pick');
+    const buyReason=buyReasons.length?buyReasons.join(' · '):'top scout score at this position';
+
+    const sellFixHtml=sell.fixes.slice(0,3).map(f=>`<span class="frs-pill ${FIX_CLS[f.diff]}">${f.opp}</span>`).join('');
+    const buyFixHtml=buy.fixes.slice(0,3).map(f=>`<span class="frs-pill ${FIX_CLS[f.diff]}">${f.opp}</span>`).join('');
+
+    return`<div class="ts-card">
+      <div class="ts-card-inner">
+        <div class="ts-player" data-id="${sell.id}">
+          <div class="ts-sell-tag">Sell</div>
+          <div class="ts-player-top">
+            <div class="ts-shirt ${SHIRT[sell.pos]}">${sell.name.charAt(0)}</div>
+            <div>
+              <div class="ts-player-name">${sell.name}</div>
+              <div class="ts-player-meta">${sellTeam.short} · £${sell.price.toFixed(1)}m · ${sell.ownedPct.toFixed(1)}% owned</div>
+            </div>
+          </div>
+          <div class="ts-player-stats">
+            <div class="ts-stat"><span class="ts-stat-val" style="color:${sell.score>=60?'var(--cream)':'var(--accent)'}">${sell.score}</span><span class="ts-stat-label">Scout</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${sell.form.toFixed(1)}</span><span class="ts-stat-label">Form</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${sell.epNext>0?sell.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
+          </div>
+          <div style="display:flex;gap:3px;margin-top:8px;flex-wrap:wrap">${sellFixHtml||'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div>
+        </div>
+
+        <div class="ts-arrow">
+          <div style="font-size:22px">→</div>
+          <div class="ts-arrow-label ${deltaClass}">${deltaSign}${scoreDelta} score</div>
+          <div style="font-family:var(--font-m);font-size:9px;color:${priceDiff>0?'var(--accent)':priceDiff<0?'var(--grass-l)':'var(--muted)'}">
+            ${priceDiff>0?'▲':''}${priceDiff<0?'▼':''}£${Math.abs(priceDiff).toFixed(1)}m
+          </div>
+        </div>
+
+        <div class="ts-player" data-id="${buy.id}">
+          <div class="ts-buy-tag">Buy</div>
+          <div class="ts-player-top">
+            <div class="ts-shirt ${SHIRT[buy.pos]}">${buy.name.charAt(0)}</div>
+            <div>
+              <div class="ts-player-name">${buy.name}</div>
+              <div class="ts-player-meta">${buyTeam.short} · £${buy.price.toFixed(1)}m · ${buy.ownedPct.toFixed(1)}% owned</div>
+            </div>
+          </div>
+          <div class="ts-player-stats">
+            <div class="ts-stat"><span class="ts-stat-val" style="color:${buy.score>=65?'var(--grass-l)':buy.score>=50?'var(--cream)':'var(--muted)'}">${buy.score}</span><span class="ts-stat-label">Scout</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${buy.form.toFixed(1)}</span><span class="ts-stat-label">Form</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${buy.epNext>0?buy.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
+          </div>
+          <div style="display:flex;gap:3px;margin-top:8px;flex-wrap:wrap">${buyFixHtml||'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div>
+        </div>
+      </div>
+      <div class="ts-reason">
+        <strong>Sell because:</strong> ${sellReason}<br>
+        <strong>Buy because:</strong> ${buyReason}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+
+  // Wire up click-to-detail on both sell and buy player cards
+  body.querySelectorAll('.ts-player[data-id]').forEach(el=>{
+    el.addEventListener('click',()=>openDetail(+el.dataset.id));
+  });
+}
+
+function fixRunHtml(fixes,size='frs-pill'){
+  if(!fixes.length)return`<span style="color:var(--muted);font-size:10px">BGW</span>`;
+  return fixes.map(f=>`<span class="${size} ${FIX_CLS[f.diff]}" title="GW${f.gw} vs ${f.opp} (${f.ha})">${f.opp} <span style="opacity:0.7;font-size:8px">${f.ha}</span></span>`).join('');
+}
+
+function renderTargets(){
+  const banner=document.getElementById('targetsBanner');
+  const grid=document.getElementById('targetsGrid');
+  if(F.mode!=='buy'){banner.style.display='none';return;}
+
+  // Full scored pool — ignore sidebar filters, apply only availability + banner price cap
+  const base=ALL
+    .filter(p=>p.status!=='i'&&p.status!=='u')
+    .filter(p=>F.bannerPrice>=15||p.price<=F.bannerPrice);
+
+  if(!base.length){banner.style.display='none';return;}
+  banner.style.display='block';
+
+  const hasSquad=SQUAD_IDS.size>0;
+  const sorted=[...base].sort((a,b)=>b.score-a.score);
+
+  // Exclude squad players from buy recommendations if squad is loaded
+  const buyPool=hasSquad?sorted.filter(p=>!SQUAD_IDS.has(p.id)):sorted;
+
+  // 1. Best overall — top scorer not in squad (or overall if no squad)
+  const best=buyPool[0]??null;
+
+  // 2. Best value — top scorer at or under £8.5m, not already shown
+  const valueCap=Math.min(F.bannerPrice>=15?8.5:F.bannerPrice, 8.5);
+  const bestValue=buyPool.find(p=>p.price<=valueCap&&p.id!==best?.id)??null;
+
+  // 3. Hidden gem — top scorer under 15% ownership, not already shown
+  const shownIds=new Set([best?.id,bestValue?.id].filter(Boolean));
+  const gem=buyPool.find(p=>p.ownedPct<15&&!shownIds.has(p.id))??null;
+
+  // 4. Sell candidate — worst scout score IN your squad (only if squad loaded)
+  let sellCandidate=null;
+  if(hasSquad){
+    const squadPlayers=[...base].filter(p=>SQUAD_IDS.has(p.id));
+    squadPlayers.sort((a,b)=>a.score-b.score); // worst first
+    sellCandidate=squadPlayers[0]??null;
+  }
+
+  const picks=[
+    {player:best,          label:hasSquad?'Best transfer in':'Best overall', icon:'⭐', accentCls:'rank-1'},
+    {player:bestValue,     label:'Best value',    icon:'💰', accentCls:'rank-value'},
+    {player:gem,           label:'Hidden gem',    icon:'💎', accentCls:'rank-gem'},
+    {player:sellCandidate, label:'Consider selling', icon:'📤', accentCls:'rank-sell'},
+  ].filter(x=>x.player!==null);
+
+  if(!picks.length){banner.style.display='none';return;}
+
+  grid.innerHTML=picks.map(({player:p,label,icon,accentCls,desc})=>{
+    const team=TMAP[p.teamId]??{short:'?'};
+    const v=getVerdict(p);
+    const shirtCls=SHIRT[p.pos]??'shirt-mid';
+    const fixRun=fixRunHtml(p.fixes);
+    const priceTag=p.priceChg>0?`<span class="price-up">↑</span>`:p.priceChg<0?`<span class="price-down">↓</span>`:'';
+    return`<div class="target-card ${accentCls}" data-id="${p.id}">
+      <div class="target-top">
+        <div class="target-shirt ${shirtCls}">${p.name.charAt(0)}</div>
+        <div>
+          <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">${icon} ${label}</div>
+          <div class="target-name">${p.name}</div>
+          <div class="target-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m${priceTag} · ${p.ownedPct.toFixed(1)}% owned</div>
+        </div>
+      </div>
+      <div class="target-score-row">
+        <div>
+          <div class="target-score-label">Scout score</div>
+          <div class="target-score">${p.score}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="target-score-label">Form</div>
+          <div style="font-family:var(--font-d);font-size:22px;color:${p.form>=8?'var(--grass-l)':'var(--cream)'}">${p.form.toFixed(1)}</div>
+        </div>
+      </div>
+      <div class="target-reason">${v.reason}</div>
+      <div class="fix-run-strip">
+        <span class="fix-run-gw-label">Next 4 GWs →</span>
+        ${fixRun}
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.target-card[data-id]').forEach(card=>{
+    card.addEventListener('click',()=>openDetail(+card.dataset.id));
+  });
+}
+
+function getColDefs(pos){
+  const common = [
+    {key:'price', hdr:'Price',    tip:'Current FPL price. ↑↓ shows price movement this GW.'},
+    {key:'form',  hdr:'Form',     tip:'FPL avg pts per game over the last 30 days.'},
+    {key:'fixes', hdr:'Next 4 GWs', tip:null},
+    {key:'ep',    hdr:'Proj pts', tip:'Projected points next GW.'},
+    {key:'own',   hdr:'Owned%',   tip:'% of FPL managers who own this player.'},
+
+  ];
+  const statCols = {
+    GK: [
+      {key:'xgc90',            hdr:'xGC/90',  tip:'Expected goals conceded per 90 — lower is better.'},
+      {key:'cleanSheetsPer90', hdr:'CS/game',  tip:'Clean sheets per game this season.'},
+      {key:'savesPer90',       hdr:'Saves/90', tip:'Saves per 90 mins.'},
+    ],
+    DEF: [
+      {key:'xgc90',            hdr:'xGC/90',  tip:'Expected goals conceded per 90 — lower is better.'},
+      {key:'cleanSheetsPer90', hdr:'CS/game',  tip:'Clean sheets per game this season.'},
+      {key:'xg90',             hdr:'xG/90',   tip:'Expected goals per 90.'},
+      {key:'xa90',             hdr:'xA/90',   tip:'Expected assists per 90.'},
+      {key:'gl6',              hdr:'G L6',    tip:'Goals per 90 over last 6 games. Loads live.'},
+      {key:'al6',              hdr:'A L6',    tip:'Assists per 90 over last 6 games. Loads live.'},
+      {key:'defContribPer90',  hdr:'DC/90',   tip:'Defensive contributions per 90 — tackles, blocks, interceptions, clearances.'},
+    ],
+    MID: [
+      {key:'xg90',             hdr:'xG/90',   tip:'Expected goals per 90 — season avg.'},
+      {key:'xa90',             hdr:'xA/90',   tip:'Expected assists per 90 — season avg.'},
+      {key:'xgl6',             hdr:'xG L6',   tip:'xG per 90 over last 6 games. Loads live.'},
+      {key:'xal6',             hdr:'xA L6',   tip:'xA per 90 over last 6 games. Loads live.'},
+      {key:'gl6',              hdr:'G L6',    tip:'Goals per 90 over last 6 games. Loads live.'},
+      {key:'al6',              hdr:'A L6',    tip:'Assists per 90 over last 6 games. Loads live.'},
+      {key:'defContribPer90',  hdr:'DC/90',   tip:'Defensive contributions per 90.'},
+    ],
+    FWD: [
+      {key:'xg90',             hdr:'xG/90',   tip:'Expected goals per 90 — season avg.'},
+      {key:'xa90',             hdr:'xA/90',   tip:'Expected assists per 90 — season avg.'},
+      {key:'xgl6',             hdr:'xG L6',   tip:'xG per 90 over last 6 games. Loads live.'},
+      {key:'xal6',             hdr:'xA L6',   tip:'xA per 90 over last 6 games. Loads live.'},
+      {key:'gl6',              hdr:'G L6',    tip:'Goals per 90 over last 6 games. Loads live.'},
+      {key:'al6',              hdr:'A L6',    tip:'Assists per 90 over last 6 games. Loads live.'},
+    ],
+  };
+  return [...(statCols[pos]||statCols.MID), ...common];
+}
+
+function renderColCell(p, key){
+  switch(key){
+    case 'price': {const pCh=p.priceChg>0?'<span class="price-up">↑</span>':p.priceChg<0?'<span class="price-down">↓</span>':''; return `<td>£${p.price.toFixed(1)}m${pCh}</td>`;}
+    case 'form':  {const fc=p.form>=8?'stat-good':p.form>=5?'stat-ok':p.form>=3?'stat-warn':'stat-bad'; return `<td class="${fc}">${p.form.toFixed(1)}</td>`;}
+    case 'xg90':  {const t=p.xg90Recent>0?`<span style="font-size:9px;margin-left:3px;opacity:0.7">${p.xg90Recent.toFixed(2)}</span><span style="font-size:9px;margin-left:2px">${p.xg90Recent>p.xg90Season*1.1?'<span style="color:var(--grass-l)">↑</span>':p.xg90Recent<p.xg90Season*0.9?'<span style="color:var(--accent)">↓</span>':'<span style="color:var(--muted)">→</span>'}</span>`:''; return `<td class="${p.xg90>0.3?'stat-good':p.xg90>0.15?'stat-ok':'stat-warn'}">${p.xg90.toFixed(2)}${t}</td>`;}
+    case 'xa90':  return `<td class="${p.xa90>0.2?'stat-good':p.xa90>0.1?'stat-ok':'stat-warn'}">${p.xa90.toFixed(2)}</td>`;
+    case 'xgl6':  return `<td data-xgl6="${p.id}" style="color:var(--muted);font-size:11px">—</td>`;
+    case 'xal6':  return `<td data-xal6="${p.id}" style="color:var(--muted);font-size:11px">—</td>`;
+    case 'gl6':   return `<td data-gl6="${p.id}" style="color:var(--muted);font-size:11px">—</td>`;
+    case 'al6':   return `<td data-al6="${p.id}" style="color:var(--muted);font-size:11px">—</td>`;
+    case 'xgc90': return `<td class="${p.xgc90<1?'stat-good':p.xgc90<1.5?'stat-ok':'stat-warn'}">${p.xgc90.toFixed(2)}</td>`;
+    case 'cleanSheetsPer90': return `<td class="${p.cleanSheetsPer90>0.35?'stat-good':p.cleanSheetsPer90>0.2?'stat-ok':'stat-warn'}">${p.cleanSheetsPer90.toFixed(2)}</td>`;
+    case 'savesPer90': return `<td class="${p.savesPer90>3?'stat-good':p.savesPer90>2?'stat-ok':'stat-warn'}">${p.savesPer90.toFixed(1)}</td>`;
+    case 'defContribPer90': return `<td class="${p.defContribPer90>3?'stat-good':p.defContribPer90>1.5?'stat-ok':'stat-warn'}">${p.defContribPer90.toFixed(1)}</td>`;
+    case 'fixes': return `<td><div class="tbl-fix-run">${p.fixes.length?p.fixes.map(f=>`<span class="frs-pill ${FIX_CLS[f.diff]}" title="GW${f.gw} vs ${f.opp} (${f.ha})">${f.opp}</span>`).join(''):'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div></td>`;
+    case 'ep':    return `<td class="${p.epNext>=7?'stat-good':p.epNext>=5?'stat-ok':'stat-warn'}">${p.epNext>0?p.epNext.toFixed(1):'—'}</td>`;
+    case 'own':   return `<td class="${p.ownedPct<10?'stat-good':p.ownedPct<30?'stat-ok':'stat-warn'}">${p.ownedPct.toFixed(1)}%</td>`;
+
+    default: return '<td>—</td>';
+  }
+}
+
+function renderTable(){
+  const pool=getFiltered();
+  const isSell=F.mode==='sell';
+  document.getElementById('resultCount').textContent=
+    isSell  ? `${pool.length} squad player${pool.length!==1?'s':''} · sorted by sell urgency` :
+    `${pool.length} player${pool.length!==1?'s':''} shown`;
+
+  const cols = getColDefs(F.pos);
+  const colCount = cols.length + 3;
+
+  // Map column keys to sort comparators
+  // Rebuild thead with clickable sortable headers
+  const thead = document.getElementById('playerThead');
+  if(thead){
+    const arrow = key => F.sort===key ? ` <span style="color:var(--grass-l)">${F.sortDir===1?'↓':'↑'}</span>` : '';
+    thead.innerHTML = `<tr>
+      <th style="width:36px"></th>
+      <th style="text-align:left">Player</th>
+      ${cols.map(c=>`<th data-sort="${c.key}" style="cursor:pointer;user-select:none" title="${c.tip||c.hdr}">${c.hdr}${arrow(c.key)}</th>`).join('')}
+      <th data-sort="scout" style="cursor:pointer;user-select:none">${isSell?'Urgency':'Scout'}${arrow('scout')}</th>
+      <th style="width:60px"></th>
+    </tr>`;
+    thead.querySelectorAll('th[data-sort]').forEach(th=>{
+      th.addEventListener('click',()=>{
+        if(F.sort===th.dataset.sort) F.sortDir*=-1;
+        else{ F.sort=th.dataset.sort; F.sortDir=1; }
+        renderTable();
+      });
+    });
+  }
+
+  const tbody=document.getElementById('playerTbody');
+
+
+  if(!pool.length){tbody.innerHTML=`<tr><td colspan="${colCount+1}"><div class="empty-state"><h3>No players</h3><p>Try widening your filters.</p></div></td></tr>`;return;}
+
+  tbody.innerHTML=pool.slice(0,60).map(p=>{
+    const team=TMAP[p.teamId]??{short:'?'};
+    const iP=PINNED.has(p.id);
+    const inSquad=SQUAD_IDS.size>0?SQUAD_IDS.has(p.id):null;
+    const squadBadge=inSquad===true?`<span class="badge-in-squad">In squad</span>`:'';
+    const rowCls=`${p.id===SEL?'selected':''}${inSquad===true?' row-in-squad':''}`.trim();
+    const stH=p.status==='d'?`<span class="status-d"></span>`:p.status==='i'?`<span class="status-i"></span>`:'';
+    let scoreCell;
+    if(isSell){const u=sellUrgency(p);const uc=u>=8?'sell-bad':u>=5?'sell-warn':'sell-ok';scoreCell=`<td><strong class="${uc}">${Math.round(u*10)}</strong></td>`;}
+    else{const sc=p.score>=70?'stat-good':p.score>=55?'stat-ok':p.score>=40?'stat-warn':'stat-bad';scoreCell=`<td><strong class="${sc}">${p.score}</strong></td>`;}
+    return`<tr class="${rowCls}" data-id="${p.id}">
+      <td><div style="display:flex;align-items:center;justify-content:center"><div class="player-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div></div></td>
+      <td><div><div class="player-name">${stH}${p.name}${squadBadge}</div><div class="player-team">${team.short} · ${p.pos}</div></div></td>
+      ${cols.map(c=>renderColCell(p,c.key)).join('')}
+      ${scoreCell}
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+<button class="pin-cell-btn${iP?' pinned':''}" data-pid="${p.id}">${iP?'📌':'Pin'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr[data-id]').forEach(row=>{
+    row.addEventListener('click',e=>{
+      if(e.target.closest('.pin-cell-btn'))return;
+      openDetail(+row.dataset.id);
+    });
+  });
+  tbody.querySelectorAll('.pin-cell-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{e.stopPropagation();togglePin(+btn.dataset.pid);});
+  });
+  if(ALL!==FB_PLAYERS) loadTableXg(pool.slice(0,60));
+}
+
+async function openDetail(id){
+  SEL=id;renderTable();
+  const p=ALL.find(x=>x.id===id);if(!p)return;
+  const team=TMAP[p.teamId]??{short:'?',name:'Unknown'};
+  const fix=p.fix;
+  const pb=document.getElementById('detailPosBadge');
+  pb.textContent=p.pos;
+  const posColors={GK:{bg:'rgba(245,158,11,0.15)',c:'#f59e0b'},DEF:{bg:'rgba(59,130,246,0.15)',c:'#60a5fa'},MID:{bg:'rgba(16,185,129,0.15)',c:'#34d399'},FWD:{bg:'rgba(239,68,68,0.15)',c:'#f87171'}};
+  pb.style.background=posColors[p.pos]?.bg;pb.style.color=posColors[p.pos]?.c;
+  document.getElementById('detailName').textContent=p.name;
+  document.getElementById('detailMeta').textContent=`${team.name} · £${p.price.toFixed(1)}m · ${p.ownedPct.toFixed(1)}% owned${p.status==='d'?' · ⚠ Doubt':p.status==='i'?' · ✖ Injured':''}`;
+  const v=getVerdict(p);
+  const avgPts=p.starts>0?(p.totalPts/p.starts).toFixed(1):'—';
+  const fixHtml=p.fixes.length
+    ?`<div class="fix-run-strip" style="flex-wrap:wrap;gap:6px">${p.fixes.map(f=>`
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <span style="font-family:var(--font-m);font-size:8px;color:var(--muted)">GW${f.gw}</span>
+          <span class="frs-pill ${FIX_CLS[f.diff]}">${f.opp} (${f.ha})</span>
+        </div>`).join('')}
+      </div>`
+    :`<p style="font-size:12px;color:var(--muted)">Blank gameweek</p>`;
+  document.getElementById('detailBody').innerHTML=`
+    <div class="verdict-card ${v.cls}"><div class="verdict-label ${v.cls}">${v.label}</div><div class="verdict-reason">${v.reason}</div></div>
+    <div class="detail-section">
+      <div class="detail-section-title">Key stats</div>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="stat-tile-label">Form</div><div class="stat-tile-val" style="color:${p.form>=8?'var(--grass-l)':p.form>=5?'var(--cream)':'var(--gold)'}">${p.form.toFixed(1)}</div><div class="stat-tile-sub">pts/game last 30d</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">xG / 90</div><div class="stat-tile-val" style="color:${p.xg90>0.3?'var(--grass-l)':p.xg90>0.15?'var(--cream)':'var(--muted)'}">${p.xg90.toFixed(2)}</div><div class="stat-tile-sub">${p.xg90Recent>0?`recent ${p.xg90Recent.toFixed(2)}`:'season avg'}</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">xA / 90</div><div class="stat-tile-val" style="color:${p.xa90>0.2?'var(--grass-l)':p.xa90>0.1?'var(--cream)':'var(--muted)'}">${p.xa90.toFixed(2)}</div><div class="stat-tile-sub">season avg · L6 in table</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Projected pts</div><div class="stat-tile-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="stat-tile-sub">next GW estimate</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Pts / £m</div><div class="stat-tile-val">${p.ppm.toFixed(1)}</div><div class="stat-tile-sub">value this season</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Pts per start</div><div class="stat-tile-val">${avgPts}</div><div class="stat-tile-sub">${p.starts} starts · excl. subs</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Scout score</div><div class="stat-tile-val" style="color:${p.score>=70?'var(--grass-l)':p.score>=50?'var(--cream)':'var(--muted)'}">${p.score}</div><div class="stat-tile-sub">50 = avg · 70+ = buy</div></div>
+      </div>
+    </div>
+    <div class="detail-section"><div class="detail-section-title">Next fixture</div>${fixHtml}</div>
+    <div class="detail-section" id="gwSect"><div class="detail-section-title">Last 5 GW scores</div><div id="gwChart" style="height:52px;background:rgba(255,255,255,0.03);border-radius:6px;animation:shimmer 1.4s infinite"></div></div>
+    <div class="detail-section"><div class="detail-section-title">Transfer activity this GW</div>
+      <div style="font-size:13px;color:${p.netIn>50000?'var(--grass-l)':p.netIn<-50000?'var(--accent)':'var(--muted)'}">
+        ${p.netIn>=0?'▲ +':'▼ '}${Math.abs(p.netIn).toLocaleString()} net transfers ${p.netIn>=0?'in':'out'}
+        ${p.priceChg>0?' · ↑ Price risen':p.priceChg<0?' · ↓ Price fallen':''}
+      </div>
+    </div>`;
+  document.getElementById('detailPanel').classList.add('open');
+  document.querySelector('.page').classList.add('panel-open');
+  if(ALL!==FB_PLAYERS)loadGwH(id);
+}
+
+const GWH = new Map(); // playerId → [{gw,pts,xg,xga,mins}]
+const L6_CACHE = new Map(); // playerId → {xg90L6, xa90L6}
+
+async function loadGwH(id){
+  if(GWH.has(id)){renderGwH(id);return;}
+  try{
+    const d=await fetchJ(`api/fpl-player-summary?id=${id}`);
+    const h=(d.history??[]).slice(0,5).reverse();
+    GWH.set(id,h.map(g=>({
+      gw:g.round,
+      pts:g.total_points??0,
+      xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),
+      mins:g.minutes||0
+    })));
+    // Also compute L6 while we have the data
+    computeL6(id, d.history??[]);
+    renderGwH(id);
+  }catch{}
+}
+
+function computeL6(id, history){
+  if(L6_CACHE.has(id)) return;
+  const last6 = history.slice(0,6);
+  const totalMins = last6.reduce((s,g)=>s+(g.minutes||0),0);
+  if(totalMins < 1){ L6_CACHE.set(id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); return; }
+  const per90 = 90/totalMins;
+  const xg90L6     = Math.min(last6.reduce((s,g)=>s+(parseFloat(g.expected_goals)||0),0)*per90, 1.5);
+  const xa90L6     = Math.min(last6.reduce((s,g)=>s+(parseFloat(g.expected_assists)||0),0)*per90, 1.0);
+  const goals90L6  = Math.min(last6.reduce((s,g)=>s+(g.goals_scored||0),0)*per90, 1.5);
+  const assists90L6= Math.min(last6.reduce((s,g)=>s+(g.assists||0),0)*per90, 1.0);
+  L6_CACHE.set(id,{xg90L6,xa90L6,goals90L6,assists90L6});
+}
+
+async function loadTableXg(players){
+  if(ALL===FB_PLAYERS) return;
+  const toFetch = players.filter(p => !L6_CACHE.has(p.id));
+  await Promise.allSettled(toFetch.map(async p => {
+    try{
+      const d = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
+      computeL6(p.id, d.history??[]);
+      // Also warm the GWH cache for detail panel
+      if(!GWH.has(p.id)){
+        const h=(d.history??[]).slice(0,5).reverse();
+        GWH.set(p.id,h.map(g=>({gw:g.round,pts:g.total_points??0,xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),mins:g.minutes||0})));
+      }
+    }catch{ L6_CACHE.set(p.id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); }
+  }));
+  patchL6Cells(players);
+}
+
+function patchL6Cells(players){
+  players.forEach(p => {
+    const d = L6_CACHE.get(p.id);
+    if(!d) return;
+    const patch = (sel, val, goodT, okT) => {
+      const el = document.querySelector(`[${sel}="${p.id}"]`);
+      if(!el) return;
+      el.className = val>goodT?'stat-good':val>okT?'stat-ok':'stat-warn';
+      el.style.fontSize = '';
+      el.textContent = val.toFixed(2);
+    };
+    patch('data-xgl6', d.xg90L6,    0.3,  0.15);
+    patch('data-xal6', d.xa90L6,    0.2,  0.1);
+    patch('data-gl6',  d.goals90L6,  0.3,  0.1);
+    patch('data-al6',  d.assists90L6,0.2,  0.05);
+  });
+}
+
+function renderGwH(id){
+  if(id!==SEL)return;
+  const h=GWH.get(id);if(!h?.length)return;
+  const el=document.getElementById('gwChart');if(!el)return;
+  const mx=Math.max(...h.map(x=>x.pts),1);
+  el.innerHTML=`<div class="gw-history">${h.map(x=>{
+    const pct=Math.max((x.pts/mx)*44,3);
+    const c=x.pts>=12?'var(--grass-l)':x.pts>=6?'var(--blue)':x.pts>=2?'var(--gold)':'var(--muted)';
+    const xgLabel=x.xg>0?`<div style="font-size:8px;color:var(--muted);margin-top:2px">${x.xg.toFixed(2)}xG</div>`:'';
+    return`<div class="gw-bar-wrap"><div class="gw-bar-pts">${x.pts}</div><div class="gw-bar" style="height:${pct}px;background:${c}"></div>${xgLabel}<div class="gw-bar-gw">GW${x.gw}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function getVerdict(p){
+  const fix=p.fix,fe=fix&&fix.diff<=2,fh=fix&&fix.diff>=4;
+  const inF=p.form>=7,lowF=p.form<3,gX=p.xgCombined>=0.4,rP=p.priceChg>0,fP=p.priceChg<0;
+  if(p.status==='i')return{cls:'sell',label:'✖ Transfer out',reason:`<strong>${p.name}</strong> is marked as injured. Transfer out before their price falls further.`};
+  if(p.status==='d'&&fh)return{cls:'sell',label:'↓ Consider selling',reason:`<strong>${p.name}</strong> is a doubt for a difficult fixture — high risk of missing the game entirely.`};
+  if(lowF&&fh&&fP)return{cls:'sell',label:'↓ Transfer out',reason:`Poor form (${p.form.toFixed(1)} pts/game), a hard fixture, and a falling price are all sell signals for <strong>${p.name}</strong>.`};
+  if(inF&&fe&&gX&&rP)return{cls:'buy',label:'⬆ Strong buy',reason:`<strong>${p.name}</strong> ticks every box — strong form (${p.form.toFixed(1)} pts/game), good xG+xA (${p.xgCombined.toFixed(2)}/90), an easy fixture (${fix.opp} ${fix.ha}), and a rising price.`};
+  if(inF&&fe&&gX)return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> has strong form and a favourable fixture — ${fix?.opp??''} (${fix?.ha??''}) — with solid underlying numbers (${p.xgCombined.toFixed(2)} xG+xA/90).`};
+  if(p.score>=65&&fe)return{cls:'buy',label:'⬆ Buy',reason:`Scout score of <strong>${p.score}</strong> with an easy fixture (${fix?.opp??''} ${fix?.ha??''}) makes <strong>${p.name}</strong> a strong transfer target.`};
+  if(gX&&fh)return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> has strong underlying xG+xA (${p.xgCombined.toFixed(2)}/90) but faces a tough fixture. Consider for next GW.`};
+  if(p.status==='d')return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> is listed as a doubt. Wait for team news.`};
+  if(!fix)return{cls:'monitor',label:'👀 Blank GW',reason:`<strong>${p.name}</strong> has no fixture this week. Monitor for next GW.`};
+  if(p.ownedPct>30&&!inF)return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> is widely owned (${p.ownedPct.toFixed(1)}%) but out of form. Selling is a risk without a clear upgrade.`};
+  return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> shows no strong buy or sell signal. Scout score ${p.score} is ${p.score>=50?'above':'below'} average.`};
+}
+
+function togglePin(id){
+  if(PINNED.has(id))PINNED.delete(id);
+  else{if(PINNED.size>=4)PINNED.delete(PINNED.values().next().value);PINNED.add(id);}
+  savePins();renderTable();renderCompare();
+}
+
+
+
+function renderCompare(){
+  const strip=document.getElementById('compareStrip'),cards=document.getElementById('compareCards');
+  if(!PINNED.size){strip.classList.remove('open');return;}
+  strip.classList.add('open');
+  const players=[...PINNED].map(id=>ALL.find(p=>p.id===id)).filter(Boolean);
+  const bS=Math.max(...players.map(p=>p.score)),bF=Math.max(...players.map(p=>p.form)),bX=Math.max(...players.map(p=>p.xgCombined));
+  cards.innerHTML=players.map(p=>{
+    const team=TMAP[p.teamId]??{short:'?'};const fix=p.fix;
+    return`<div class="compare-player">
+      <button class="compare-remove" data-pid="${p.id}">×</button>
+      <div class="compare-player-name">${p.name}</div>
+      <div class="compare-player-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m · ${p.ownedPct.toFixed(1)}%</div>
+      <div class="compare-player-stats">
+        <div class="compare-stat"><span class="compare-stat-label">Scout</span><span class="compare-stat-val${p.score===bS?' best':''}">${p.score}</span></div>
+        <div class="compare-stat"><span class="compare-stat-label">Form</span><span class="compare-stat-val${p.form===bF?' best':''}">${p.form.toFixed(1)}</span></div>
+        <div class="compare-stat"><span class="compare-stat-label">xG+xA</span><span class="compare-stat-val${p.xgCombined===bX?' best':''}">${p.xgCombined.toFixed(2)}</span></div>
+        <div class="compare-stat"><span class="compare-stat-label">Proj pts</span><span class="compare-stat-val">${p.epNext>0?p.epNext.toFixed(1):'—'}</span></div>
+        ${fix?`<div class="compare-stat"><span class="compare-stat-label">Next fix</span><span class="compare-stat-val"><span class="fix-mini ${FIX_CLS[fix.diff]}">${fix.opp} ${fix.ha}</span></span></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  cards.querySelectorAll('.compare-remove').forEach(btn=>{btn.addEventListener('click',()=>togglePin(+btn.dataset.pid));});
+}
+
+function setBadge(type,text){document.getElementById('dataBadge').className='data-badge '+type;document.getElementById('dataBadgeText').textContent=text;}
+
+function patchFallbackPlayers(players){
+  return players.map(p=>({
+    ...p,
+    xa90:p.xa90??0,
+    xg90:p.xg90??0,
+    xg90Season:p.xg90Season??p.xg90??0,
+    xa90Season:p.xa90Season??p.xa90??0,
+    xg90Recent:p.xg90Recent??0,
+    xa90Recent:p.xa90Recent??0,
+    xgCombined:p.xgCombined??((p.xg90??0)+(p.xa90??0)),
+    goals90:p.goals90??0,
+    assists90:p.assists90??0,
+    xgc90:p.xgc90??0,
+    xgc90Season:p.xgc90Season??0,
+    cleanSheets:p.cleanSheets??0,
+    cleanSheetsPer90:p.cleanSheetsPer90??0,
+    saves:p.saves??0,
+    savesPer90:p.savesPer90??0,
+    bps:p.bps??0,
+    bonusPts:p.bonusPts??0,
+    defContrib:p.defContrib??0,
+    defContribPer90:p.defContribPer90??0,
+  }));
+}
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
+const FB_PLAYERS=[
+  // GK (4)
+  {id:13,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,ict:45,epNext:5.2,ppm:17.6,priceChg:0,netIn:12000,minsRel:90,ownedPct:26.1,totalPts:97,starts:28,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,ict:32,epNext:4.8,ppm:18.2,priceChg:0,netIn:8000,minsRel:90,ownedPct:12.4,totalPts:82,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:16,name:'Pickford',fullName:'Jordan Pickford',teamId:8,pos:'GK',price:5.0,form:4.2,xg90:0,ict:28,epNext:4.0,ppm:11.4,priceChg:0,netIn:-5000,minsRel:90,ownedPct:8.3,totalPts:57,starts:26,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:17,name:'Henderson',fullName:'Dean Henderson',teamId:7,pos:'GK',price:4.5,form:3.8,xg90:0,ict:22,epNext:3.6,ppm:10.2,priceChg:0,netIn:3000,minsRel:90,ownedPct:4.1,totalPts:46,starts:24,status:'a',fix:{opp:'WHU',ha:'H',diff:2},fixes:[{gw:34,opp:'WHU',ha:'H',diff:2},{gw:35,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'ARS',ha:'A',diff:4},{gw:37,opp:'BRE',ha:'H',diff:2}],score:0},
+  // DEF (6)
+  {id:12,name:'Trent A-A',fullName:'Trent Alexander-Arnold',teamId:12,pos:'DEF',price:7.2,form:7.1,xg90:0.42,ict:198,epNext:6.2,ppm:16.4,priceChg:1,netIn:55000,minsRel:85,ownedPct:28.6,totalPts:118,starts:20,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
+  {id:11,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,ict:142,epNext:4.1,ppm:12.3,priceChg:-1,netIn:-45000,minsRel:70,ownedPct:18.4,totalPts:80,starts:15,status:'d',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
+  {id:15,name:'Pedro Porro',fullName:'Pedro Porro',teamId:18,pos:'DEF',price:5.8,form:4.8,xg90:0.22,ict:134,epNext:4.4,ppm:13.8,priceChg:0,netIn:6000,minsRel:80,ownedPct:14.2,totalPts:80,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:18,name:'Mykolenko',fullName:'Vitaliy Mykolenko',teamId:8,pos:'DEF',price:4.5,form:4.4,xg90:0.12,ict:88,epNext:3.8,ppm:12.1,priceChg:0,netIn:4000,minsRel:82,ownedPct:5.2,totalPts:54,starts:22,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:19,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,ict:112,epNext:4.8,ppm:14.2,priceChg:0,netIn:18000,minsRel:80,ownedPct:21.8,totalPts:74,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:20,name:'Pedro',fullName:'Pedro Lima',teamId:17,pos:'DEF',price:4.5,form:3.1,xg90:0.08,ict:62,epNext:2.8,ppm:8.4,priceChg:-1,netIn:-12000,minsRel:75,ownedPct:3.1,totalPts:38,starts:18,status:'a',fix:{opp:'BRE',ha:'A',diff:3},fixes:[{gw:34,opp:'BRE',ha:'A',diff:3},{gw:35,opp:'IPS',ha:'A',diff:2},{gw:36,opp:'BOU',ha:'A',diff:3},{gw:37,opp:'ARS',ha:'H',diff:5}],score:0},
+  // MID (8)
+  {id:1,name:'Salah',fullName:'Mohamed Salah',teamId:12,pos:'MID',price:13.2,form:11.2,xg90:0.82,ict:385,epNext:9.8,ppm:17.1,priceChg:1,netIn:120000,minsRel:90,ownedPct:73.2,totalPts:226,starts:28,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
+  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,ict:341,epNext:7.1,ppm:16.1,priceChg:-1,netIn:-20000,minsRel:85,ownedPct:49.8,totalPts:177,starts:24,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,ict:212,epNext:5.8,ppm:18.8,priceChg:0,netIn:5000,minsRel:78,ownedPct:22.1,totalPts:141,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:8,name:'Neto',fullName:'Pedro Neto',teamId:6,pos:'MID',price:6.8,form:7.8,xg90:0.55,ict:195,epNext:5.2,ppm:15.9,priceChg:1,netIn:62000,minsRel:72,ownedPct:6.4,totalPts:108,starts:16,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:10,name:'Diallo',fullName:'Cheick Doucouré',teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,ict:135,epNext:3.9,ppm:17.8,priceChg:0,netIn:28000,minsRel:65,ownedPct:3.8,totalPts:89,starts:14,status:'a',fix:{opp:'EVE',ha:'A',diff:1},fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'SOU',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'MCI',ha:'H',diff:5}],score:0},
+  {id:21,name:'Andreas',fullName:'Andreas Pereira',teamId:9,pos:'MID',price:6.2,form:5.8,xg90:0.35,ict:168,epNext:5.1,ppm:15.6,priceChg:0,netIn:9000,minsRel:82,ownedPct:11.4,totalPts:97,starts:23,status:'a',fix:{opp:'TOT',ha:'H',diff:3},fixes:[{gw:34,opp:'TOT',ha:'H',diff:3},{gw:35,opp:'CRY',ha:'H',diff:2},{gw:36,opp:'WOL',ha:'A',diff:2},{gw:37,opp:'AVL',ha:'A',diff:3}],score:0},
+  {id:22,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'MID',price:8.3,form:10.8,xg90:0.71,ict:289,epNext:7.6,ppm:22.2,priceChg:1,netIn:85000,minsRel:88,ownedPct:41.2,totalPts:184,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:23,name:'Martinelli',fullName:'Gabriel Martinelli',teamId:1,pos:'MID',price:7.2,form:4.8,xg90:0.38,ict:145,epNext:4.6,ppm:12.1,priceChg:0,netIn:-8000,minsRel:76,ownedPct:9.8,totalPts:87,starts:22,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  // FWD (6)
+  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,ict:312,epNext:8.2,ppm:13.7,priceChg:0,netIn:40000,minsRel:90,ownedPct:54.1,totalPts:198,starts:25,status:'a',fix:{opp:'LEI',ha:'H',diff:1},fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3},{gw:37,opp:'IPS',ha:'A',diff:1}],score:0},
+  {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,ict:268,epNext:6.4,ppm:18.0,priceChg:0,netIn:15000,minsRel:82,ownedPct:37.4,totalPts:162,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
+  {id:7,name:'Watkins',fullName:'Ollie Watkins',teamId:2,pos:'FWD',price:9.5,form:5.9,xg90:0.52,ict:232,epNext:5.4,ppm:14.5,priceChg:-1,netIn:-35000,minsRel:84,ownedPct:31.6,totalPts:138,starts:23,status:'a',fix:{opp:'LIV',ha:'A',diff:4},fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2}],score:0},
+  {id:9,name:'Solanke',fullName:'Dominic Solanke',teamId:18,pos:'FWD',price:7.5,form:4.2,xg90:0.38,ict:178,epNext:4.8,ppm:14.9,priceChg:0,netIn:8000,minsRel:80,ownedPct:12.3,totalPts:112,starts:21,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:24,name:'Wood',fullName:'Chris Wood',teamId:16,pos:'FWD',price:6.5,form:6.2,xg90:0.44,ict:156,epNext:5.6,ppm:16.8,priceChg:1,netIn:22000,minsRel:85,ownedPct:7.2,totalPts:109,starts:24,status:'a',fix:{opp:'CHE',ha:'A',diff:3},fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3}],score:0},
+  {id:25,name:'Wissa',fullName:'Yoane Wissa',teamId:4,pos:'FWD',price:6.0,form:5.4,xg90:0.41,ict:138,epNext:4.9,ppm:15.2,priceChg:0,netIn:11000,minsRel:78,ownedPct:8.8,totalPts:91,starts:21,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+];
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active','buy','sell'));
+      btn.classList.add('active',btn.dataset.mode);
+      F.mode=btn.dataset.mode;
+      F.sort='scout'; F.sortDir=1;
+      document.getElementById('modeDesc').textContent=MODE_DESC[F.mode];
+      renderAll();
+    });
+  });
+  document.getElementById('pgPos').addEventListener('click',e=>{
+    const b=e.target.closest('.pos-tab');if(!b)return;
+    document.querySelectorAll('#pgPos .pos-tab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    F.pos=b.dataset.pos;
+    F.xg=0;F.xa=0;F.xgc=3;F.cs=0;F.saves=0;F.defContrib=0;F.sort='scout';F.sortDir=1;
+    resetPosFilterDisplays();
+    swapPosFilters(F.pos);
+    renderAll();
+  });
+  const _ts=document.getElementById('teamSelect');if(_ts)_ts.addEventListener('change',function(){F.team=this.value;renderAll();});
+  document.getElementById('priceRange').addEventListener('input',function(){F.price=parseFloat(this.value);document.getElementById('priceDisplay').textContent=F.price>=15?'Any':`£${F.price.toFixed(1)}m`;renderAll();});
+  document.getElementById('formRange').addEventListener('input',function(){F.form=parseFloat(this.value);document.getElementById('formDisplay').textContent=F.form<=0?'Any':F.form.toFixed(1);renderAll();});
+  document.getElementById('ownRange').addEventListener('input',function(){F.own=parseInt(this.value,10);document.getElementById('ownDisplay').textContent=F.own>=80?'Any':`${F.own}%`;renderAll();});
+
+  // Fixture difficulty filter
+  document.getElementById('fixDiffRange').addEventListener('input',function(){
+    F.fixDiff=parseFloat(this.value);
+    const el=document.getElementById('fixDiffDisplay');
+    const labels={'1':'Very easy','1.5':'Easy-very easy','2':'Easy','2.5':'Easy-medium','3':'Medium','3.5':'Medium-hard','4':'Hard','4.5':'Hard-very hard','5':'Any'};
+    el.textContent=F.fixDiff>=5?'Any':(labels[String(F.fixDiff)]||'\u2264'+F.fixDiff);
+    el.style.color=F.fixDiff<=2?'var(--grass-l)':F.fixDiff<=3?'var(--gold)':F.fixDiff<5?'var(--accent)':'var(--muted)';
+    renderAll();
+  });
+
+  // Advanced filters toggle
+  document.getElementById('advToggle').addEventListener('click',function(){
+    this.classList.toggle('open');
+    document.getElementById('advFilters').classList.toggle('open');
+  });
+  document.getElementById('availToggle').addEventListener('click',function(){this.classList.toggle('on');F.avail=this.classList.contains('on');renderAll();});
+  document.getElementById('squadOnlyToggle').addEventListener('click',function(){this.classList.toggle('on');F.squadOnly=this.classList.contains('on');renderAll();});
+  document.getElementById('squadLoadBtn').addEventListener('click',()=>{
+    const id=parseInt(document.getElementById('squadIdInput').value.trim(),10);
+    if(id>0)loadSquad(id);
+  });
+  document.getElementById('squadIdInput').addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();const id=parseInt(e.target.value.trim(),10);if(id>0)loadSquad(id);}
+  });
+  // xG sliders — DEF:xgRange, MID:xgRange2, FWD:xgRange3
+  ({xgRange:'xgDisplay', xgRange2:'xgDisplay2', xgRange3:'xgDisplay3'} && [
+    ['xgRange','xgDisplay'],['xgRange2','xgDisplay2'],['xgRange3','xgDisplay3']
+  ]).forEach(([rid,did])=>{
+    const el=document.getElementById(rid);if(!el)return;
+    el.addEventListener('input',function(){F.xg=parseFloat(this.value);document.querySelectorAll('#xgDisplay,#xgDisplay2,#xgDisplay3').forEach(d=>d&&(d.textContent=F.xg<=0?'Any':`${F.xg.toFixed(2)}+`));renderAll();});
+  });
+  // xA sliders — MID:xaRange, FWD:xaRange3
+  [['xaRange','xaDisplay'],['xaRange3','xaDisplay3']].forEach(([rid,did])=>{
+    const el=document.getElementById(rid);if(!el)return;
+    el.addEventListener('input',function(){F.xa=parseFloat(this.value);document.querySelectorAll('#xaDisplay,#xaDisplay3').forEach(d=>d&&(d.textContent=F.xa<=0?'Any':`${F.xa.toFixed(2)}+`));renderAll();});
+  });
+  // xGC sliders — GK:xgcRange, DEF:xgcRange2
+  [['xgcRange','xgcDisplay'],['xgcRange2','xgcDisplay2']].forEach(([rid,did])=>{
+    const el=document.getElementById(rid);if(!el)return;
+    el.addEventListener('input',function(){F.xgc=parseFloat(this.value);document.querySelectorAll('#xgcDisplay,#xgcDisplay2').forEach(d=>d&&(d.textContent=F.xgc>=3?'Any':`≤${F.xgc.toFixed(1)}`));renderAll();});
+  });
+  // CS sliders — GK:csRange, DEF:csRange2
+  [['csRange','csDisplay'],['csRange2','csDisplay2']].forEach(([rid,did])=>{
+    const el=document.getElementById(rid);if(!el)return;
+    el.addEventListener('input',function(){F.cs=parseFloat(this.value);document.querySelectorAll('#csDisplay,#csDisplay2').forEach(d=>d&&(d.textContent=F.cs<=0?'Any':`${F.cs.toFixed(2)}+`));renderAll();});
+  });
+  document.getElementById('savesRange').addEventListener('input',function(){F.saves=parseFloat(this.value);document.getElementById('savesDisplay').textContent=F.saves<=0?'Any':`${F.saves.toFixed(1)}+/90`;renderAll();});
+  // DC sliders — DEF:defContribRange, MID:defContribRange2
+  [['defContribRange','defContribDisplay'],['defContribRange2','defContribDisplay2']].forEach(([rid,did])=>{
+    const el=document.getElementById(rid);if(!el)return;
+    el.addEventListener('input',function(){F.defContrib=parseFloat(this.value);document.querySelectorAll('#defContribDisplay,#defContribDisplay2').forEach(d=>d&&(d.textContent=F.defContrib<=0?'Any':`${F.defContrib.toFixed(1)}+/90`));renderAll();});
+  });
+
+  document.getElementById('bannerPriceRange').addEventListener('input',function(){
+    F.bannerPrice=parseFloat(this.value);
+    document.getElementById('bannerPriceDisplay').textContent=F.bannerPrice>=15?'Any':`£${F.bannerPrice.toFixed(1)}m`;
+    renderTargets();
+  });
+  document.getElementById('searchInput').addEventListener('input',function(){F.search=this.value;renderAll();});
+  document.getElementById('tsBudgetRange').addEventListener('input',function(){
+    TS_BUDGET=parseFloat(this.value);
+    document.getElementById('tsBudgetDisplay').textContent=TS_BUDGET<=0?'Any':`+£${TS_BUDGET.toFixed(1)}m`;
+    if(F.mode==='sell') renderTransferSuggester();
+  });
+  document.getElementById('vpPosTabs').addEventListener('click',e=>{
+    const b=e.target.closest('.vp-tab');if(!b)return;
+    VP_POS=b.dataset.pos;
+    renderValuePicks(VP_POS);
+  });
+  document.getElementById('compareClear').addEventListener('click',()=>{PINNED.clear();savePins();renderTable();renderCompare();});
+  document.getElementById('detailClose').addEventListener('click',()=>{
+    document.getElementById('detailPanel').classList.remove('open');
+    document.querySelector('.page').classList.remove('panel-open');
+    SEL=null;renderTable();
+  });
+  document.addEventListener('click',e=>{
+    const panel=document.getElementById('detailPanel');
+    if(panel.classList.contains('open')&&!panel.contains(e.target)&&!e.target.closest('tr[data-id]')&&!e.target.closest('.ts-player')){
+      panel.classList.remove('open');
+      document.querySelector('.page').classList.remove('panel-open');
+      SEL=null;renderTable();
+    }
+  });
+  // ── Fixed tooltip for .ii info icons ──────────────────────────────────────
+  // Uses event delegation so it works on dynamically rendered rows too
+  const TT = document.getElementById('scout-tooltip');
+  let ttHide;
+
+  document.addEventListener('mouseover', e => {
+    const ii = e.target.closest('.ii');
+    if (!ii) return;
+    // Get tooltip text from data-tip attribute or inner .ip element text
+    const tip = ii.dataset.tip || ii.querySelector('.ip')?.innerHTML || '';
+    if (!tip) return;
+
+    clearTimeout(ttHide);
+    TT.innerHTML = tip;
+    TT.classList.add('visible');
+    positionTooltip(e);
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (TT.classList.contains('visible')) positionTooltip(e);
+  });
+
+  document.addEventListener('mouseout', e => {
+    if (!e.target.closest('.ii')) return;
+    ttHide = setTimeout(() => TT.classList.remove('visible'), 80);
+  });
+
+  function positionTooltip(e) {
+    const pad = 12;
+    const w = TT.offsetWidth || 220;
+    const h = TT.offsetHeight || 80;
+    let x = e.clientX + 14;
+    let y = e.clientY - h - 10;
+    // Keep within viewport
+    if (x + w > window.innerWidth - pad) x = e.clientX - w - 14;
+    if (y < pad) y = e.clientY + 20;
+    TT.style.left = x + 'px';
+    TT.style.top  = y + 'px';
+  }
+
+  ALL=patchFallbackPlayers(FB_PLAYERS);TMAP=FB_TEAMS;
+  fillTeamSel(Object.entries(FB_TEAMS).map(([id,t])=>({...t,id:+id,short_name:t.short})));
+  // Restore saved squad team ID input
+  const savedTeamId=lsG('squadTeamId','');
+  if(savedTeamId)document.getElementById('squadIdInput').value=savedTeamId;
+  // If squad was previously loaded, show status
+  if(SQUAD_IDS.size){
+    const el=document.getElementById('squadStatus');
+    el.className='squad-status loaded';el.textContent=`✓ ${SQUAD_IDS.size} players loaded`;
+    document.getElementById('squadHint').style.display='none';
+  }
+  scoreAll();renderAll();swapPosFilters(F.pos);
+  loadData();
+});
+</script>
+<div id="scout-tooltip"></div>
+
+<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
+  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+        </div>
+      </a>
+      <a href="captain-picker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">⚡</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Captain Picker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
+        </div>
+      </a>
+      <a href="value-tracker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">💰</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Value Tracker</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Best points per million</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted,#6b7280)">
+    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;
+    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;
+    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;
+    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<!-- AD SLOT: Mobile sticky footer (320x50) -->
+<!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
+<div class="ad-slot-sticky" aria-hidden="true">
+  <!-- AdSense unit goes here when approved:
+  <ins class="adsbygoogle"
+       style="display:inline-block;width:320px;height:50px"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="XXXXXXXXXX"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  -->
+</div>
+
+</body>
+</html>

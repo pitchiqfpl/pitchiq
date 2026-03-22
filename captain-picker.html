@@ -670,18 +670,9 @@ const saveHistory  = () => sl('history',  S.history);
    DATA LOADING
 ══════════════════════════════════════════════════ */
 async function fetchJ(url) {
-  // Try direct fetch with 8s timeout
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  try {
-    const r = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    if (!r.ok) { const e=new Error(`HTTP ${r.status}`); e.status=r.status; throw e; }
-    return r.json();
-  } catch(err) {
-    clearTimeout(timer);
-    throw err;
-  }
+  const r = await Promise.race([fetch(url), new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);
+  if (!r.ok) { const e=new Error(`HTTP ${r.status}`); e.status=r.status; throw e; }
+  return r.json();
 }
 
 async function loadData() {
@@ -717,7 +708,7 @@ async function loadData() {
 }
 
 async function loadFixtures() {
-  if(ALL===FB_PLAYERS) return;
+  if(!ALL_PLAYERS.length || ALL_PLAYERS===FALLBACK_PLAYERS) return;
   try {
     const fixes = await fetchJ('api/fpl-fixtures');
     if (!Array.isArray(fixes)) return;
@@ -730,12 +721,15 @@ async function loadFixtures() {
 
 function attachFixtures(fixes, gw) {
   const byTeam = {};
-  // Try selected GW unfinished first, then selected GW finished, then next GW
-  const gwFixes   = fixes.filter(f => f.event === gw);
+  const gwFixes    = fixes.filter(f => f.event === gw);
   const unfinished = gwFixes.filter(f => !f.finished);
-  const source    = unfinished.length ? unfinished
-                  : gwFixes.length    ? gwFixes
-                  : fixes.filter(f => f.event === gw + 1 && !f.finished);
+  const nextFixes  = fixes.filter(f => f.event === gw + 1 && !f.finished);
+
+  // Priority: unfinished current GW → next GW unfinished → current GW finished (for display)
+  const source = unfinished.length  ? unfinished
+               : nextFixes.length   ? nextFixes
+               : gwFixes.length     ? gwFixes
+               : fixes.filter(f => f.event === gw + 1);
 
   source.forEach(f => {
     byTeam[f.team_h] = { opp:TEAMS_MAP[f.team_a]?.short??'?', ha:'H', difficulty:f.team_h_difficulty??3 };
@@ -756,7 +750,7 @@ const XG_TREND_CACHE = new Map(); // playerId → number[] (last 8 GWs, oldest f
 const SPARK_GWS = 8;
 
 async function loadSparklines(players) {
-  if(ALL===FB_PLAYERS) return;
+  if(!ALL_PLAYERS.length || ALL_PLAYERS===FALLBACK_PLAYERS) return;
   const toFetch = players.slice(0, 24).filter(p => !XG_TREND_CACHE.has(p.id));
   if (!toFetch.length) { patchSparklines(players); return; }
 
@@ -889,7 +883,7 @@ async function loadSquad(teamId) {
     el.className='squad-status error';
     if (err.status===404)           el.textContent='⚠ Squad not found — check your Team ID is correct';
     else if (err.status===503||err.status===429) el.textContent='⚠ FPL API busy — try again in a moment';
-    else if(ALL===FB_PLAYERS)               el.textContent='⚠ Squad loading requires Vercel deployment';
+    else if(ALL_PLAYERS===FALLBACK_PLAYERS) el.textContent='⚠ Squad loading requires Vercel deployment';
     else                            el.textContent=`⚠ ${err.message||'Could not load squad — try again'}`;
   } finally {
     btn.disabled = false;
@@ -1570,19 +1564,19 @@ const FALLBACK_TEAMS = {
   1:{short:'ARS'},2:{short:'AVL'},3:{short:'BOU'},4:{short:'BRE'},5:{short:'BHA'},
   6:{short:'CHE'},7:{short:'CRY'},8:{short:'EVE'},9:{short:'FUL'},10:{short:'IPS'},
   11:{short:'LEI'},12:{short:'LIV'},13:{short:'MCI'},14:{short:'MUN'},15:{short:'NEW'},
-  16:{short:'NFO'},17:{short:'SOU'},18:{short:'TOT'},19:{short:'WHU'},20:{short:'WOL'},
+  16:{short:'NFO'},17:{short:'WHU'},18:{short:'TOT'},19:{short:'WOL'},20:{short:'BRN'},
 };
 const FALLBACK_PLAYERS = [
-  {id:1, name:'Salah',   fullName:'Mohamed Salah',  teamId:12,pos:'MID',posId:3,price:13.2,ownedPct:73.2,form:11.2,xg90:0.82,ict:385.4,minsReliability:90,totalPts:226,epNext:9.8,starts:28,transfersDelta:120000,priceChange:1, status:'a',fix:{opp:'BOU',ha:'A',difficulty:1}},
-  {id:2, name:'Haaland', fullName:'Erling Haaland',  teamId:13,pos:'FWD',posId:4,price:14.5,ownedPct:54.1,form:8.9, xg90:0.94,ict:312.1,minsReliability:90,totalPts:198,epNext:8.2,starts:25,transfersDelta:40000, priceChange:0, status:'a',fix:{opp:'LEI',ha:'H',difficulty:1}},
-  {id:3, name:'Mbeumo',  fullName:'Bryan Mbeumo',    teamId:4, pos:'FWD',posId:4,price:8.3, ownedPct:41.2,form:10.8,xg90:0.71,ict:289.3,minsReliability:88,totalPts:184,epNext:7.6,starts:26,transfersDelta:85000, priceChange:1, status:'a',fix:{opp:'SOU',ha:'H',difficulty:1}},
-  {id:4, name:'Palmer',  fullName:'Cole Palmer',     teamId:6, pos:'MID',posId:3,price:11.0,ownedPct:49.8,form:7.4, xg90:0.68,ict:341.2,minsReliability:85,totalPts:177,epNext:7.1,starts:24,transfersDelta:-20000,priceChange:-1,status:'a',fix:{opp:'NFO',ha:'H',difficulty:2}},
-  {id:5, name:'Isak',    fullName:'Alexander Isak',  teamId:15,pos:'FWD',posId:4,price:9.0, ownedPct:37.4,form:8.1, xg90:0.63,ict:267.8,minsReliability:82,totalPts:162,epNext:6.4,starts:22,transfersDelta:15000, priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:2}},
-  {id:6, name:'Trossard',fullName:'Leandro Trossard',teamId:1, pos:'MID',posId:3,price:7.5, ownedPct:22.1,form:6.4, xg90:0.48,ict:211.7,minsReliability:78,totalPts:141,epNext:5.8,starts:20,transfersDelta:5000,  priceChange:0, status:'a',fix:{opp:'BHA',ha:'H',difficulty:2}},
-  {id:7, name:'Watkins', fullName:'Ollie Watkins',   teamId:2, pos:'FWD',posId:4,price:9.5, ownedPct:31.6,form:5.9, xg90:0.52,ict:231.8,minsReliability:84,totalPts:138,epNext:5.4,starts:23,transfersDelta:-35000,priceChange:-1,status:'a',fix:{opp:'LIV',ha:'A',difficulty:4}},
-  {id:8, name:'Neto',    fullName:'Pedro Neto',      teamId:6, pos:'MID',posId:3,price:6.8, ownedPct:6.4, form:7.8, xg90:0.55,ict:195.4,minsReliability:72,totalPts:108,epNext:5.2,starts:16,transfersDelta:62000, priceChange:1, status:'a',fix:{opp:'NFO',ha:'H',difficulty:2}},
-  {id:9, name:'Solanke', fullName:'Dominic Solanke', teamId:18,pos:'FWD',posId:4,price:7.5, ownedPct:12.3,form:4.2, xg90:0.38,ict:178.3,minsReliability:80,totalPts:112,epNext:4.8,starts:21,transfersDelta:8000,  priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:2}},
-  {id:10,name:'Diallo',  fullName:'Cheick Doucouré', teamId:10,pos:'MID',posId:3,price:5.0, ownedPct:3.8, form:4.4, xg90:0.28,ict:134.6,minsReliability:65,totalPts:89, epNext:3.9,starts:14,transfersDelta:28000, priceChange:0, status:'a',fix:{opp:'EVE',ha:'A',difficulty:1}},
+  {id:1, name:'Salah',   fullName:'Mohamed Salah',  teamId:12,pos:'MID',posId:3,price:13.4,ownedPct:14.1,form:7.8, xg90:0.72,ict:310.2,minsReliability:88,totalPts:198,epNext:8.2,starts:26,transfersDelta:45000, priceChange:0, status:'a',fix:{opp:'BOU',ha:'H',difficulty:2}},
+  {id:2, name:'Haaland', fullName:'Erling Haaland',  teamId:13,pos:'FWD',posId:4,price:14.5,ownedPct:28.4,form:9.2, xg90:0.91,ict:298.4,minsReliability:90,totalPts:182,epNext:9.1,starts:24,transfersDelta:80000, priceChange:1, status:'a',fix:{opp:'EVE',ha:'A',difficulty:2}},
+  {id:3, name:'Mbeumo',  fullName:'Bryan Mbeumo',    teamId:4, pos:'FWD',posId:4,price:8.8, ownedPct:38.2,form:8.4, xg90:0.68,ict:241.7,minsReliability:86,totalPts:171,epNext:7.4,starts:25,transfersDelta:62000, priceChange:1, status:'a',fix:{opp:'CHE',ha:'H',difficulty:3}},
+  {id:4, name:'Palmer',  fullName:'Cole Palmer',     teamId:6, pos:'MID',posId:3,price:11.2,ownedPct:32.6,form:6.8, xg90:0.61,ict:318.9,minsReliability:84,totalPts:164,epNext:6.9,starts:23,transfersDelta:-12000,priceChange:0, status:'a',fix:{opp:'BRE',ha:'A',difficulty:3}},
+  {id:5, name:'Isak',    fullName:'Alexander Isak',  teamId:15,pos:'FWD',posId:4,price:9.2, ownedPct:22.1,form:7.1, xg90:0.58,ict:224.3,minsReliability:80,totalPts:148,epNext:6.2,starts:21,transfersDelta:18000, priceChange:0, status:'a',fix:{opp:'WOL',ha:'H',difficulty:2}},
+  {id:6, name:'Saka',    fullName:'Bukayo Saka',     teamId:1, pos:'MID',posId:3,price:10.2,ownedPct:18.4,form:6.2, xg90:0.54,ict:287.1,minsReliability:82,totalPts:152,epNext:6.4,starts:24,transfersDelta:8000,  priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:3}},
+  {id:7, name:'Watkins', fullName:'Ollie Watkins',   teamId:2, pos:'FWD',posId:4,price:9.4, ownedPct:16.8,form:5.4, xg90:0.48,ict:198.6,minsReliability:83,totalPts:134,epNext:5.2,starts:22,transfersDelta:-8000, priceChange:0, status:'a',fix:{opp:'LIV',ha:'A',difficulty:4}},
+  {id:8, name:'Trossard',fullName:'Leandro Trossard',teamId:1, pos:'MID',posId:3,price:7.4, ownedPct:8.2, form:5.8, xg90:0.44,ict:178.4,minsReliability:76,totalPts:118,epNext:5.1,starts:19,transfersDelta:4000,  priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:3}},
+  {id:9, name:'Solanke', fullName:'Dominic Solanke', teamId:18,pos:'FWD',posId:4,price:7.4, ownedPct:9.6, form:4.8, xg90:0.36,ict:162.1,minsReliability:79,totalPts:108,epNext:4.6,starts:20,transfersDelta:2000,  priceChange:0, status:'a',fix:{opp:'NFO',ha:'H',difficulty:2}},
+  {id:10,name:'Flekken', fullName:'Mark Flekken',    teamId:4, pos:'GK', posId:1,price:4.6, ownedPct:6.4, form:4.2, xg90:0.0, ict:98.4, minsReliability:90,totalPts:98, epNext:4.1,starts:24,transfersDelta:6000,  priceChange:0, status:'a',fix:{opp:'CHE',ha:'H',difficulty:3}},
 ];
 
 /* ══════════════════════════════════════════════════
@@ -1693,13 +1687,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key==='Enter') logCaptain();
   });
 
-  // Render immediately with fallback, then load live data
-  ALL_PLAYERS = FALLBACK_PLAYERS;
-  TEAMS_MAP   = FALLBACK_TEAMS;
-  document.getElementById('skeletonGrid').style.display = 'none';
-  renderHistorySection();
-  renderAll();
-
+  // Keep skeleton visible until live data loads — don't flash stale fallback data
   loadData().then(() => loadFixtures());
 });
 </script>

@@ -18,7 +18,7 @@
 
 const API_BASE       = 'https://v3.football.api-sports.io';
 const PL_LEAGUE_ID   = 39;    // Premier League — never changes
-const CURRENT_SEASON = 2024;  // Update to 2025 each August
+const CURRENT_SEASON = 2025;  // 2025/26 Premier League season
 const FORM_ROUNDS    = 10;    // fetch last N rounds for form window
 const FORM_GAMES     = 5;     // use last N games from those rounds for form avg
 

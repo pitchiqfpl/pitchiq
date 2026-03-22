@@ -505,28 +505,62 @@ async function loadSquad(){
 
 /* ── LIVE RANK CALCULATION ────────────────────────────── */
 function calcApproxRank(myPts, totalPlayers){
-  // Uses score distribution from fpl-results to estimate rank
-  // Returns {rank, percentile, confidence}
-  if(!RANK_DATA||!myPts)return null;
+  if(!myPts) return null;
 
-  // fpl-results returns {results:[{entry,event_total,...}]} for finished GWs
-  // During live GWs it returns partial data — we use total_players from bootstrap
-  // and estimate rank from the score distribution
-  let managersAbove=0;
-
-  // Try results array if available (finished GW)
-  if(Array.isArray(RANK_DATA.results)){
-    managersAbove=RANK_DATA.results.filter(r=>r.event_total>myPts).length;
-    const known=RANK_DATA.results.length;
-    if(known>0&&known<totalPlayers){
-      // Scale up from sample to full population
-      managersAbove=Math.round((managersAbove/known)*totalPlayers);
-    }
-    return{
-      rank: managersAbove+1,
-      percentile: ((totalPlayers-managersAbove)/totalPlayers*100),
-      confidence: known>=1000?'high':'low',
+  // Method 1: Use fpl-results score distribution (available after GW closes)
+  if(RANK_DATA && Array.isArray(RANK_DATA.results) && RANK_DATA.results.length > 0){
+    const known = RANK_DATA.results.length;
+    const managersAbove = RANK_DATA.results.filter(r=>r.event_total>myPts).length;
+    const scaled = known < totalPlayers
+      ? Math.round((managersAbove/known)*totalPlayers)
+      : managersAbove;
+    return {
+      rank: scaled+1,
+      percentile: ((totalPlayers-scaled)/totalPlayers*100),
+      confidence: 'est.',
       based: known,
+      method: 'results',
+    };
+  }
+
+  // Method 2: Estimate from live player scores during active GW
+  // Logic: count how many of the top-owned players are outscoring you
+  // weighted by their ownership %. Not precise but directionally correct.
+  if(Object.keys(LIVE_MAP).length > 0 && ALL.length > 0){
+    // Get the top 50 most-owned players and their live scores
+    const topOwned = [...ALL]
+      .filter(p => p.pos !== 'GK' && p.ownedPct > 5)
+      .sort((a,b) => b.ownedPct - a.ownedPct)
+      .slice(0, 50);
+
+    // Estimate: what % of managers have more points than me?
+    // For each player, if their captain (2x) score beats myPts, 
+    // roughly their ownership% of managers are beating me via that captain
+    let estimatedPctAbove = 0;
+    const counted = new Set();
+
+    for(const p of topOwned){
+      const live = LIVE_MAP[p.id];
+      if(!live) continue;
+      const capPts = live.total_points * 2;
+      if(capPts > myPts && !counted.has(p.id)){
+        // Rough estimate: their ownership% of managers captained them
+        // and if that captain score beats myPts, those managers likely beat me
+        estimatedPctAbove += (p.ownedPct / 100) * 0.35; // ~35% of owners captain them
+        counted.add(p.id);
+      }
+    }
+
+    // Cap at 99%
+    estimatedPctAbove = Math.min(estimatedPctAbove, 0.99);
+    const estimatedRank = Math.round(estimatedPctAbove * totalPlayers) + 1;
+
+    return {
+      rank: estimatedRank,
+      percentile: ((1 - estimatedPctAbove) * 100),
+      confidence: 'live est.',
+      based: null,
+      method: 'live',
     };
   }
 
@@ -671,14 +705,14 @@ function renderLiveContent(){
   const rankHtml=rankInfo
     ?`<div class="rank-val ${rankClass(rankInfo.rank,TOTAL_PLAYERS)}">${formatRank(rankInfo.rank)}</div>
        <div class="pts-label">Live rank</div>
-       <div class="rank-accuracy">~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores</div>`
+       <div class="rank-accuracy">${rankInfo.method==='live'?'Live estimate · captain scoring':'~'+rankInfo.percentile.toFixed(1)+'% · est. from '+(rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based)+' scores'}</div>`
     :hasLive
       ?`<div class="rank-loading"></div>
         <div class="pts-label" style="margin-top:6px">Live rank</div>
         <div class="rank-accuracy">Calculating…</div>`
       :`<div class="rank-val" style="color:var(--muted)">—</div>
         <div class="pts-label">Live rank</div>
-        <div class="rank-accuracy">Available once GW starts</div>`;
+        <div class="rank-accuracy">Load your squad above</div>`;
 
   document.getElementById('liveContent').innerHTML=`
     <div class="pts-header">

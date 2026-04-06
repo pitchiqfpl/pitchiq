@@ -436,7 +436,7 @@ async function loadBootstrap(){
   setBadge('loading','Loading…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TOTAL_PLAYERS=bs.total_players??10000000;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({

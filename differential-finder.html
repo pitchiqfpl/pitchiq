@@ -326,7 +326,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt&&cur.finished)return nxt.id;return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);

@@ -398,7 +398,12 @@
   }
 
   function getSavedTeamId() {
-    try { return localStorage.getItem(TEAM_ID_KEY) || ''; } catch(e) { return ''; }
+    try {
+      let v = localStorage.getItem(TEAM_ID_KEY) || '';
+      // Some tools store via JSON.stringify — unwrap quotes if present
+      if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
+      return v;
+    } catch(e) { return ''; }
   }
 
   // Auto-fill any team ID input on the page, and save whenever it changes

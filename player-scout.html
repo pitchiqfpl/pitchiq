@@ -661,7 +661,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
+function resolveGw(bs){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt&&cur.finished)return nxt.id;return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');
@@ -1737,7 +1737,7 @@ function patchFallbackPlayers(players){
     cleanSheetsPer90:p.cleanSheetsPer90??0,
     saves:p.saves??0,
     savesPer90:p.savesPer90??0,
-    ppg:p.ppg??p.totalPts>0&&p.starts>0?(p.totalPts/p.starts):0,
+    ppg:p.ppg??(p.totalPts>0&&p.starts>0?(p.totalPts/p.starts):0),
     chanceNext:p.chanceNext??100,
     bonusPts:p.bonusPts??0,
     defContrib:p.defContrib??0,

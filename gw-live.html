@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -260,14 +259,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -407,7 +409,6 @@ const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
 const LS='pitchiq_live_';
 let ALL=[],TMAP={},GW=1,TOTAL_PLAYERS=10000000;
-let GW_AVERAGE=0,GW_HIGHEST=0;
 let PICKS=[];
 let SQUAD_IDS=new Set();
 let LIVE_MAP={};
@@ -435,12 +436,8 @@ async function loadBootstrap(){
   setBadge('loading','Loading…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TOTAL_PLAYERS=bs.total_players??10000000;
-    // Store current GW average and highest score for live rank estimation
-    const currentEvent=bs.events?.find(e=>e.is_current);
-    GW_AVERAGE=currentEvent?.average_entry_score??0;
-    GW_HIGHEST=currentEvent?.highest_score??0;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,
@@ -510,54 +507,32 @@ async function loadSquad(){
 
 /* ── LIVE RANK CALCULATION ────────────────────────────── */
 function calcApproxRank(myPts, totalPlayers){
-  if(!myPts) return null;
+  // Uses score distribution from fpl-results to estimate rank
+  // Returns {rank, percentile, confidence}
+  if(!RANK_DATA||!myPts)return null;
 
-  // Method 1: Use fpl-results score distribution (available after GW closes)
-  if(RANK_DATA && Array.isArray(RANK_DATA.results) && RANK_DATA.results.length > 0){
-    const known = RANK_DATA.results.length;
-    const managersAbove = RANK_DATA.results.filter(r=>r.event_total>myPts).length;
-    const scaled = known < totalPlayers
-      ? Math.round((managersAbove/known)*totalPlayers)
-      : managersAbove;
-    return {
-      rank: scaled+1,
-      percentile: ((totalPlayers-scaled)/totalPlayers*100),
+  // fpl-results returns {results:[{entry,event_total,...}]} for finished GWs
+  // During live GWs it returns partial data — we use total_players from bootstrap
+  // and estimate rank from the score distribution
+  let managersAbove=0;
+
+  // Try results array if available (finished GW)
+  if(Array.isArray(RANK_DATA.results)){
+    managersAbove=RANK_DATA.results.filter(r=>r.event_total>myPts).length;
+    const known=RANK_DATA.results.length;
+    if(known>0&&known<totalPlayers){
+      // Scale up from sample to full population
+      managersAbove=Math.round((managersAbove/known)*totalPlayers);
+    }
+    return{
+      rank: managersAbove+1,
+      percentile: ((totalPlayers-managersAbove)/totalPlayers*100),
+      confidence: known>=1000?'high':'low',
       based: known,
-      method: 'results',
-    };
-  }
-
-  // Method 2: Normal distribution estimate using GW average + highest score
-  // FPL scores roughly follow a normal distribution centred on the average.
-  // We estimate SD from the average and highest score, then use the
-  // cumulative normal distribution to estimate what % scored above you.
-  if(GW_AVERAGE > 0 && GW_HIGHEST > 0){
-    const mean = GW_AVERAGE;
-    // Approximate SD: highest score is typically ~3.5 SDs above mean
-    const sd = Math.max((GW_HIGHEST - mean) / 3.5, 1);
-    const z = (myPts - mean) / sd;
-    // Cumulative normal: % of managers scoring below you
-    const pctBelow = 0.5*(1 + erf(z/Math.SQRT2));
-    const managersAbove = Math.round((1-pctBelow) * totalPlayers);
-    return {
-      rank: Math.max(1, managersAbove + 1),
-      percentile: pctBelow * 100,
-      based: null,
-      method: 'estimate',
     };
   }
 
   return null;
-}
-
-// Error function approximation for normal distribution
-function erf(x){
-  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
-  const sign=x<0?-1:1;
-  x=Math.abs(x);
-  const t=1/(1+p*x);
-  const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
-  return sign*y;
 }
 
 function formatRank(rank){
@@ -577,18 +552,48 @@ function rankClass(rank, total){
 }
 
 /* ── LIVE DATA FETCH + POLL ───────────────────────────── */
+// Track GW fixture state from fixtures API
+let GW_FIXTURES=[]; // fixtures for current GW
+
+function gwMatchState(){
+  // Use fixture started/finished flags as authoritative source
+  // started=true, finished=false → match in progress
+  // started=false → not kicked off yet
+  // started=true, finished=true → complete
+  if(GW_FIXTURES.length){
+    const hasStarted  = GW_FIXTURES.some(f=>f.started);
+    const hasLive     = GW_FIXTURES.some(f=>f.started&&!f.finished);
+    const allFinished = GW_FIXTURES.every(f=>f.finished);
+    return { hasStarted, hasLive, allFinished,
+             liveCount: GW_FIXTURES.filter(f=>f.started&&!f.finished).length,
+             totalCount: GW_FIXTURES.length };
+  }
+  // Fallback: use player minutes if no fixture data
+  const hasPlaying=Object.values(LIVE_MAP).some(s=>s.minutes>0&&s.minutes<120);
+  return { hasStarted:hasPlaying, hasLive:hasPlaying, allFinished:false, liveCount:0, totalCount:0 };
+}
+
 async function fetchLive(){
   if(!GW)return;
   try{
-    // Fetch live data and score distribution in parallel
-    const[liveData, resultsData]=await Promise.allSettled([
+    // Fetch live data, fixtures and score distribution in parallel
+    const[liveData, fixturesData, resultsData]=await Promise.allSettled([
       fetchJ(`api/fpl-live?gw=${GW}`),
+      fetchJ(`api/fpl-fixtures`),
       fetchJ(`api/fpl-results?gw=${GW}`),
     ]);
 
     if(liveData.status==='fulfilled'&&Array.isArray(liveData.value.elements)){
       LIVE_MAP={};
       liveData.value.elements.forEach(e=>{LIVE_MAP[e.id]=e.stats;});
+    }
+    if(fixturesData.status==='fulfilled'&&Array.isArray(fixturesData.value)){
+      // Filter to just this GW's fixtures
+      GW_FIXTURES=fixturesData.value.filter(f=>f.event===GW).map(f=>({
+        started:f.started??false,
+        finished:f.finished??false,
+        finished_provisional:f.finished_provisional??false,
+      }));
     }
     if(resultsData.status==='fulfilled'){
       RANK_DATA=resultsData.value;
@@ -606,13 +611,34 @@ function updateLiveStatusBar(success){
   const bar=document.getElementById('liveStatusBar');
   const dot=document.getElementById('liveDot');
   const text=document.getElementById('liveStatusText');
-  const hasPlaying=Object.values(LIVE_MAP).some(s=>s.minutes>0&&s.minutes<90);
-  if(success&&hasPlaying){
+  const state=gwMatchState();
+
+  if(success&&state.hasLive){
+    // Matches currently in progress
     bar.className='live-status-bar active';
     dot.className='live-dot pulsing';
-    text.textContent='Matches in progress — updating every 60 seconds';
+    const liveLabel=state.liveCount>0?` · ${state.liveCount} of ${state.totalCount} matches live`:'';
+    text.textContent=`Matches in progress${liveLabel} — updating every 60 seconds`;
     startCountdown();
+  }else if(success&&!state.hasStarted){
+    // GW not started yet — upcoming
+    bar.className='live-status-bar inactive';
+    dot.className='live-dot off';
+    text.textContent=`GW${GW} upcoming — scores will appear here once matches kick off`;
+    stopCountdown();
+  }else if(success&&state.allFinished){
+    // All matches finished
+    bar.className='live-status-bar inactive';
+    dot.className='live-dot off';
+    const totalPts=PICKS.filter(p=>p.position<=11).reduce((s,p)=>{
+      const live=LIVE_MAP[p.element];
+      if(!live)return s;
+      return s+(live.total_points*(p.multiplier??(p.is_captain?2:1)));
+    },0);
+    text.textContent=`GW${GW} complete · ${totalPts > 0 ? totalPts + ' pts scored' : 'final scores below'}`;
+    stopCountdown();
   }else if(success){
+    // Data loaded, mixed state
     bar.className='live-status-bar inactive';
     dot.className='live-dot off';
     const totalPts=PICKS.filter(p=>p.position<=11).reduce((s,p)=>{
@@ -698,18 +724,14 @@ function renderLiveContent(){
   const rankHtml=rankInfo
     ?`<div class="rank-val ${rankClass(rankInfo.rank,TOTAL_PLAYERS)}">${formatRank(rankInfo.rank)}</div>
        <div class="pts-label">Live rank</div>
-       <div class="rank-accuracy">${
-         rankInfo.method==='results'
-           ?`~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores`
-           :`~${rankInfo.percentile.toFixed(1)}% · based on GW avg ${GW_AVERAGE}pts`
-       }</div>`
+       <div class="rank-accuracy">~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores</div>`
     :hasLive
-      ?`<div class="rank-val" style="color:var(--muted);font-size:18px">—</div>
-        <div class="pts-label">Live rank</div>
-        <div class="rank-accuracy">GW avg score loading…</div>`
+      ?`<div class="rank-loading"></div>
+        <div class="pts-label" style="margin-top:6px">Live rank</div>
+        <div class="rank-accuracy">Calculating…</div>`
       :`<div class="rank-val" style="color:var(--muted)">—</div>
         <div class="pts-label">Live rank</div>
-        <div class="rank-accuracy">Load your squad above</div>`;
+        <div class="rank-accuracy">Available once GW starts</div>`;
 
   document.getElementById('liveContent').innerHTML=`
     <div class="pts-header">
@@ -726,7 +748,7 @@ function renderLiveContent(){
         <div class="pts-sub">${capPlayer?.name??'—'}</div>
       </div>
       <div class="pts-card">
-        <div class="pts-val">${starters.filter(p=>{const s=LIVE_MAP[p.element];return s&&s.minutes>0&&s.minutes<90;}).length}</div>
+        <div class="pts-val">${gwMatchState().hasLive?starters.filter(p=>{const s=LIVE_MAP[p.element];return s&&s.minutes>0&&s.minutes<120;}).length:0}</div>
         <div class="pts-label">Playing now</div>
       </div>
       <div class="pts-card">
@@ -738,7 +760,7 @@ function renderLiveContent(){
     <div class="cap-compare">
       <div class="cap-compare-title">Captain comparison — your pick vs template options</div>
       ${capPlayer?`<div class="cap-row">
-        <div class="pl-shirt ${SHIRT[capPlayer.pos]}">${capPlayer.name.charAt(0)}</div>
+        <div class="pl-shirt ${SHIRT[capPlayer.pos]}">${TMAP[capPlayer.teamId]?.short??capPlayer.teamId??'?'}</div>
         <div class="cap-name">${capPlayer.name}</div>
         <span class="cap-badge yours">Your C</span>
         <div class="cap-pts" style="color:var(--gold)">${capPts}</div>
@@ -750,7 +772,7 @@ function renderLiveContent(){
         const gainCls=diff>0?'pos':diff<0?'neg':'neu';
         const gainStr=diff>0?`+${diff} ahead`:diff<0?`${diff} behind`:'level';
         return`<div class="cap-row">
-          <div class="pl-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+          <div class="pl-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
           <div class="cap-name">${p.name}</div>
           <span class="cap-badge template">${p.form.toFixed(1)} form</span>
           <div class="cap-pts">${pts}</div>
@@ -783,7 +805,7 @@ function playerRowHtml(pick,p,stats,isCap,isVice,isBench){
   const statLine=buildStatLine(stats,p.pos);
   const capLabel=isCap?(mult===3?'TC':'C'):'V';
   return`<div class="player-live-row ${rowCls}">
-    <div class="pl-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+    <div class="pl-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
     ${isCap?`<span class="captain-tag c">${capLabel}</span>`:isVice?'<span class="captain-tag v">V</span>':'<span style="width:18px"></span>'}
     <div style="flex:1;min-width:0">
       <div class="pl-name">${p.name}</div>
@@ -944,7 +966,7 @@ function renderPriceChanges(){
       const rowCls=alreadyChanged?(p.priceChg>0?'rising':'dropping'):p.netIn>0?'rising':p.netIn<0?'dropping':'';
       return`<div class="price-row ${rowCls}">
         <div class="change-dir ${dirCls}">${dirLabel}</div>
-        <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div class="pr-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
         <div style="flex:1;min-width:0">
           <div class="pr-name">${p.name}${SQUAD_IDS.has(p.id)?` <span style="font-size:9px;font-family:var(--font-m);font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(240,180,41,0.12);color:var(--gold)">YOURS</span>`:''}</div>
           <div class="pr-team">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m</div>
@@ -972,7 +994,7 @@ function renderPriceChanges(){
       const team=TMAP[p.teamId]??{short:'?'};
       const dir=p.priceChg>0;
       return`<div class="price-row ${dir?'rising':'dropping'}">
-        <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div class="pr-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
         <div style="flex:1;min-width:0"><div class="pr-name">${p.name}</div><div class="pr-team">${p.pos} · ${team.short}</div></div>
         <div class="pr-price">£${p.price.toFixed(1)}m</div>
         <div class="pr-change ${dir?'rose':'fell'}">${dir?'↑ +':'↓ '}£0.1m</div>
@@ -1001,7 +1023,7 @@ function priceRowHtml(p,prob,dir){
     :'';
   const inSquad=SQUAD_IDS.has(p.id);
   return`<div class="price-row ${rowCls}${inSquad?' in-squad':''}">
-    <div class="pr-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+    <div class="pr-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
     <div style="flex:1;min-width:0">
       <div class="pr-name">${p.name}${inSquad?` <span style="font-size:9px;font-family:var(--font-m);font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(240,180,41,0.12);color:var(--gold)">YOUR SQUAD</span>`:''}</div>
       <div class="pr-team">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m${secondaryStat?' · <span style="color:var(--muted)">'+secondaryStat+'</span>':''}</div>
@@ -1018,7 +1040,7 @@ function priceRowHtml(p,prob,dir){
 }
 
 /* ── FALLBACK DATA ─────────────────────────────────────── */
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Burnley',short:'BRN'},18:{name:'Spurs',short:'TOT'},19:{name:'Leeds',short:'LEE'},20:{name:'Sunderland',short:'SUN'}};
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Leeds United',short:'LDS'},11:{name:'Liverpool',short:'LIV'},12:{name:'Man City',short:'MCI'},13:{name:'Man United',short:'MUN'},14:{name:'Newcastle',short:'NEW'},15:{name:"Nott'm Forest",short:'NFO'},16:{name:'Sunderland',short:'SUN'},17:{name:'West Ham',short:'WHU'},18:{name:'Spurs',short:'TOT'},19:{name:'Wolves',short:'WOL'},20:{name:'Burnley',short:'BRN'}};
 const FB_PLAYERS=[
   {id:1,name:'Salah',teamId:12,pos:'MID',price:13.2,form:11.2,priceChg:0,priceChgStart:20,netIn:280000,transfersIn:310000,transfersOut:30000,status:'a'},
   {id:2,name:'Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,priceChg:0,priceChgStart:15,netIn:90000,transfersIn:130000,transfersOut:40000,status:'a'},
@@ -1148,11 +1170,11 @@ document.addEventListener('DOMContentLoaded',()=>{
           <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
         </div>
       </a>
-      <a href="fixture-ticker.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">📊</span>
+      <a href="my-team.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">👕</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Fixture Ticker</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Check the fixture run first</div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">My Team</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Your squad on the pitch</div>
         </div>
       </a>
       <a href="hit-calculator.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">

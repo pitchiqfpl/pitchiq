@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -268,14 +267,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -491,7 +493,7 @@ async function loadData(){
   setBadge('loading','Fetching fixture data…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     EVENTS=bs.events??[];
     ALL_FIXTURES=Array.isArray(fixes)?fixes:[];
@@ -1022,11 +1024,11 @@ function renderHeatmap(gwsToShow){
 }
 
 /* ── FALLBACK DATA ─────────────────────────────────────────────── */
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Burnley',short:'BRN'},18:{name:'Spurs',short:'TOT'},19:{name:'Leeds',short:'LEE'},20:{name:'Sunderland',short:'SUN'}};
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Leeds United',short:'LDS'},11:{name:'Liverpool',short:'LIV'},12:{name:'Man City',short:'MCI'},13:{name:'Man United',short:'MUN'},14:{name:'Newcastle',short:'NEW'},15:{name:"Nott'm Forest",short:'NFO'},16:{name:'Sunderland',short:'SUN'},17:{name:'West Ham',short:'WHU'},18:{name:'Spurs',short:'TOT'},19:{name:'Wolves',short:'WOL'},20:{name:'Burnley',short:'BRN'}};
 const FB_PLAYERS=[
-  {id:1,name:'Salah',teamId:12,pos:'MID',form:7.8,epNext:8.2,ownedPct:14.1,status:'a'},
-  {id:2,name:'Haaland',teamId:13,pos:'FWD',form:9.2,epNext:9.1,ownedPct:28.4,status:'a'},
-  {id:3,name:'Mbeumo',teamId:4,pos:'FWD',form:8.4,epNext:7.4,ownedPct:38.2,status:'a'},
+  {id:1,name:'Salah',teamId:12,pos:'MID',form:11.2,epNext:9.8,ownedPct:73.2,status:'a'},
+  {id:2,name:'Haaland',teamId:13,pos:'FWD',form:8.9,epNext:8.2,ownedPct:54.1,status:'a'},
+  {id:3,name:'Mbeumo',teamId:4,pos:'FWD',form:10.8,epNext:7.6,ownedPct:41.2,status:'a'},
   {id:4,name:'Palmer',teamId:6,pos:'MID',form:7.4,epNext:7.1,ownedPct:49.8,status:'a'},
   {id:5,name:'Isak',teamId:15,pos:'FWD',form:8.1,epNext:6.4,ownedPct:37.4,status:'a'},
   {id:6,name:'Trossard',teamId:1,pos:'MID',form:6.4,epNext:5.8,ownedPct:22.1,status:'a'},
@@ -1323,7 +1325,7 @@ function showExecContent(chip){
     content.innerHTML=`<div class="exec-player-list">${pool.map((p,i)=>`
       <div class="exec-player-row">
         <div class="exec-rank" style="color:${i===0?'var(--gold)':'var(--muted)'}">${i+1}</div>
-        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${TMAP[p.teamId]?.short??'?'}</div>
         <div style="flex:1;min-width:0">
           <div class="exec-name">${p.name}${p.status==='d'?' <span style="color:var(--gold);font-size:10px">⚠</span>':''}</div>
           <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${p.opp?' vs '+p.opp.short+' ('+p.opp.ha+') · diff '+p.diff+'/5':''}</div>
@@ -1346,7 +1348,7 @@ function showExecContent(chip){
       const hasDGW=dgwTeams.includes(p.teamId);
       return`<div class="exec-player-row">
         <div class="exec-rank" style="color:var(--muted)">${i+12}</div>
-        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${TMAP[p.teamId]?.short??'?'}</div>
         <div style="flex:1;min-width:0">
           <div class="exec-name">${p.name}${hasDGW?` <span style="font-size:9px;font-family:var(--font-m);padding:1px 5px;border-radius:3px;background:rgba(99,179,237,0.12);color:var(--blue)">DGW</span>`:''}</div>
           <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${opp?' · vs '+opp.short+' ('+opp.ha+')':' · No fixture'}</div>
@@ -1376,7 +1378,7 @@ function showExecContent(chip){
     content.innerHTML=`<div class="exec-player-list">${top.map((p,i)=>`
       <div class="exec-player-row">
         <div class="exec-rank" style="color:${i<3?'var(--grass-l)':'var(--muted)'}">${i+1}</div>
-        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+        <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${TMAP[p.teamId]?.short??'?'}</div>
         <div style="flex:1;min-width:0">
           <div class="exec-name">${p.name}</div>
           <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}${p.opp?' · vs '+p.opp.short+' ('+p.opp.ha+') · diff '+p.diff+'/5':''}</div>
@@ -1409,7 +1411,7 @@ function showExecContent(chip){
       <div style="font-family:var(--font-m);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:500">Players to consider replacing (hard 3-GW run)</div>
       ${hardPlayers.length?`<div class="exec-player-list" style="margin-bottom:16px">${hardPlayers.map(p=>`
         <div class="exec-player-row" style="border-color:rgba(230,57,70,0.15)">
-          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${TMAP[p.teamId]?.short??'?'}</div>
           <div style="flex:1;min-width:0">
             <div class="exec-name">${p.name}</div>
             <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'}</div>
@@ -1421,7 +1423,7 @@ function showExecContent(chip){
       ${replacements.length?`<div class="exec-player-list">${replacements.map((p,i)=>`
         <div class="exec-player-row" style="border-color:rgba(39,174,96,0.15)">
           <div class="exec-rank" style="color:${i===0?'var(--grass-l)':'var(--muted)'}">${i+1}</div>
-          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${p.name.charAt(0)}</div>
+          <div class="exec-shirt ${SHIRT_EXEC[p.pos]??'shirt-mid'}">${TMAP[p.teamId]?.short??'?'}</div>
           <div style="flex:1;min-width:0">
             <div class="exec-name">${p.name}</div>
             <div class="exec-meta">${p.pos} · ${TMAP[p.teamId]?.short??'?'} · diff ${p.diff}/5</div>

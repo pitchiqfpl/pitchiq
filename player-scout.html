@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -104,7 +103,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .player-table tbody tr.selected{background:rgba(39,174,96,0.04)}
 .player-table td{padding:9px 8px;font-size:12px;text-align:right;white-space:nowrap;vertical-align:middle}
 .player-table td:first-child,.player-table td:nth-child(2){text-align:left}
-.player-shirt{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.player-shirt{width:28px;height:28px;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
 .shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
 .player-name{font-weight:600;font-size:13px;color:var(--cream);line-height:1.2}
 .player-team{font-size:10px;color:var(--muted);margin-top:1px}
@@ -208,7 +207,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .target-rank{position:absolute;top:12px;right:14px;font-family:var(--font-d);font-size:36px;color:rgba(255,255,255,0.05);line-height:1;user-select:none}
 .target-card.rank-1 .target-rank{color:rgba(39,174,96,0.1)}
 .target-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-.target-shirt{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.target-shirt{width:36px;height:36px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
 .target-name{font-weight:600;font-size:14px;color:var(--cream);line-height:1.2}
 .target-meta{font-size:11px;color:var(--muted);margin-top:2px}
 .target-score-row{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
@@ -261,7 +260,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .vp-rank{position:absolute;top:10px;right:14px;font-family:var(--font-d);font-size:42px;color:rgba(255,255,255,0.04);line-height:1;user-select:none}
 .vp-card:nth-child(1) .vp-rank{color:rgba(240,180,41,0.09)}
 .vp-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
-.vp-shirt{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.vp-shirt{width:34px;height:34px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
 .vp-name{font-weight:600;font-size:14px;color:var(--cream);line-height:1.2}
 .vp-meta{font-size:10px;color:var(--muted);margin-top:2px}
 .vp-stats{display:flex;gap:14px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
@@ -287,7 +286,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .ts-player{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s}
 .ts-player:hover{border-color:rgba(255,255,255,0.15)}
 .ts-player-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px}
-.ts-shirt{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.ts-shirt{width:30px;height:30px;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
 .ts-player-name{font-weight:600;font-size:13px;color:var(--cream);line-height:1.2}
 .ts-player-meta{font-size:10px;color:var(--muted);margin-top:2px}
 .ts-player-stats{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--font-m);font-size:10px}
@@ -325,14 +324,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -659,7 +661,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;}
+function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');
@@ -901,7 +903,7 @@ function renderValuePicks(pos){
     return`<div class="vp-card" data-id="${p.id}">
       <div class="vp-rank">${i+1}</div>
       <div class="vp-top">
-        <div class="vp-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+        <div class="vp-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
         <div>
           <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">${RANK_LABELS[i]}</div>
           <div class="vp-name">${p.name}</div>
@@ -1026,7 +1028,7 @@ function renderTransferSuggester(){
         <div class="ts-player" data-id="${sell.id}">
           <div class="ts-sell-tag">Sell</div>
           <div class="ts-player-top">
-            <div class="ts-shirt ${SHIRT[sell.pos]}">${sell.name.charAt(0)}</div>
+            <div class="ts-shirt ${SHIRT[sell.pos]}">${TMAP[sell.teamId]?.short??'?'}</div>
             <div>
               <div class="ts-player-name">${sell.name}</div>
               <div class="ts-player-meta">${sellTeam.short} · £${sell.price.toFixed(1)}m · ${sell.ownedPct.toFixed(1)}% owned</div>
@@ -1051,7 +1053,7 @@ function renderTransferSuggester(){
         <div class="ts-player" data-id="${buy.id}">
           <div class="ts-buy-tag">Buy</div>
           <div class="ts-player-top">
-            <div class="ts-shirt ${SHIRT[buy.pos]}">${buy.name.charAt(0)}</div>
+            <div class="ts-shirt ${SHIRT[buy.pos]}">${TMAP[buy.teamId]?.short??'?'}</div>
             <div>
               <div class="ts-player-name">${buy.name}</div>
               <div class="ts-player-meta">${buyTeam.short} · £${buy.price.toFixed(1)}m · ${buy.ownedPct.toFixed(1)}% owned</div>
@@ -1138,7 +1140,7 @@ function renderTargets(){
     const priceTag=p.priceChg>0?`<span class="price-up">↑</span>`:p.priceChg<0?`<span class="price-down">↓</span>`:'';
     return`<div class="target-card ${accentCls}" data-id="${p.id}">
       <div class="target-top">
-        <div class="target-shirt ${shirtCls}">${p.name.charAt(0)}</div>
+        <div class="target-shirt ${shirtCls}">${TMAP[p.teamId]?.short??'?'}</div>
         <div>
           <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px">${icon} ${label}</div>
           <div class="target-name">${p.name}</div>
@@ -1170,12 +1172,11 @@ function renderTargets(){
 
 function getColDefs(pos){
   const common = [
-    {key:'price', hdr:'Price',    tip:'Current FPL price. ↑↓ shows price movement this GW.'},
-    {key:'form',  hdr:'Form',     tip:'FPL avg pts per game over the last 30 days.'},
+    {key:'price', hdr:'Price',     tip:'Current FPL price. ↑↓ shows price movement this GW.'},
+    {key:'ep',    hdr:'Proj pts',  tip:'Projected points next GW.'},
+    {key:'own',   hdr:'Owned%',    tip:'% of FPL managers who own this player.'},
+    {key:'form',  hdr:'Form',      tip:'FPL avg pts per game over the last 30 days.'},
     {key:'fixes', hdr:'Next 4 GWs', tip:null},
-    {key:'ep',    hdr:'Proj pts', tip:'Projected points next GW.'},
-    {key:'own',   hdr:'Owned%',   tip:'% of FPL managers who own this player.'},
-
   ];
   const statCols = {
     GK: [
@@ -1282,7 +1283,7 @@ function renderTable(){
     if(isSell){const u=sellUrgency(p);const uc=u>=8?'sell-bad':u>=5?'sell-warn':'sell-ok';scoreCell=`<td><strong class="${uc}">${Math.round(u*10)}</strong></td>`;}
     else{const sc=p.score>=70?'stat-good':p.score>=55?'stat-ok':p.score>=40?'stat-warn':'stat-bad';scoreCell=`<td><strong class="${sc}">${p.score}</strong></td>`;}
     return`<tr class="${rowCls}" data-id="${p.id}">
-      <td><div style="display:flex;align-items:center;justify-content:center"><div class="player-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div></div></td>
+      <td><div style="display:flex;align-items:center;justify-content:center"><div class="player-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div></div></td>
       <td><div><div class="player-name">${stH}${p.name}${squadBadge}</div><div class="player-team">${team.short} · ${p.pos}</div></div></td>
       ${cols.map(c=>renderColCell(p,c.key)).join('')}
       ${scoreCell}
@@ -1339,6 +1340,10 @@ async function openDetail(id){
         <div class="stat-tile"><div class="stat-tile-label">Scout score</div><div class="stat-tile-val" style="color:${p.score>=70?'var(--grass-l)':p.score>=50?'var(--cream)':'var(--muted)'}">${p.score}</div><div class="stat-tile-sub">50 = avg · 70+ = buy</div></div>
       </div>
     </div>
+
+    ${buildMinuteCalc(p)}
+    ${buildMultiFixProj(p)}
+
     <div class="detail-section"><div class="detail-section-title">Next fixture</div>${fixHtml}</div>
     <div class="detail-section" id="gwSect"><div class="detail-section-title">Last 5 GW scores</div><div id="gwChart" style="height:52px;background:rgba(255,255,255,0.03);border-radius:6px;animation:shimmer 1.4s infinite"></div></div>
     <div class="detail-section"><div class="detail-section-title">Transfer activity this GW</div>
@@ -1388,18 +1393,17 @@ function computeL6(id, history){
 async function loadTableXg(players){
   if(ALL===FB_PLAYERS) return;
   const toFetch = players.filter(p => !L6_CACHE.has(p.id));
-  // Sequential with delay to avoid FPL rate limiting
-  for(const p of toFetch){
+  await Promise.allSettled(toFetch.map(async p => {
     try{
       const d = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
       computeL6(p.id, d.history??[]);
+      // Also warm the GWH cache for detail panel
       if(!GWH.has(p.id)){
         const h=(d.history??[]).slice(0,5).reverse();
         GWH.set(p.id,h.map(g=>({gw:g.round,pts:g.total_points??0,xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),mins:g.minutes||0})));
       }
     }catch{ L6_CACHE.set(p.id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); }
-    await new Promise(r=>setTimeout(r,120));
-  }
+  }));
   patchL6Cells(players);
 }
 
@@ -1432,6 +1436,136 @@ function renderGwH(id){
     const xgLabel=x.xg>0?`<div style="font-size:8px;color:var(--muted);margin-top:2px">${x.xg.toFixed(2)}xG</div>`:'';
     return`<div class="gw-bar-wrap"><div class="gw-bar-pts">${x.pts}</div><div class="gw-bar" style="height:${pct}px;background:${c}"></div>${xgLabel}<div class="gw-bar-gw">GW${x.gw}</div></div>`;
   }).join('')}</div>`;
+}
+
+/* ── MINUTE CALCULATOR ─────────────────────────────────────── */
+function buildMinuteCalc(p) {
+  // Expected minutes per game based on minsRel + status + rotation signals
+  const base = p.minsRel ?? 75;
+
+  // Status penalty
+  const statusMult = p.status === 'd' ? 0.5 : p.status === 'i' ? 0 : 1;
+
+  // Rotation risk: players with many starts relative to season games have low rotation
+  // minsRel < 60 = high rotation risk, 60-75 = medium, 75+ = regular starter
+  const rotRisk = base < 55  ? 'High'
+               : base < 72  ? 'Medium'
+               : base < 82  ? 'Low'
+               :               'Very low';
+  const rotColor = base < 55  ? 'var(--accent)'
+                : base < 72  ? 'var(--gold)'
+                : base < 82  ? 'var(--cream)'
+                :               'var(--grass-l)';
+
+  const expMins = Math.round(base * statusMult);
+  const expMinsColor = expMins >= 75 ? 'var(--grass-l)' : expMins >= 55 ? 'var(--gold)' : 'var(--accent)';
+
+  // Minutes bar
+  const barPct = Math.min((expMins / 90) * 100, 100).toFixed(0);
+  const barColor = expMins >= 75 ? 'var(--grass)' : expMins >= 55 ? 'var(--gold)' : 'var(--accent)';
+
+  // Rotation signal text
+  const signal = p.status === 'i' ? 'Player is injured — 0 expected minutes'
+               : p.status === 'd' ? `Doubt for selection — minutes halved`
+               : base >= 82 ? `Near-ever-present — averaging ${base.toFixed(0)} mins/game`
+               : base >= 72 ? `Regular starter — occasional rotation risk`
+               : base >= 55 ? `Rotation risk — managed minutes this season`
+               :               `Significant rotation — averaged only ${base.toFixed(0)} mins/game`;
+
+  return `<div class="detail-section">
+    <div class="detail-section-title">⏱ Minute Calculator</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="stat-tile">
+        <div class="stat-tile-label">Exp. mins/game</div>
+        <div class="stat-tile-val" style="color:${expMinsColor}">${expMins}'</div>
+        <div class="stat-tile-sub">based on season avg</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-label">Rotation risk</div>
+        <div class="stat-tile-val" style="color:${rotColor};font-size:14px">${rotRisk}</div>
+        <div class="stat-tile-sub">${base.toFixed(0)} avg mins/game</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-label">Starts this season</div>
+        <div class="stat-tile-val">${p.starts}</div>
+        <div class="stat-tile-sub">of ~${Math.round(p.starts / Math.max(base/90, 0.3))} possible</div>
+      </div>
+    </div>
+    <div style="background:rgba(255,255,255,0.04);border-radius:8px;height:8px;overflow:hidden;margin-bottom:8px">
+      <div style="width:${barPct}%;height:100%;background:${barColor};border-radius:8px;transition:width 0.4s"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.5">${signal}</div>
+  </div>`;
+}
+
+/* ── MULTI-FIXTURE PROJECTIONS ─────────────────────────────── */
+function buildMultiFixProj(p) {
+  if (!p.fixes || p.fixes.length === 0) {
+    return `<div class="detail-section">
+      <div class="detail-section-title">📈 Multi-fixture Projection</div>
+      <div style="font-size:12px;color:var(--muted)">No upcoming fixtures available for projection.</div>
+    </div>`;
+  }
+
+  // Difficulty multiplier — easier fixtures = higher projected pts
+  const diffMult = { 1: 1.35, 2: 1.15, 3: 1.0, 4: 0.82, 5: 0.65 };
+  // Home advantage
+  const haMult = { H: 1.08, A: 0.93 };
+  // Minutes reliability factor (90 mins = full EP, less = scaled down)
+  const minsFactor = Math.min((p.minsRel ?? 75) / 90, 1);
+  // Status factor
+  const statusFactor = p.status === 'd' ? 0.6 : p.status === 'i' ? 0 : 1;
+
+  const baseEP = p.epNext > 0 ? p.epNext : p.form > 0 ? p.form * 0.6 : 3.5;
+
+  let cumulative = 0;
+  const rows = p.fixes.map(f => {
+    const dm = diffMult[f.diff] ?? 1;
+    const hm = haMult[f.ha]   ?? 1;
+    const proj = +(baseEP * dm * hm * minsFactor * statusFactor).toFixed(1);
+    cumulative = +(cumulative + proj).toFixed(1);
+    const barW = Math.min((proj / 12) * 100, 100).toFixed(0);
+    const c = proj >= 7 ? 'var(--grass-l)' : proj >= 5 ? 'var(--blue)' : proj >= 3 ? 'var(--gold)' : 'var(--muted)';
+    return { f, proj, cumulative, barW, c };
+  });
+
+  const totalProj = cumulative;
+  const gwCount = p.fixes.length;
+  const avgProj = (totalProj / gwCount).toFixed(1);
+
+  const rowsHtml = rows.map(({f, proj, cumulative, barW, c}) => `
+    <div style="display:grid;grid-template-columns:42px 1fr 52px 54px;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+      <div style="font-family:var(--font-m);font-size:9px;color:var(--muted)">GW${f.gw}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="frs-pill ${FIX_CLS[f.diff]}" style="font-size:9px;padding:2px 6px">${f.opp} ${f.ha}</span>
+        <div style="flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden">
+          <div style="width:${barW}%;height:100%;background:${c};border-radius:3px"></div>
+        </div>
+      </div>
+      <div style="text-align:right;font-weight:600;color:${c};font-size:13px">${proj}pts</div>
+      <div style="text-align:right;font-family:var(--font-m);font-size:10px;color:var(--muted)">${cumulative} cum.</div>
+    </div>`).join('');
+
+  return `<div class="detail-section">
+    <div class="detail-section-title">📈 Multi-fixture Projection</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="stat-tile">
+        <div class="stat-tile-label">Projected total</div>
+        <div class="stat-tile-val" style="color:var(--grass-l)">${totalProj}pts</div>
+        <div class="stat-tile-sub">next ${gwCount} GWs</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-label">Avg per GW</div>
+        <div class="stat-tile-val" style="color:${+avgProj>=6?'var(--grass-l)':+avgProj>=4?'var(--cream)':'var(--muted)'}">${avgProj}pts</div>
+        <div class="stat-tile-sub">fixture-adjusted</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-family:var(--font-m)">GW · FIXTURE · PROJ · CUMULATIVE</div>
+    ${rowsHtml}
+    <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
+      Projected using FPL expected points × fixture difficulty × home/away factor × minutes reliability. Not a guarantee — form and injuries will affect actual returns.
+    </div>
+  </div>`;
 }
 
 function getVerdict(p){
@@ -1508,36 +1642,36 @@ function patchFallbackPlayers(players){
     defContribPer90:p.defContribPer90??0,
   }));
 }
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Burnley',short:'BRN'},18:{name:'Spurs',short:'TOT'},19:{name:'Leeds',short:'LEE'},20:{name:'Sunderland',short:'SUN'}};
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
 const FB_PLAYERS=[
   // GK (4)
-  {id:13,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,ict:45,epNext:5.2,ppm:17.6,priceChg:0,netIn:12000,minsRel:90,ownedPct:26.1,totalPts:97,starts:28,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
-  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,ict:32,epNext:4.8,ppm:18.2,priceChg:0,netIn:8000,minsRel:90,ownedPct:12.4,totalPts:82,starts:26,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
-  {id:16,name:'Pickford',fullName:'Jordan Pickford',teamId:8,pos:'GK',price:5.0,form:4.2,xg90:0,ict:28,epNext:4.0,ppm:11.4,priceChg:0,netIn:-5000,minsRel:90,ownedPct:8.3,totalPts:57,starts:26,status:'a',fix:{opp:'LDS',ha:'H',diff:1},fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:13,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,ict:45,epNext:5.2,ppm:17.6,priceChg:0,netIn:12000,minsRel:90,ownedPct:26.1,totalPts:97,starts:28,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,ict:32,epNext:4.8,ppm:18.2,priceChg:0,netIn:8000,minsRel:90,ownedPct:12.4,totalPts:82,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:16,name:'Pickford',fullName:'Jordan Pickford',teamId:8,pos:'GK',price:5.0,form:4.2,xg90:0,ict:28,epNext:4.0,ppm:11.4,priceChg:0,netIn:-5000,minsRel:90,ownedPct:8.3,totalPts:57,starts:26,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
   {id:17,name:'Henderson',fullName:'Dean Henderson',teamId:7,pos:'GK',price:4.5,form:3.8,xg90:0,ict:22,epNext:3.6,ppm:10.2,priceChg:0,netIn:3000,minsRel:90,ownedPct:4.1,totalPts:46,starts:24,status:'a',fix:{opp:'WHU',ha:'H',diff:2},fixes:[{gw:34,opp:'WHU',ha:'H',diff:2},{gw:35,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'ARS',ha:'A',diff:4},{gw:37,opp:'BRE',ha:'H',diff:2}],score:0},
   // DEF (6)
   {id:12,name:'Trent A-A',fullName:'Trent Alexander-Arnold',teamId:12,pos:'DEF',price:7.2,form:7.1,xg90:0.42,ict:198,epNext:6.2,ppm:16.4,priceChg:1,netIn:55000,minsRel:85,ownedPct:28.6,totalPts:118,starts:20,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
-  {id:11,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,ict:142,epNext:4.1,ppm:12.3,priceChg:-1,netIn:-45000,minsRel:70,ownedPct:18.4,totalPts:80,starts:15,status:'d',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1}],score:0},
-  {id:15,name:'Pedro Porro',fullName:'Pedro Porro',teamId:18,pos:'DEF',price:5.8,form:4.8,xg90:0.22,ict:134,epNext:4.4,ppm:13.8,priceChg:0,netIn:6000,minsRel:80,ownedPct:14.2,totalPts:80,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'SUN',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
-  {id:18,name:'Mykolenko',fullName:'Vitaliy Mykolenko',teamId:8,pos:'DEF',price:4.5,form:4.4,xg90:0.12,ict:88,epNext:3.8,ppm:12.1,priceChg:0,netIn:4000,minsRel:82,ownedPct:5.2,totalPts:54,starts:22,status:'a',fix:{opp:'LDS',ha:'H',diff:1},fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
-  {id:19,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,ict:112,epNext:4.8,ppm:14.2,priceChg:0,netIn:18000,minsRel:80,ownedPct:21.8,totalPts:74,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
-  {id:20,name:'Pedro',fullName:'Pedro Lima',teamId:17,pos:'DEF',price:4.5,form:3.1,xg90:0.08,ict:62,epNext:2.8,ppm:8.4,priceChg:-1,netIn:-12000,minsRel:75,ownedPct:3.1,totalPts:38,starts:18,status:'a',fix:{opp:'BRE',ha:'A',diff:3},fixes:[{gw:34,opp:'BRE',ha:'A',diff:3},{gw:35,opp:'LDS',ha:'A',diff:2},{gw:36,opp:'BOU',ha:'A',diff:3},{gw:37,opp:'ARS',ha:'H',diff:5}],score:0},
+  {id:11,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,ict:142,epNext:4.1,ppm:12.3,priceChg:-1,netIn:-45000,minsRel:70,ownedPct:18.4,totalPts:80,starts:15,status:'d',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
+  {id:15,name:'Pedro Porro',fullName:'Pedro Porro',teamId:18,pos:'DEF',price:5.8,form:4.8,xg90:0.22,ict:134,epNext:4.4,ppm:13.8,priceChg:0,netIn:6000,minsRel:80,ownedPct:14.2,totalPts:80,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:18,name:'Mykolenko',fullName:'Vitaliy Mykolenko',teamId:8,pos:'DEF',price:4.5,form:4.4,xg90:0.12,ict:88,epNext:3.8,ppm:12.1,priceChg:0,netIn:4000,minsRel:82,ownedPct:5.2,totalPts:54,starts:22,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:19,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,ict:112,epNext:4.8,ppm:14.2,priceChg:0,netIn:18000,minsRel:80,ownedPct:21.8,totalPts:74,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:20,name:'Pedro',fullName:'Pedro Lima',teamId:17,pos:'DEF',price:4.5,form:3.1,xg90:0.08,ict:62,epNext:2.8,ppm:8.4,priceChg:-1,netIn:-12000,minsRel:75,ownedPct:3.1,totalPts:38,starts:18,status:'a',fix:{opp:'BRE',ha:'A',diff:3},fixes:[{gw:34,opp:'BRE',ha:'A',diff:3},{gw:35,opp:'IPS',ha:'A',diff:2},{gw:36,opp:'BOU',ha:'A',diff:3},{gw:37,opp:'ARS',ha:'H',diff:5}],score:0},
   // MID (8)
   {id:1,name:'Salah',fullName:'Mohamed Salah',teamId:12,pos:'MID',price:13.2,form:11.2,xg90:0.82,ict:385,epNext:9.8,ppm:17.1,priceChg:1,netIn:120000,minsRel:90,ownedPct:73.2,totalPts:226,starts:28,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
-  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,ict:341,epNext:7.1,ppm:16.1,priceChg:-1,netIn:-20000,minsRel:85,ownedPct:49.8,totalPts:177,starts:24,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
-  {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,ict:212,epNext:5.8,ppm:18.8,priceChg:0,netIn:5000,minsRel:78,ownedPct:22.1,totalPts:141,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
-  {id:8,name:'Neto',fullName:'Pedro Neto',teamId:6,pos:'MID',price:6.8,form:7.8,xg90:0.55,ict:195,epNext:5.2,ppm:15.9,priceChg:1,netIn:62000,minsRel:72,ownedPct:6.4,totalPts:108,starts:16,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
-  {id:10,name:'Diallo',fullName:'Cheick Doucouré',teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,ict:135,epNext:3.9,ppm:17.8,priceChg:0,netIn:28000,minsRel:65,ownedPct:3.8,totalPts:89,starts:14,status:'a',fix:{opp:'EVE',ha:'A',diff:1},fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'BRN',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'MCI',ha:'H',diff:5}],score:0},
+  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,ict:341,epNext:7.1,ppm:16.1,priceChg:-1,netIn:-20000,minsRel:85,ownedPct:49.8,totalPts:177,starts:24,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,ict:212,epNext:5.8,ppm:18.8,priceChg:0,netIn:5000,minsRel:78,ownedPct:22.1,totalPts:141,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:8,name:'Neto',fullName:'Pedro Neto',teamId:6,pos:'MID',price:6.8,form:7.8,xg90:0.55,ict:195,epNext:5.2,ppm:15.9,priceChg:1,netIn:62000,minsRel:72,ownedPct:6.4,totalPts:108,starts:16,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:10,name:'Diallo',fullName:'Cheick Doucouré',teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,ict:135,epNext:3.9,ppm:17.8,priceChg:0,netIn:28000,minsRel:65,ownedPct:3.8,totalPts:89,starts:14,status:'a',fix:{opp:'EVE',ha:'A',diff:1},fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'SOU',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'MCI',ha:'H',diff:5}],score:0},
   {id:21,name:'Andreas',fullName:'Andreas Pereira',teamId:9,pos:'MID',price:6.2,form:5.8,xg90:0.35,ict:168,epNext:5.1,ppm:15.6,priceChg:0,netIn:9000,minsRel:82,ownedPct:11.4,totalPts:97,starts:23,status:'a',fix:{opp:'TOT',ha:'H',diff:3},fixes:[{gw:34,opp:'TOT',ha:'H',diff:3},{gw:35,opp:'CRY',ha:'H',diff:2},{gw:36,opp:'WOL',ha:'A',diff:2},{gw:37,opp:'AVL',ha:'A',diff:3}],score:0},
-  {id:22,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'MID',price:8.3,form:10.8,xg90:0.71,ict:289,epNext:7.6,ppm:22.2,priceChg:1,netIn:85000,minsRel:88,ownedPct:41.2,totalPts:184,starts:26,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
-  {id:23,name:'Martinelli',fullName:'Gabriel Martinelli',teamId:1,pos:'MID',price:7.2,form:4.8,xg90:0.38,ict:145,epNext:4.6,ppm:12.1,priceChg:0,netIn:-8000,minsRel:76,ownedPct:9.8,totalPts:87,starts:22,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
+  {id:22,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'MID',price:8.3,form:10.8,xg90:0.71,ict:289,epNext:7.6,ppm:22.2,priceChg:1,netIn:85000,minsRel:88,ownedPct:41.2,totalPts:184,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:23,name:'Martinelli',fullName:'Gabriel Martinelli',teamId:1,pos:'MID',price:7.2,form:4.8,xg90:0.38,ict:145,epNext:4.6,ppm:12.1,priceChg:0,netIn:-8000,minsRel:76,ownedPct:9.8,totalPts:87,starts:22,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
   // FWD (6)
-  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,ict:312,epNext:8.2,ppm:13.7,priceChg:0,netIn:40000,minsRel:90,ownedPct:54.1,totalPts:198,starts:25,status:'a',fix:{opp:'SUN',ha:'H',diff:1},fixes:[{gw:34,opp:'SUN',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3},{gw:37,opp:'LDS',ha:'A',diff:1}],score:0},
-  {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,ict:268,epNext:6.4,ppm:18.0,priceChg:0,netIn:15000,minsRel:82,ownedPct:37.4,totalPts:162,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1}],score:0},
+  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,ict:312,epNext:8.2,ppm:13.7,priceChg:0,netIn:40000,minsRel:90,ownedPct:54.1,totalPts:198,starts:25,status:'a',fix:{opp:'LEI',ha:'H',diff:1},fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3},{gw:37,opp:'IPS',ha:'A',diff:1}],score:0},
+  {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,ict:268,epNext:6.4,ppm:18.0,priceChg:0,netIn:15000,minsRel:82,ownedPct:37.4,totalPts:162,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
   {id:7,name:'Watkins',fullName:'Ollie Watkins',teamId:2,pos:'FWD',price:9.5,form:5.9,xg90:0.52,ict:232,epNext:5.4,ppm:14.5,priceChg:-1,netIn:-35000,minsRel:84,ownedPct:31.6,totalPts:138,starts:23,status:'a',fix:{opp:'LIV',ha:'A',diff:4},fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2}],score:0},
-  {id:9,name:'Solanke',fullName:'Dominic Solanke',teamId:18,pos:'FWD',price:7.5,form:4.2,xg90:0.38,ict:178,epNext:4.8,ppm:14.9,priceChg:0,netIn:8000,minsRel:80,ownedPct:12.3,totalPts:112,starts:21,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'SUN',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:9,name:'Solanke',fullName:'Dominic Solanke',teamId:18,pos:'FWD',price:7.5,form:4.2,xg90:0.38,ict:178,epNext:4.8,ppm:14.9,priceChg:0,netIn:8000,minsRel:80,ownedPct:12.3,totalPts:112,starts:21,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
   {id:24,name:'Wood',fullName:'Chris Wood',teamId:16,pos:'FWD',price:6.5,form:6.2,xg90:0.44,ict:156,epNext:5.6,ppm:16.8,priceChg:1,netIn:22000,minsRel:85,ownedPct:7.2,totalPts:109,starts:24,status:'a',fix:{opp:'CHE',ha:'A',diff:3},fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3}],score:0},
-  {id:25,name:'Wissa',fullName:'Yoane Wissa',teamId:4,pos:'FWD',price:6.0,form:5.4,xg90:0.41,ict:138,epNext:4.9,ppm:15.2,priceChg:0,netIn:11000,minsRel:78,ownedPct:8.8,totalPts:91,starts:21,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:25,name:'Wissa',fullName:'Yoane Wissa',teamId:4,pos:'FWD',price:6.0,form:5.4,xg90:0.41,ict:138,epNext:4.9,ppm:15.2,priceChg:0,netIn:11000,minsRel:78,ownedPct:8.8,totalPts:91,starts:21,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
 ];
 
 document.addEventListener('DOMContentLoaded',()=>{

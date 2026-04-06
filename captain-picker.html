@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -238,7 +237,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .cap-rank{position:absolute;top:14px;right:16px;font-family:var(--font-d);font-size:42px;line-height:1;color:rgba(255,255,255,0.05);user-select:none}
 .cap-card.selected .cap-rank{color:rgba(240,180,41,0.12)}
 .cap-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
-.cap-shirt{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;border:2px solid rgba(255,255,255,0.15)}
+.cap-shirt{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-weight:700;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);letter-spacing:0.5px}
 .shirt-mid{background:#10b981;color:white}
 .shirt-fwd{background:#ef4444;color:white}
 .shirt-def{background:#3b82f6;color:white}
@@ -358,14 +357,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -755,22 +757,23 @@ async function loadSparklines(players) {
   const toFetch = players.slice(0, 24).filter(p => !XG_TREND_CACHE.has(p.id));
   if (!toFetch.length) { patchSparklines(players); return; }
 
-  // Fetch sequentially with small delay to avoid FPL rate limiting
-  for (const p of toFetch) {
-    try {
-      const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
-      const history = Array.isArray(data.history) ? data.history : [];
-      const vals = history
-        .slice(0, SPARK_GWS)
-        .reverse()
-        .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
-      XG_TREND_CACHE.set(p.id, vals);
-    } catch {
-      XG_TREND_CACHE.set(p.id, []);
-    }
-    // Small delay between requests to avoid FPL rate limiting
-    await new Promise(r => setTimeout(r, 80));
-  }
+  // Fetch all in parallel — silent on failure per player
+  await Promise.allSettled(
+    toFetch.map(async p => {
+      try {
+        const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
+        // history[] is newest-first array of GW objects with expected_goals, expected_assists
+        const history = Array.isArray(data.history) ? data.history : [];
+        const vals = history
+          .slice(0, SPARK_GWS)
+          .reverse()  // oldest first for left-to-right chart
+          .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
+        XG_TREND_CACHE.set(p.id, vals);
+      } catch {
+        XG_TREND_CACHE.set(p.id, []); // mark as fetched even on failure
+      }
+    })
+  );
 
   patchSparklines(players);
 }
@@ -891,7 +894,7 @@ async function loadSquad(teamId) {
 }
 
 function resolveGw(bs) {
-  return (bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+  return (bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
 }
 
 function resolveDeadline(bs) {
@@ -1306,7 +1309,7 @@ function renderCard(p, rank) {
   return `<div class="cap-card${selCls}${pinCls}${dimCls}">
     <div class="cap-rank">${rank+1}</div>
     <div class="cap-top">
-      <div class="cap-shirt ${shirtCls}">${p.name.charAt(0)}</div>
+      <div class="cap-shirt ${shirtCls}">${team.short}</div>
       <div style="flex:1;min-width:0">
         <div class="cap-name">${p.name}</div>
         <div class="cap-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m · ${p.ownedPct.toFixed(1)}% owned</div>
@@ -1562,9 +1565,9 @@ function setBadge(type, text) {
 ══════════════════════════════════════════════════ */
 const FALLBACK_TEAMS = {
   1:{short:'ARS'},2:{short:'AVL'},3:{short:'BOU'},4:{short:'BRE'},5:{short:'BHA'},
-  6:{short:'CHE'},7:{short:'CRY'},8:{short:'EVE'},9:{short:'FUL'},10:{short:'LDS'},
-  11:{short:'LIV'},12:{short:'MCI'},13:{short:'MUN'},14:{short:'NEW'},15:{short:'NFO'},
-  16:{short:'SUN'},17:{short:'WHU'},18:{short:'TOT'},19:{short:'WOL'},20:{short:'BRN'},
+  6:{short:'CHE'},7:{short:'CRY'},8:{short:'EVE'},9:{short:'FUL'},10:{short:'IPS'},
+  11:{short:'LEI'},12:{short:'LIV'},13:{short:'MCI'},14:{short:'MUN'},15:{short:'NEW'},
+  16:{short:'NFO'},17:{short:'WHU'},18:{short:'TOT'},19:{short:'WOL'},20:{short:'BRN'},
 };
 const FALLBACK_PLAYERS = [
   {id:1, name:'Salah',   fullName:'Mohamed Salah',  teamId:12,pos:'MID',posId:3,price:13.4,ownedPct:14.1,form:7.8, xg90:0.72,ict:310.2,minsReliability:88,totalPts:198,epNext:8.2,starts:26,transfersDelta:45000, priceChange:0, status:'a',fix:{opp:'BOU',ha:'H',difficulty:2}},
@@ -1710,11 +1713,11 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:11px;color:#6b7280;line-height:1.4">Is a -4 hit worth taking?</div>
         </div>
       </a>
-      <a href="player-scout.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">🔍</span>
+      <a href="my-team.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">👕</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Player Scout</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Find the best transfer in</div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">My Team</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Your squad on the pitch</div>
         </div>
       </a>
     </div>

@@ -82,11 +82,11 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 .legend-swatch{width:28px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:0.3px}
 .legend-note{font-size:11px;color:rgba(240,236,227,0.3);font-style:italic;line-height:1.5}
-.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);background:var(--ink-2)}
+.table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);background:var(--ink-2);-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;min-width:860px}
 thead tr{border-bottom:1px solid var(--border)}
 th{padding:10px 6px;font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-weight:400;white-space:nowrap}
-th.team-col{text-align:left;padding-left:18px;min-width:130px}
+th.team-col{text-align:left;padding-left:18px;min-width:130px;position:sticky;left:0;z-index:6;background:var(--ink-2);box-shadow:2px 0 8px rgba(0,0,0,0.35)}
 th.gw-col{text-align:center;min-width:68px}
 th.score-col{text-align:center;min-width:72px;cursor:pointer;color:var(--cream)}
 th.score-col:hover{color:var(--grass-l)}
@@ -96,7 +96,9 @@ tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,0.025)}
 tbody tr.hl{background:rgba(39,174,96,0.05)}
 td{padding:6px;vertical-align:middle}
-td.team-col{padding:9px 18px;white-space:nowrap}
+td.team-col{padding:9px 18px;white-space:nowrap;position:sticky;left:0;z-index:4;background:var(--ink-2);box-shadow:2px 0 8px rgba(0,0,0,0.35)}
+tbody tr:hover td.team-col{background:#1c2128}
+tbody tr.hl td.team-col{background:#161e1a}
 .team-name{font-weight:600;font-size:13px;color:var(--cream)}
 .team-abbr{font-family:var(--font-m);font-size:10px;color:var(--muted);margin-top:1px}
 td.fix-td{text-align:center;padding:5px 4px}
@@ -185,7 +187,34 @@ td.score-td{text-align:center}
 .tt-xg-label{font-size:10px;color:var(--muted)}
 .tt-xg-val{font-family:var(--font-m);font-size:11px;font-weight:500}
 @media(max-width:900px){.chip-cards{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){.page{padding:20px 14px 60px}.summary-row{grid-template-columns:1fr 1fr}.chip-cards{grid-template-columns:1fr 1fr}.controls{gap:7px;flex-wrap:wrap}.scroll-hint{display:block}}@media(max-width:480px){.summary-row{grid-template-columns:1fr 1fr}.chip-cards{grid-template-columns:1fr}.controls select,.controls button{font-size:12px}}
+@media(max-width:700px){
+  .page{padding:20px 14px 60px}
+  .summary-row{grid-template-columns:1fr 1fr}
+  .chip-cards{grid-template-columns:1fr 1fr}
+  .controls{gap:7px;flex-wrap:wrap}
+  .scroll-hint{display:flex}
+  th.team-col{min-width:100px;padding-left:12px}
+  td.team-col{padding:8px 12px}
+  .team-name{font-size:12px}
+  .team-abbr{display:none}
+}
+@media(max-width:480px){
+  .summary-row{grid-template-columns:1fr 1fr}
+  .chip-cards{grid-template-columns:1fr}
+  .controls select,.controls button{font-size:12px}
+  th.team-col{min-width:80px}
+  .fix-cell{width:48px;height:34px}
+  .split-cell{width:50px;height:34px}
+}
+.scroll-hint{
+  display:none;align-items:center;gap:6px;
+  padding:7px 14px;font-size:10px;color:var(--muted);
+  font-family:var(--font-m);letter-spacing:0.5px;
+  border-bottom:1px solid var(--border);
+  background:var(--ink-2);
+}
+.scroll-hint-arrow{animation:nudgeRight 1.6s ease-in-out infinite}
+@keyframes nudgeRight{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
@@ -325,6 +354,11 @@ body.ads-enabled .ad-slot-sticky{display:flex}
       </div>
     </div>
     <div class="legend-note">H&nbsp;=&nbsp;home &middot; A&nbsp;=&nbsp;away &middot; Home advantage is factored into the xG-based attacking and defensive ratings.</div>
+  </div>
+
+  <div class="scroll-hint">
+    <span class="scroll-hint-arrow">→</span>
+    Scroll right to see more gameweeks &nbsp;·&nbsp; Team names stay fixed
   </div>
 
   <div class="table-wrap">

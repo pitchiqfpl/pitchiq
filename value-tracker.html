@@ -1,43 +1,34 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Plan your FPL wildcard or free hit with confidence. See which players give you the most points per £m spent — ranked by position, price band and current form.">
-  <meta name="keywords" content="FPL value players, FPL points per million, best budget FPL players, FPL value picks">
-  <meta name="author" content="PitchIQ">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://pitchiqfpl.com/value-tracker.html">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://pitchiqfpl.com/value-tracker.html">
-  <meta property="og:title" content="FPL Value Tracker — Budget Planner & Wildcard Tool | PitchIQ">
-  <meta property="og:description" content="Plan your FPL wildcard or free hit with confidence. See which players give you the most points per £m spent — ranked by position, price band and current form.">
-  <meta property="og:site_name" content="PitchIQ">
-  <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="FPL Value Tracker — Budget Planner & Wildcard Tool | PitchIQ">
-  <meta name="twitter:description" content="Plan your FPL wildcard or free hit with confidence. See which players give you the most points per £m spent — ranked by position, price band and current form.">
-  <meta name="twitter:image" content="https://pitchiqfpl.com/og-image.png">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="shortcut icon" href="favicon.svg">
-  <meta name="theme-color" content="#27ae60">
-<title>PitchIQ — Value Tracker · Squad Budget Planner</title>
+<meta name="description" content="Plan your FPL transfers with data. Enter your Team ID, set your free transfers and time horizon — PitchIQ suggests the best swaps to maximise your points.">
+<meta name="keywords" content="FPL transfer planner, FPL free transfers, FPL transfer suggestions, best FPL transfers, FPL wildcard planner">
+<meta name="author" content="PitchIQ">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pitchiqfpl.com/value-tracker.html">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pitchiqfpl.com/value-tracker.html">
+<meta property="og:title" content="FPL Transfer Planner — Maximise Your Free Transfers | PitchIQ">
+<meta property="og:description" content="Enter your Team ID, set your free transfers and time horizon — PitchIQ ranks every possible swap by projected points gain so you know exactly who to bring in.">
+<meta property="og:site_name" content="PitchIQ">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FPL Transfer Planner — Maximise Your Free Transfers | PitchIQ">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="shortcut icon" href="favicon.svg">
+<meta name="theme-color" content="#27ae60">
+<title>PitchIQ — Transfer Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="nav.js" defer></script>
 <style>
-:root{
-  --ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;
-  --cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);
-  --grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;
-  --accent:#e63946;--blue:#63b3ed;--purple:#a78bfa;
-  --font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;
-}
+:root{--ink:#0d1117;--ink-2:#161b22;--ink-3:#1e2530;--cream:#f0ece3;--muted:#6b7280;--border:rgba(255,255,255,0.07);--grass:#27ae60;--grass-l:#2ecc71;--gold:#f0b429;--accent:#e63946;--blue:#63b3ed;--font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--ink);color:var(--cream);font-family:var(--font-b);font-size:14px;min-height:100vh}
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.5}
-.page{max-width:1200px;margin:0 auto;padding:36px 28px 80px}
-.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+.page{max-width:1100px;margin:0 auto;padding:36px 28px 80px}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
 .logo{font-family:var(--font-d);font-size:26px;letter-spacing:3px}.logo span{color:var(--grass)}
 .header-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--font-m)}
 .data-badge{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:8px;border:1px solid;font-size:11px;font-weight:500;transition:all 0.3s}
@@ -49,484 +40,719 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .data-badge.loading .data-dot{background:var(--gold);animation:blink 0.8s infinite}
 .data-badge.fallback .data-dot{background:var(--muted)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-/* CONTROLS */
-.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
-.ctrl-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-.pill-group{display:flex;background:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
-.pill{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.18s;font-family:var(--font-b);white-space:nowrap}
-.pill:hover{color:var(--cream)}
-.pill.active{background:var(--ink-3);color:var(--cream);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
-.pill.active.gold{color:var(--gold)}
-.pill.active.green{color:var(--grass-l)}
-.sep{width:1px;height:26px;background:var(--border);flex-shrink:0}
-.range-wrap{display:flex;align-items:center;gap:10px;padding:7px 13px;background:var(--ink-2);border:1px solid var(--border);border-radius:10px}
-.range-input{-webkit-appearance:none;width:110px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;outline:none}
-.range-input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold);cursor:pointer}
-.range-val{font-family:var(--font-m);font-size:11px;color:var(--gold);min-width:36px}
-.search-input{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--cream);padding:7px 12px;border-radius:8px;font-family:var(--font-b);font-size:12px;outline:none;width:160px;transition:border-color 0.2s}
-.search-input::placeholder{color:var(--muted)}
-.search-input:focus{border-color:rgba(39,174,96,0.4)}
-/* TABLE */
-.table-wrap{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.table-toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.table-toolbar-label{font-family:var(--font-m);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.result-count{font-family:var(--font-m);font-size:11px;color:var(--muted);margin-left:auto}
-table{width:100%;border-collapse:collapse}
-thead th{padding:10px 12px;font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);font-weight:400;white-space:nowrap;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
-thead th:hover{color:var(--cream)}
-thead th.active-sort{color:var(--gold)}
-thead th.num{text-align:right}
-tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.12s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:rgba(255,255,255,0.025)}
-td{padding:9px 12px;vertical-align:middle}
-td.num{text-align:right;font-family:var(--font-m);font-size:12px}
-.player-cell{display:flex;align-items:center;gap:10px}
-.player-shirt{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.12)}
-.shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}
-.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
-.pname{font-weight:600;font-size:13px;color:var(--cream)}
-.pmeta{font-size:10px;color:var(--muted)}
-.pos-badge{display:inline-block;font-family:var(--font-m);font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px}
-.pos-gk{background:rgba(245,158,11,0.15);color:#f59e0b}
-.pos-def{background:rgba(59,130,246,0.15);color:#60a5fa}
-.pos-mid{background:rgba(16,185,129,0.15);color:#34d399}
-.pos-fwd{background:rgba(239,68,68,0.15);color:#f87171}
-/* PPM bar */
-.ppm-cell{display:flex;align-items:center;gap:8px;justify-content:flex-end}
-.ppm-bar{width:60px;height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;flex-shrink:0}
-.ppm-fill{height:100%;border-radius:3px;background:var(--gold)}
-.ppm-val{font-family:var(--font-d);font-size:18px;line-height:1}
-.ppm-high{color:var(--gold)}.ppm-mid{color:rgba(240,180,41,0.6)}.ppm-low{color:var(--muted)}
-/* Fix pills */
-.fix-pill{display:inline-flex;align-items:center;padding:1px 6px;border-radius:5px;font-family:var(--font-m);font-size:9px;border:1px solid;margin-right:2px;white-space:nowrap}
-.fix-d1{background:rgba(15,76,41,0.4);border-color:rgba(74,222,128,0.2);color:#4ade80}
-.fix-d2{background:rgba(22,101,52,0.4);border-color:rgba(134,239,172,0.15);color:#86efac}
-.fix-d3{background:rgba(113,63,18,0.4);border-color:rgba(252,211,77,0.15);color:#fcd34d}
-.fix-d4{background:rgba(124,29,29,0.4);border-color:rgba(252,165,165,0.15);color:#fca5a5}
-.fix-d5{background:rgba(69,10,10,0.4);border-color:rgba(248,113,113,0.15);color:#f87171}
-/* Price badges */
-.badge{display:inline-flex;align-items:center;font-size:9px;font-weight:600;padding:2px 6px;border-radius:10px}
-.badge-rise{background:rgba(39,174,96,0.15);color:var(--grass-l)}
-.badge-fall{background:rgba(230,57,70,0.12);color:var(--accent)}
-/* Skeleton */
-.skel-row{height:48px;background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.06) 50%,rgba(255,255,255,0.03) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-/* Info icon */
-.ii{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);font-size:8px;color:var(--muted);cursor:default;position:relative;vertical-align:middle;margin-left:2px}
-.ii:hover .ip{opacity:1;pointer-events:auto}
-.ip{position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1e2530;border:1px solid rgba(255,255,255,0.12);border-radius:9px;padding:9px 12px;min-width:190px;max-width:260px;font-size:11px;color:rgba(240,236,227,0.72);line-height:1.6;opacity:0;pointer-events:none;z-index:200;box-shadow:0 6px 20px rgba(0,0,0,0.5);white-space:normal;text-align:left;font-family:var(--font-b);font-weight:400;letter-spacing:0;text-transform:none}
-.ip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1e2530}
-.ip strong{color:var(--cream)}
-/* Sort arrow */
-.sort-arrow{font-size:9px;margin-left:3px;opacity:0.5}
-thead th.active-sort .sort-arrow{opacity:1}
-@media(max-width:700px){.page{padding:18px 14px 60px}}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
-@media(max-width:600px){.controls{flex-direction:column;align-items:flex-start}.pill-group{flex-wrap:wrap}table{font-size:12px}th,td{padding:6px 4px}.col-hide-mobile{display:none}}
-@media(max-width:420px){table{font-size:11px}th,td{padding:5px 3px}}
-
-/* ═══════════════════════════════════════════════════════════
-   AD PLACEHOLDERS
-   All ad slots are hidden by default (display:none).
-   When AdSense is approved, add class="ads-enabled" to <body>
-   and uncomment the AdSense script in each placeholder.
-   No layout shift — space is pre-reserved.
-═══════════════════════════════════════════════════════════ */
-.ad-slot{display:none;text-align:center;overflow:hidden;background:transparent}
+/* IMPORT */
+.import-bar{display:flex;gap:10px;align-items:center;background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:20px;flex-wrap:wrap}
+.import-input{flex:1;min-width:140px;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--cream);padding:9px 14px;border-radius:9px;font-family:var(--font-m);font-size:13px;outline:none;transition:border-color 0.2s}
+.import-input:focus{border-color:rgba(39,174,96,0.4)}
+.import-btn{padding:9px 20px;border-radius:9px;background:var(--grass);border:none;color:#0d1117;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font-b);transition:background 0.15s;white-space:nowrap}
+.import-btn:hover{background:var(--grass-l)}
+.import-btn:disabled{opacity:0.5;cursor:not-allowed}
+.import-status{font-size:12px;color:var(--muted);font-family:var(--font-m)}
+.import-status.ok{color:var(--grass-l)}.import-status.err{color:var(--accent)}
+/* SETTINGS */
+.settings-strip{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+.setting-group{display:flex;flex-direction:column;gap:5px}
+.setting-label{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.pill-group{display:flex;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
+.pill{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.15s;font-family:var(--font-b);white-space:nowrap}
+.pill:hover{color:var(--cream)}.pill.active{background:var(--ink-3);color:var(--cream);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
+.pill.active.green{color:var(--grass-l)}.pill.active.gold{color:var(--gold)}
+.sep{width:1px;height:32px;background:var(--border);flex-shrink:0}
+.budget-display{font-family:var(--font-m);font-size:18px;font-weight:600;color:var(--grass-l)}
+.budget-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+/* SUMMARY */
+.summary-box{background:var(--ink-2);border:1px solid rgba(39,174,96,0.2);border-radius:14px;padding:18px 20px;margin-bottom:20px}
+.summary-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grass-l);margin-bottom:12px}
+.summary-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:500px){.summary-stats{grid-template-columns:1fr 1fr}}
+.sum-stat{text-align:center}
+.sum-val{font-family:var(--font-d);font-size:28px;letter-spacing:0.5px}
+.sum-label{font-size:10px;color:var(--muted);font-family:var(--font-m);letter-spacing:0.5px;margin-top:2px}
+/* GRID */
+.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media(max-width:800px){.main-grid{grid-template-columns:1fr}}
+/* PANELS */
+.panel{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.panel-body{padding:12px}
+/* PLAYER ROWS */
+.player-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;transition:background 0.12s;border:1px solid transparent;margin-bottom:4px}
+.player-shirt{width:32px;height:32px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
+.shirt-gk{background:#b45309;color:#fef3c7}.shirt-def{background:#1d4ed8;color:#dbeafe}
+.shirt-mid{background:#065f46;color:#d1fae5}.shirt-fwd{background:#991b1b;color:#fee2e2}
+.player-info{flex:1;min-width:0}
+.player-name-row{font-size:13px;font-weight:600;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-meta-row{font-size:10px;color:var(--muted);font-family:var(--font-m);margin-top:1px}
+.player-ep-col{text-align:right;flex-shrink:0}
+.ep-val{font-size:13px;font-weight:600;color:var(--grass-l)}
+.ep-lbl{font-size:10px;color:var(--muted);font-family:var(--font-m)}
+.pos-divider{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;margin-top:4px}
+.fix-strip{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.fix-pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:700;font-family:var(--font-m)}
+.d1{background:#1a3d2a;color:#2ecc71}.d2{background:#1a2e1a;color:#68d391}
+.d3{background:#2a2520;color:#d4a017}.d4{background:#2d1a1a;color:#f87171}.d5{background:#3d1010;color:#fc4444}
+/* SUGGESTION CARDS */
+.suggestion-card{background:var(--ink-3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;transition:border-color 0.15s}
+.suggestion-card:hover{border-color:rgba(39,174,96,0.2)}
+.suggestion-rank{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.hit-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;font-family:var(--font-m)}
+.hit-free{background:rgba(39,174,96,0.12);color:var(--grass-l)}
+.hit-cost{background:rgba(230,57,70,0.12);color:var(--accent)}
+.swap-row{display:grid;grid-template-columns:1fr 28px 1fr;gap:6px;align-items:start;margin-bottom:10px}
+.swap-side{display:flex;align-items:flex-start;gap:8px}
+.swap-side.buy{flex-direction:row-reverse;text-align:right}
+.swap-text{min-width:0}
+.swap-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swap-name.sell{color:var(--accent)}.swap-name.buy{color:var(--grass-l)}
+.swap-meta{font-size:10px;color:var(--muted);font-family:var(--font-m);margin-top:1px}
+.swap-fixes{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+.swap-arrow{font-size:16px;color:var(--muted);text-align:center;padding-top:6px}
+.sug-stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:2px}
+.sug-stat{text-align:center;background:rgba(255,255,255,0.03);border-radius:7px;padding:7px 4px}
+.sug-val{font-size:14px;font-weight:700}
+.sug-lbl{font-size:9px;color:var(--muted);font-family:var(--font-m);letter-spacing:0.3px;margin-top:2px}
+.gain-pos{color:var(--grass-l)}.gain-neg{color:var(--accent)}
+/* EMPTY */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:32px;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:600;color:var(--cream);margin-bottom:6px}
+.empty-desc{font-size:12px;line-height:1.6;max-width:260px;margin:0 auto}
+/* ALSO USEFUL */
+.also-useful{margin-top:36px}
+.au-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.au-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:600px){.au-grid{grid-template-columns:1fr}}
+.au-link{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s}
+.au-link:hover{background:rgba(39,174,96,0.04);border-color:rgba(39,174,96,0.35)}
+.au-icon{font-size:20px;flex-shrink:0}
+.au-name{font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px}
+.au-desc{font-size:11px;color:#6b7280;line-height:1.4}
+/* COMPARISON PANEL */
+.cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.cmp-overlay.open{opacity:1;pointer-events:all}
+.cmp-panel{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:100vw;background:var(--ink-2);border-left:1px solid var(--border);z-index:301;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1);overflow-y:auto;display:flex;flex-direction:column}
+.cmp-panel.open{transform:translateX(0)}
+.cmp-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;background:var(--ink-2);z-index:10}
+.cmp-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.cmp-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:color 0.15s}
+.cmp-close:hover{color:var(--cream)}
+.cmp-body{padding:16px 18px;flex:1}
+.cmp-players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.cmp-player-card{background:var(--ink-3);border-radius:10px;padding:12px;text-align:center}
+.cmp-player-card.sell{border:1px solid rgba(230,57,70,0.2)}
+.cmp-player-card.buy{border:1px solid rgba(39,174,96,0.2)}
+.cmp-player-shirt{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:0 auto 6px;border:1px solid rgba(255,255,255,0.1)}
+.cmp-player-name{font-size:13px;font-weight:600;color:var(--cream);margin-bottom:2px}
+.cmp-player-meta{font-size:10px;color:var(--muted);font-family:var(--font-m)}
+.cmp-player-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-m);margin-bottom:6px}
+.cmp-section{margin-bottom:16px}
+.cmp-section-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cmp-stat-row{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.cmp-stat-row:last-child{border-bottom:none}
+.cmp-stat-val{font-size:13px;font-weight:600;font-family:var(--font-m)}
+.cmp-stat-val.sell{text-align:left}.cmp-stat-val.buy{text-align:right}
+.cmp-stat-val.winner{color:var(--grass-l)}.cmp-stat-val.loser{color:var(--muted)}
+.cmp-stat-label{font-size:9px;color:var(--muted);text-align:center;font-family:var(--font-m);letter-spacing:0.3px}
+.cmp-fix-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cmp-fix-col{display:flex;flex-direction:column;gap:4px}
+.cmp-fix-item{display:flex;align-items:center;gap:5px}
+.cmp-fix-item.buy-side{flex-direction:row-reverse}
+.cmp-fix-gw{font-family:var(--font-m);font-size:8px;color:var(--muted);width:26px;flex-shrink:0;text-align:center}
+.cmp-chart{display:flex;align-items:flex-end;gap:3px;height:52px;padding:0 2px}
+.cmp-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}
+.cmp-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px}
+.cmp-bar-lbl{font-size:8px;color:var(--muted);font-family:var(--font-m)}
+.cmp-beq{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cmp-beq-val{font-family:var(--font-d);font-size:28px;color:var(--gold);flex-shrink:0}
+.cmp-beq-text{font-size:11px;color:var(--muted);line-height:1.5}
+.cmp-verdict{border-radius:10px;padding:12px 14px;font-size:12px;line-height:1.6}
+.cmp-verdict.buy{background:rgba(39,174,96,0.07);border:1px solid rgba(39,174,96,0.2);color:rgba(240,236,227,0.8)}
+.cmp-verdict.hold{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--muted)}
+.cmp-verdict strong{color:var(--cream)}
+.cmp-btn{width:100%;margin-top:8px;padding:7px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-size:11px;font-family:var(--font-b);cursor:pointer;transition:all 0.15s}
+.cmp-btn:hover{border-color:rgba(39,174,96,0.35);color:var(--grass-l)}
+.ad-slot{display:none;text-align:center;overflow:hidden}
 body.ads-enabled .ad-slot{display:block}
-/* Leaderboard 728x90 — homepage between tool grid and dashboard */
-.ad-slot-leaderboard{height:90px;max-width:728px;margin:0 auto}
-/* Content banner 728x90 — top of tool pages below nav */
-.ad-slot-content{height:90px;max-width:728px;margin:0 auto}
-/* Mobile sticky footer 320x50 */
-.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;
-  z-index:400;background:var(--ink-2,#161b22);
-  border-top:1px solid rgba(255,255,255,0.07);
-  display:none;align-items:center;justify-content:center}
-body.ads-enabled .ad-slot-sticky{display:flex}
-/* Ensure content isn't hidden behind sticky ad on mobile */
-@media(max-width:760px){
-  body.ads-enabled{padding-bottom:50px}
-}
-/* Hide leaderboard on mobile — show mobile banner instead */
-@media(max-width:760px){
-  .ad-slot-leaderboard,.ad-slot-content{display:none!important}
-}
+.ad-slot-content{margin:28px 0;min-height:90px}
+.ad-slot-sticky{position:fixed;bottom:0;left:0;right:0;height:50px;display:none;align-items:center;justify-content:center;background:rgba(13,17,23,0.95);border-top:1px solid var(--border);z-index:100}
+@media(max-width:760px){body.ads-enabled{padding-bottom:50px}.ad-slot-content{display:none!important}}
 </style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
-<script src="nav.js"></script>
 <div class="page">
   <div class="page-header">
     <div>
-      <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
-      <div class="header-sub" id="headerSub">VALUE TRACKER · Budget Planner</div>
+      <div class="logo">PITCH<span>IQ</span></div>
+      <div class="header-sub" id="headerSub">TRANSFER PLANNER · Import your squad to get started</div>
     </div>
-    <div id="dataBadge" class="data-badge loading">
+    <div class="data-badge loading" id="dataBadge">
       <div class="data-dot"></div>
-      <span id="dataBadgeText">Fetching live data…</span>
+      <span id="dataBadgeText">Loading…</span>
     </div>
   </div>
 
-  <div style="margin-bottom:20px;padding:14px 18px;background:rgba(240,180,41,0.05);border:1px solid rgba(240,180,41,0.12);border-radius:12px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-    <div style="font-size:20px;flex-shrink:0">💰</div>
-    <div>
-      <div style="font-size:13px;font-weight:600;color:var(--cream);margin-bottom:2px">Wildcard &amp; free hit planner</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.6">You have £100m — where does each pound go furthest? This ranks every player by points returned per £m spent. Use it to build the most efficient squad possible, not just find this week's best transfer.</div>
-    </div>
+  <div class="ad-slot ad-slot-content" aria-hidden="true">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
   </div>
 
-  <div class="controls">
-    <span class="ctrl-label">Position</span>
-    <div class="pill-group" id="pgPos">
-      <button class="pill active green" data-pos="ALL">All</button>
-      <button class="pill" data-pos="GK">GK</button>
-      <button class="pill" data-pos="DEF">DEF</button>
-      <button class="pill" data-pos="MID">MID</button>
-      <button class="pill" data-pos="FWD">FWD</button>
-    </div>
+  <div class="import-bar">
+    <input class="import-input" id="teamIdInput" type="number" placeholder="Your FPL Team ID" inputmode="numeric">
+    <button class="import-btn" id="importBtn">Load squad</button>
+    <span class="import-status" id="importStatus">Enter your Team ID to get personalised transfer suggestions</span>
+  </div>
 
-    <div class="sep"></div>
-    <span class="ctrl-label">Max price</span>
-    <div class="range-wrap">
-      <input type="range" class="range-input" id="priceRange" min="4" max="15" step="0.5" value="15">
-      <span class="range-val" id="priceVal">Any</span>
+  <div class="settings-strip" id="settingsStrip" style="display:none">
+    <div class="setting-group">
+      <div class="setting-label">Free transfers</div>
+      <div class="pill-group" id="ftPills">
+        <button class="pill active green" data-ft="1">1 FT</button>
+        <button class="pill" data-ft="2">2 FT</button>
+        <button class="pill gold" data-ft="15">Wildcard</button>
+      </div>
     </div>
     <div class="sep"></div>
-    <span class="ctrl-label">Min price</span>
-    <div class="range-wrap">
-      <input type="range" class="range-input" id="minPriceRange" min="4" max="10" step="0.5" value="4">
-      <span class="range-val" id="minPriceVal">Any</span>
+    <div class="setting-group">
+      <div class="setting-label">Optimise over</div>
+      <div class="pill-group" id="horizonPills">
+        <button class="pill active" data-gws="1">Next GW</button>
+        <button class="pill" data-gws="3">3 GWs</button>
+        <button class="pill" data-gws="5">5 GWs</button>
+        <button class="pill" data-gws="7">Run-in</button>
+      </div>
     </div>
     <div class="sep"></div>
-    <input class="search-input" id="searchInput" type="text" placeholder="Search player…">
+    <div class="setting-group">
+      <div class="budget-label">Available budget</div>
+      <div class="budget-display" id="budgetDisplay">£0.0m</div>
+    </div>
+    <button class="import-btn" id="rerunBtn" style="margin-left:auto">↻ Recalculate</button>
   </div>
 
-  <div class="table-wrap">
-    <div class="table-toolbar">
-      <span class="table-toolbar-label">💰 Pts per £m — all players</span>
-      <span class="result-count" id="resultCount"></span>
-    </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:36px">#</th>
-            <th>Player</th>
-            <th class="num" data-col="price">Price <span class="sort-arrow">↕</span></th>
-            <th class="num" data-col="totalPts">Pts <span class="sort-arrow">↕</span></th>
-            <th class="num active-sort" data-col="ppm">
-              Season/£m <span class="sort-arrow">↓</span>
-              <span class="ii">i<div class="ip"><strong>Season pts per £m</strong> — total season points ÷ current price. Good for long-term value.</div></span>
-            </th>
-            <th class="num" data-col="ppmForm">
-              Form/£m <span class="sort-arrow">↕</span>
-              <span class="ii">i<div class="ip"><strong>Form pts per £m</strong> — last 5 GW form ÷ price × 10. Best for finding value <em>right now</em>.</div></span>
-            </th>
-            <th class="num" data-col="form">Form <span class="sort-arrow">↕</span></th>
-            <th class="num" data-col="epNext">xPts <span class="sort-arrow">↕</span>
-              <span class="ii">i<div class="ip"><strong>Expected points next GW</strong> — FPL's projected points for the upcoming gameweek. Useful for spotting short-term value.</div></span>
-            </th>
-            <th class="num col-hide-mobile" data-col="ownedPct">Owned <span class="sort-arrow">↕</span></th>
-            <th>Next 5 fixtures</th>
-            <th class="num col-hide-mobile" data-col="priceChange">Price trend <span class="sort-arrow">↕</span></th>
-          </tr>
-        </thead>
-        <tbody id="valueTable">
-          <tr class="skel-row"><td colspan="11"></td></tr>
-          <tr class="skel-row"><td colspan="11"></td></tr>
-          <tr class="skel-row"><td colspan="11"></td></tr>
-          <tr class="skel-row"><td colspan="11"></td></tr>
-          <tr class="skel-row"><td colspan="11"></td></tr>
-        </tbody>
-      </table>
+  <div class="summary-box" id="summaryBox" style="display:none">
+    <div class="summary-title">Transfer Plan Summary</div>
+    <div class="summary-stats">
+      <div class="sum-stat"><div class="sum-val gain-pos" id="sumGain">+0.0</div><div class="sum-label">Projected pts gain</div></div>
+      <div class="sum-stat"><div class="sum-val" id="sumTransfers">0</div><div class="sum-label">Transfers suggested</div></div>
+      <div class="sum-stat"><div class="sum-val" id="sumHitCost" style="color:var(--muted)">0</div><div class="sum-label">Hit cost (pts)</div></div>
+      <div class="sum-stat"><div class="sum-val gain-pos" id="sumNetGain">+0.0</div><div class="sum-label">Net gain after hits</div></div>
     </div>
   </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Your Squad</span>
+        <span style="font-size:11px;color:var(--muted)" id="squadMeta">—</span>
+      </div>
+      <div class="panel-body" id="squadBody">
+        <div class="empty-state"><div class="empty-icon">👕</div><div class="empty-title">No squad loaded</div><div class="empty-desc">Enter your FPL Team ID above to load your players</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title" id="suggestionsTitle">Transfer Suggestions</span>
+        <span style="font-size:11px;color:var(--muted)" id="horizonLabel">—</span>
+      </div>
+      <div class="panel-body" id="suggestionsBody">
+        <div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">Load your squad first</div><div class="empty-desc">We'll rank every possible swap by projected points gain over your chosen time horizon</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="also-useful">
+    <div class="au-title">Also useful</div>
+    <div class="au-grid">
+      <a href="hit-calculator.html" class="au-link"><span class="au-icon">🎯</span><div><div class="au-name">Hit Calculator</div><div class="au-desc">Is a -4 hit worth taking?</div></div></a>
+      <a href="player-scout.html" class="au-link"><span class="au-icon">🔍</span><div><div class="au-name">Player Scout</div><div class="au-desc">Find the best transfer target</div></div></a>
+      <a href="captain-picker.html" class="au-link"><span class="au-icon">⚡</span><div><div class="au-name">Captain Picker</div><div class="au-desc">Pick your armband with data</div></div></a>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON OVERLAY -->
+<div class="cmp-overlay" id="cmpOverlay"></div>
+<div class="cmp-panel" id="cmpPanel">
+  <div class="cmp-head">
+    <span class="cmp-title">Player Comparison</span>
+    <button class="cmp-close" id="cmpClose">✕</button>
+  </div>
+  <div class="cmp-body" id="cmpBody"></div>
+</div>
+
+<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2)">
+  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream);text-decoration:none">PITCH<span style="color:var(--grass);opacity:0.6">IQ</span></a>
+  <span style="font-size:12px;color:var(--muted)">
+    <a href="index.html" style="color:var(--muted);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
+    &nbsp;·&nbsp;<a href="privacy.html" style="color:var(--muted);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
+    &nbsp;·&nbsp;<a href="methodology.html" style="color:var(--muted);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
+    &nbsp;·&nbsp;© 2026 PitchIQ · Not affiliated with the Premier League or FPL
+  </span>
+</footer>
+<div class="ad-slot-sticky" aria-hidden="true">
+  <ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins>
 </div>
 
 <script>
-const FIX_CLS = ['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
-const POS_ID  = {1:'GK',2:'DEF',3:'MID',4:'FWD'};
-const SHIRT   = {GK:'shirt-gk',DEF:'shirt-def',MID:'shirt-mid',FWD:'shirt-fwd'};
-const POS_CLS = {GK:'pos-gk',DEF:'pos-def',MID:'pos-mid',FWD:'pos-fwd'};
+'use strict';
+let ALL=[],TMAP={},SQUAD=[],GW=1,FT=1,HORIZON=1,BANK=0;
+const SHIRT={GK:'shirt-gk',DEF:'shirt-def',MID:'shirt-mid',FWD:'shirt-fwd'};
+const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
+const FIX_CLS={1:'d1',2:'d2',3:'d3',4:'d4',5:'d5'};
+const DIFF_MULT={1:1.35,2:1.15,3:1.0,4:0.82,5:0.65};
+const HA_MULT={H:1.08,A:0.93};
 
-let ALL=[], TMAP={}, GW=1;
-const S = { pos:'ALL', price:15, minPrice:4, search:'', sortCol:'ppm', sortDir:-1 };
+function setBadge(t,x){const b=document.getElementById('dataBadge');b.className='data-badge '+t;document.getElementById('dataBadgeText').textContent=x;}
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
 
-// ── DATA ────────────────────────────────────────────────────────────────────
-function setBadge(t,txt){
-  document.getElementById('dataBadge').className='data-badge '+t;
-  document.getElementById('dataBadgeText').textContent=txt;
+function projectPts(p,gws){
+  const base=p.epNext>0?p.epNext:(p.form||3);
+  const mf=Math.min((p.minsRel||75)/90,1);
+  const sf=p.status==='i'?0:p.status==='d'?0.6:1;
+  if(!p.fixes||!p.fixes.length) return+(base*mf*sf).toFixed(1);
+  let total=0;
+  const n=Math.min(gws,p.fixes.length);
+  for(let i=0;i<n;i++){
+    const f=p.fixes[i];
+    const dm=DIFF_MULT[f.diff]??1,hm=HA_MULT[f.ha]??1;
+    const gb=i===0?base:(p.form||3)*0.65;
+    total+=gb*dm*hm*mf*sf;
+  }
+  if(p.fixes.length<gws) total+=(total/n)*(gws-p.fixes.length);
+  return+total.toFixed(1);
 }
 
-async function fetchJ(url){
-  const r=await fetch(url);
-  if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
-  return r.json();
+function sellUrgency(p){
+  let s=0;
+  if(p.form<3)s+=3;else if(p.form<5)s+=1;
+  if(p.status==='i')s+=5;else if(p.status==='d')s+=2;
+  const ad=(p.fixes?.slice(0,3).reduce((t,f)=>t+f.diff,0)||9)/3;
+  if(ad>=4)s+=2;else if(ad>=3)s+=1;
+  if(p.priceChg<0)s+=1;
+  if(p.epNext<3)s+=2;
+  return s;
 }
 
-function buildFixMap(fixtures, gw, count){
-  const m={};
-  if(!Array.isArray(fixtures)) return m;
-  fixtures.filter(f=>f.event>=gw&&f.event<gw+count&&!f.finished).forEach(f=>{
-    [f.team_h,f.team_a].forEach(tid=>{
-      if(!m[tid]) m[tid]=[];
-      const isH=tid===f.team_h;
-      m[tid].push({
-        gw:f.event,
-        opp:TMAP[isH?f.team_a:f.team_h]?.short??'?',
-        ha:isH?'H':'A',
-        diff:isH?f.team_h_difficulty??3:f.team_a_difficulty??3
-      });
-    });
-  });
-  Object.values(m).forEach(a=>a.sort((x,y)=>x.gw-y.gw));
-  return m;
+function buildPlayer(e,fixMap){
+  const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+  const pos=POS_ID[e.element_type]??'MID';
+  const price=(e.now_cost||0)/10;
+  const rawFixes=(fixMap[e.team]||[]);
+  const fixes=rawFixes.map(f=>{
+    const isHome=f.team_h===e.team;
+    const oppId=isHome?f.team_a:f.team_h;
+    const diff=isHome?f.team_h_difficulty:f.team_a_difficulty;
+    return{gw:f.event,opp:TMAP[oppId]?.short??'?',ha:isHome?'H':'A',diff:diff||3};
+  }).sort((a,b)=>a.gw-b.gw);
+  return{
+    id:e.id,name:e.web_name,teamId:e.team,pos,price,
+    form:parseFloat(e.form)||0,
+    epNext:parseFloat(e.ep_next)||0,
+    ownedPct:parseFloat(e.selected_by_percent)||0,
+    status:e.status,priceChg:e.cost_change_event||0,
+    totalPts:e.total_points||0,starts:e.starts??games,
+    minsRel:Math.min(mins/games,90),fixes,
+  };
 }
 
-function buildPlayers(els, fm){
-  return els
-    .filter(e=>e.element_type>0 && e.status!=='u' && e.total_points>0)
-    .map(e=>{
-      const pos=POS_ID[e.element_type]??'MID';
-      const price=e.now_cost/10;
-      const totalPts=e.total_points||0;
-      const form=parseFloat(e.form)||0;
-      const ppm  = price>0 ? totalPts/price : 0;
-      const ppmForm = price>0 ? (form/price)*10 : 0;
-      // Price change: cost_change_event shows this GW's price change in 0.1m units
-      const priceChange = e.cost_change_event||0;
-      return{
-        id:e.id, name:e.web_name,
-        teamId:e.team, pos, posId:e.element_type,
-        price, totalPts, form, ppm, ppmForm,
-        priceChange,
-        ownedPct:parseFloat(e.selected_by_percent)||0,
-        epNext:parseFloat(e.ep_next)||0,
-        status:e.status,
-        fixes:fm[e.team]??[],
-      };
-    });
-}
-
-async function loadData(){
+async function loadBootstrap(){
   setBadge('loading','Fetching live data…');
   try{
-    const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
-    const[bs,fixes]=await Promise.race([
-      Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),
-      timeout
-    ]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    const[bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??
+        bs.events?.find(e=>e.is_previous)??
+        [...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
-    const fm=buildFixMap(fixes,GW,6);
-    ALL=buildPlayers(bs.elements,fm);
+    const fixMap={};
+    allFix.filter(f=>f.event>=GW&&!f.finished).forEach(f=>{
+      [f.team_h,f.team_a].forEach(tid=>{if(!fixMap[tid])fixMap[tid]=[];fixMap[tid].push(f);});
+    });
+    ALL=bs.elements.filter(e=>e.status!=='u').map(e=>buildPlayer(e,fixMap));
+    document.getElementById('headerSub').textContent=`TRANSFER PLANNER · GW${GW}`;
     setBadge('live',`Live · GW${GW}`);
-    document.getElementById('headerSub').textContent=`VALUE TRACKER · Budget Planner · GW${GW}`;
+    const saved=lsGet('piq_team_id','');
+    if(saved) document.getElementById('teamIdInput').value=saved;
   }catch(err){
-    ALL=FB_PLAYERS; TMAP=FB_TEAMS;
-    setBadge('fallback',err.status===404?'Static data · deploy for live':'Static data');
-    document.getElementById('headerSub').textContent='VALUE TRACKER · Budget Planner';
+    console.warn('[TransferPlanner]',err.message);
+    setBadge('fallback','Static data — deploy for live');
   }
 }
 
-// ── FILTER & SORT ────────────────────────────────────────────────────────────
-function getPool(){
-  const q=S.search.toLowerCase().trim();
-  let pool=ALL.filter(p=>{
-    if(S.pos!=='ALL' && p.pos!==S.pos) return false;
-    if(S.price<15 && p.price>S.price) return false;
-    if(S.minPrice>4 && p.price<S.minPrice) return false;
-    if(q && !p.name.toLowerCase().includes(q)) return false;
-    return true;
-  });
-  pool.sort((a,b)=>{
-    const av=a[S.sortCol]??0, bv=b[S.sortCol]??0;
-    return S.sortDir*(bv-av);
-  });
-  return pool;
+async function loadSquad(){
+  const raw=document.getElementById('teamIdInput').value.trim();
+  const id=parseInt(raw,10);
+  const st=document.getElementById('importStatus');
+  const btn=document.getElementById('importBtn');
+  if(!id||isNaN(id)||id<1){st.className='import-status err';st.textContent='Please enter a valid Team ID';return;}
+  btn.disabled=true;st.className='import-status';st.textContent='Loading your squad…';
+  try{
+    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW}`);
+    if(!data?.picks?.length) throw Object.assign(new Error('No picks'),{status:404});
+    BANK=(data.entry_history?.bank||0)/10;
+    SQUAD=data.picks.map(pick=>{
+      const p=ALL.find(x=>x.id===pick.element);
+      if(!p)return null;
+      return{...p,multiplier:pick.multiplier,isCaptain:pick.is_captain,isVice:pick.is_vice_captain,position:pick.position};
+    }).filter(Boolean);
+    lsSet('piq_team_id',String(id));
+    st.className='import-status ok';st.textContent=`✓ ${SQUAD.length} players loaded`;
+    document.getElementById('settingsStrip').style.display='flex';
+    document.getElementById('summaryBox').style.display='block';
+    const sqVal=SQUAD.reduce((s,p)=>s+p.price,0);
+    document.getElementById('budgetDisplay').textContent=`£${(sqVal+BANK).toFixed(1)}m`;
+    renderSquad();runSuggestions();
+  }catch(err){
+    st.className='import-status err';
+    if(err.status===404)st.textContent='⚠ Team not found — check your ID';
+    else if(err.status===503||err.status===429)st.textContent='⚠ FPL API busy — try again';
+    else st.textContent=`⚠ ${err.message||'Could not load squad'}`;
+  }finally{btn.disabled=false;}
 }
 
-// ── RENDER ──────────────────────────────────────────────────────────────────
-function fixPills(fixes, count=5){
-  if(!fixes.length) return `<span style="color:var(--muted);font-size:10px">—</span>`;
-  return fixes.slice(0,count).map(f=>
-    `<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`
-  ).join('');
-}
-
-function renderTable(pool){
-  document.getElementById('resultCount').textContent=`${pool.length} player${pool.length!==1?'s':''}`;
-  const maxPpm=Math.max(...pool.map(p=>p.ppm??0),1);
-  const tbody=document.getElementById('valueTable');
-
-  if(!pool.length){
-    tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted)">No players match these filters</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML=pool.map((p,i)=>{
-    const team=TMAP[p.teamId]??{short:'?'};
-    const ppmVal=(p.ppm??0).toFixed(1);
-    const ppmPct=Math.min(((p.ppm??0)/maxPpm*100),100).toFixed(0);
-    const ppmCls=p.ppm>=20?'ppm-high':p.ppm>=12?'ppm-mid':'ppm-low';
-    const shirtCls=SHIRT[p.pos]??'shirt-mid';
-    const posCls=POS_CLS[p.pos]??'pos-mid';
-    const priceMove=p.priceChange>0
-      ?`<span class="badge badge-rise">↑ Rising</span>`
-      :p.priceChange<0
-        ?`<span class="badge badge-fall">↓ Falling</span>`
-        :`<span style="color:var(--muted);font-size:11px">—</span>`;
-    const formColor=p.form>=8?'var(--grass-l)':p.form>=5?'var(--gold)':'var(--cream)';
-    return`<tr>
-      <td style="color:var(--muted);font-family:var(--font-m);font-size:11px">${i+1}</td>
-      <td>
-        <div class="player-cell">
-          <div class="player-shirt ${shirtCls}">${p.name.charAt(0)}</div>
-          <div>
-            <div class="pname">${p.name}${p.status==='d'?' <span style="font-size:9px;color:var(--gold)">⚠</span>':p.status==='i'?' <span style="font-size:9px;color:var(--accent)">✕</span>':''}</div>
-            <div class="pmeta"><span class="pos-badge ${posCls}">${p.pos}</span> · ${team.short}</div>
-          </div>
+function renderSquad(){
+  const body=document.getElementById('squadBody');
+  const sqVal=SQUAD.reduce((s,p)=>s+p.price,0).toFixed(1);
+  document.getElementById('squadMeta').textContent=`£${sqVal}m · £${BANK.toFixed(1)}m bank`;
+  const byPos={GK:[],DEF:[],MID:[],FWD:[]};
+  SQUAD.forEach(p=>{if(byPos[p.pos])byPos[p.pos].push(p);});
+  let html='';
+  Object.entries(byPos).forEach(([pos,players])=>{
+    if(!players.length)return;
+    html+=`<div class="pos-divider">${pos}</div>`;
+    players.sort((a,b)=>b.epNext-a.epNext).forEach(p=>{
+      const fixH=p.fixes?.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`).join('')||'';
+      const capB=p.isCaptain?`<span style="font-size:9px;background:rgba(240,180,41,0.15);color:var(--gold);padding:1px 5px;border-radius:3px;font-family:var(--font-m);margin-left:4px">C</span>`:
+                 p.isVice?`<span style="font-size:9px;background:rgba(255,255,255,0.08);color:var(--muted);padding:1px 5px;border-radius:3px;font-family:var(--font-m);margin-left:4px">V</span>`:'';
+      const dotD=p.status==='d'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin-right:4px;vertical-align:middle"></span>`:'';
+      const dotI=p.status==='i'?`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:4px;vertical-align:middle"></span>`:'';
+      const isBench=p.position>11;
+      html+=`<div class="player-row" style="${isBench?'opacity:0.55':''}">
+        <div class="player-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
+        <div class="player-info">
+          <div class="player-name-row">${dotD}${dotI}${p.name}${capB}${isBench?` <span style="font-size:9px;color:var(--muted);font-family:var(--font-m)">(bench)</span>`:''}</div>
+          <div class="player-meta-row">£${p.price.toFixed(1)}m · ${p.ownedPct.toFixed(1)}% owned</div>
+          <div class="fix-strip">${fixH}</div>
         </div>
-      </td>
-      <td class="num">£${p.price.toFixed(1)}m</td>
-      <td class="num">${p.totalPts}</td>
-      <td class="num">
-        <div class="ppm-cell">
-          <div class="ppm-bar"><div class="ppm-fill" style="width:${ppmPct}%"></div></div>
-          <span class="${ppmCls}">${ppmVal}</span>
+        <div class="player-ep-col">
+          <div class="ep-val">${p.epNext>0?p.epNext.toFixed(1):'—'}</div>
+          <div class="ep-lbl">proj pts</div>
         </div>
-      </td>
-      <td class="num">${(p.ppmForm??0).toFixed(1)}</td>
-      <td class="num" style="color:${formColor}">${p.form.toFixed(1)}</td>
-      <td class="num" style="color:${p.epNext>=7?'var(--grass-l)':p.epNext>=5?'var(--gold)':'var(--cream)'}">${p.epNext.toFixed(1)}</td>
-      <td class="num col-hide-mobile">${p.ownedPct.toFixed(1)}%</td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:3px">${fixPills(p.fixes,5)}</div></td>
-      <td class="num col-hide-mobile">${priceMove}</td>
-    </tr>`;
-  }).join('');
-}
-
-function render(){
-  const pool=getPool();
-  renderTable(pool);
-  // Update sort header highlights
-  document.querySelectorAll('thead th[data-col]').forEach(th=>{
-    const isActive=th.dataset.col===S.sortCol;
-    th.classList.toggle('active-sort',isActive);
-    const arrow=th.querySelector('.sort-arrow');
-    if(arrow) arrow.textContent=isActive?(S.sortDir===-1?'↓':'↑'):'↕';
-  });
-}
-
-// ── FALLBACK DATA ────────────────────────────────────────────────────────────
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Leeds United',short:'LDS'},11:{name:'Liverpool',short:'LIV'},12:{name:'Man City',short:'MCI'},13:{name:'Man United',short:'MUN'},14:{name:'Newcastle',short:'NEW'},15:{name:"Nott'm Forest",short:'NFO'},16:{name:'Sunderland',short:'SUN'},17:{name:'West Ham',short:'WHU'},18:{name:'Spurs',short:'TOT'},19:{name:'Wolves',short:'WOL'},20:{name:'Burnley',short:'BRN'}};
-const FB_PLAYERS=[
-  {id:1, name:'Salah',    teamId:12,pos:'MID',posId:3,price:13.4,totalPts:198,form:7.8,ppm:14.8,ppmForm:5.8, priceChange:0, ownedPct:14.1,epNext:8.2,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3}]},
-  {id:3, name:'Mbeumo',   teamId:4, pos:'FWD',posId:4,price:8.8, totalPts:171,form:8.4, ppm:19.4,ppmForm:9.5, priceChange:1, ownedPct:38.2,epNext:7.4,status:'a',fixes:[{gw:34,opp:'WHU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
-  {id:2, name:'Haaland',  teamId:13,pos:'FWD',posId:4,price:14.5,totalPts:182,form:9.2, ppm:12.6,ppmForm:6.3, priceChange:1, ownedPct:28.4,epNext:9.1,status:'a',fixes:[{gw:34,opp:'SUN',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'A',diff:3},{gw:37,opp:'LDS',ha:'A',diff:1},{gw:38,opp:'CHE',ha:'H',diff:3}]},
-  {id:4, name:'Palmer',   teamId:6, pos:'MID',posId:3,price:11.0,totalPts:177,form:7.4, ppm:16.1,ppmForm:6.7, priceChange:0, ownedPct:49.8,epNext:7.1,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4}]},
-  {id:5, name:'Isak',     teamId:15,pos:'FWD',posId:4,price:9.0, totalPts:162,form:8.1, ppm:18.0,ppmForm:9.0, priceChange:0, ownedPct:37.4,epNext:6.4,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3}]},
-  {id:6, name:'Trossard', teamId:1, pos:'MID',posId:3,price:7.5, totalPts:141,form:6.4, ppm:18.8,ppmForm:8.5, priceChange:0, ownedPct:22.1,epNext:5.8,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
-  {id:7, name:'Watkins',  teamId:2, pos:'FWD',posId:4,price:9.5, totalPts:138,form:5.9, ppm:14.5,ppmForm:6.2, priceChange:-1,ownedPct:31.6,epNext:5.4,status:'a',fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2},{gw:38,opp:'BHA',ha:'A',diff:2}]},
-  {id:8, name:'Neto',     teamId:6, pos:'MID',posId:3,price:6.8, totalPts:108,form:7.8, ppm:15.9,ppmForm:11.5,priceChange:1, ownedPct:6.4, epNext:5.2,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4}]},
-  {id:9, name:'Wood',     teamId:16,pos:'FWD',posId:4,price:6.5, totalPts:109,form:6.2, ppm:16.8,ppmForm:9.5, priceChange:1, ownedPct:7.2, epNext:5.6,status:'a',fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3},{gw:38,opp:'MUN',ha:'H',diff:3}]},
-  {id:10,name:'Trent A-A',teamId:12,pos:'DEF',posId:2,price:7.2, totalPts:118,form:7.1, ppm:16.4,ppmForm:9.9, priceChange:0, ownedPct:28.6,epNext:6.2,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3}]},
-  {id:11,name:'Raya',     teamId:1, pos:'GK', posId:1,price:5.5, totalPts:97, form:5.8, ppm:17.6,ppmForm:10.5,priceChange:0, ownedPct:26.1,epNext:5.2,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
-  {id:12,name:'Flekken',  teamId:4, pos:'GK', posId:1,price:4.5, totalPts:82, form:5.4, ppm:18.2,ppmForm:12.0,priceChange:0, ownedPct:12.4,epNext:4.8,status:'a',fixes:[{gw:34,opp:'WHU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
-  {id:13,name:'Timber',   teamId:1, pos:'DEF',posId:2,price:5.2, totalPts:74, form:5.6, ppm:14.2,ppmForm:10.8,priceChange:0, ownedPct:21.8,epNext:4.8,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
-  {id:14,name:'Trippier', teamId:15,pos:'DEF',posId:2,price:6.5, totalPts:80, form:3.2, ppm:12.3,ppmForm:4.9, priceChange:-1,ownedPct:18.4,epNext:4.1,status:'d',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1},{gw:38,opp:'TOT',ha:'H',diff:3}]},
-  {id:15,name:'Solanke',  teamId:18,pos:'FWD',posId:4,price:7.5, totalPts:112,form:4.2, ppm:14.9,ppmForm:5.6, priceChange:0, ownedPct:12.3,epNext:4.8,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'SUN',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3},{gw:38,opp:'NEW',ha:'H',diff:3}]},
-];
-
-// ── INIT ────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  ALL=FB_PLAYERS; TMAP=FB_TEAMS;
-
-  // Wire position pills
-  document.getElementById('pgPos').addEventListener('click',e=>{
-    const b=e.target.closest('.pill'); if(!b) return;
-    document.querySelectorAll('#pgPos .pill').forEach(p=>p.classList.remove('active'));
-    b.classList.add('active'); S.pos=b.dataset.pos; render();
-  });
-
-  // Wire min price slider
-  document.getElementById('minPriceRange').addEventListener('input',function(){
-    S.minPrice=parseFloat(this.value);
-    document.getElementById('minPriceVal').textContent=S.minPrice<=4?'Any':`£${S.minPrice.toFixed(1)}m`;
-    render();
-  });
-
-  // Wire max price slider
-  document.getElementById('priceRange').addEventListener('input',function(){
-    S.price=parseFloat(this.value);
-    document.getElementById('priceVal').textContent=S.price>=15?'No limit':`£${S.price.toFixed(1)}m`;
-    render();
-  });
-
-  // Wire search
-  document.getElementById('searchInput').addEventListener('input',e=>{
-    S.search=e.target.value; render();
-  });
-
-  // Wire column sort — click header to sort by that column
-  document.querySelectorAll('thead th[data-col]').forEach(th=>{
-    th.addEventListener('click',()=>{
-      const col=th.dataset.col;
-      if(S.sortCol===col){ S.sortDir*=-1; }
-      else{ S.sortCol=col; S.sortDir=-1; }
-      render();
+      </div>`;
     });
   });
+  body.innerHTML=html||'<div class="empty-state"><div class="empty-title">No players</div></div>';
+}
 
-  // Initial render with fallback
-  render();
+function runSuggestions(){
+  if(!SQUAD.length||!ALL.length)return;
+  const squadIds=new Set(SQUAD.map(p=>p.id));
+  const isWC=FT>=15;
+  const starters=SQUAD.filter(p=>p.position<=11);
+  const ranked=starters
+    .map(p=>({p,urgency:sellUrgency(p),cur:projectPts(p,HORIZON)}))
+    .sort((a,b)=>b.urgency-a.urgency);
+  const suggestions=[];
+  ranked.forEach(({p,urgency,cur})=>{
+    if(!isWC&&urgency<2)return;
+    const maxBudget=p.price+BANK+0.1;
+    const best=ALL
+      .filter(x=>x.pos===p.pos&&!squadIds.has(x.id)&&x.status!=='i'&&x.status!=='u'&&x.price<=maxBudget)
+      .map(x=>({x,proj:projectPts(x,HORIZON)}))
+      .sort((a,b)=>b.proj-a.proj)[0];
+    if(!best)return;
+    const gain=+(best.proj-cur).toFixed(1);
+    if(gain<=0.3&&!isWC)return;
+    suggestions.push({sell:p,buy:best.x,sellProj:cur,buyProj:best.proj,gain,urgency});
+  });
+  suggestions.sort((a,b)=>b.gain-a.gain);
+  renderSuggestions(suggestions);
+  renderSummary(suggestions);
+}
 
-  // Load live data
-  loadData().then(()=>render());
+function renderSuggestions(suggestions){
+  const body=document.getElementById('suggestionsBody');
+  const horizonText=HORIZON===1?'Next GW':HORIZON===7?'Run-in':`Next ${HORIZON} GWs`;
+  document.getElementById('horizonLabel').textContent=horizonText;
+  if(!suggestions.length){
+    body.innerHTML=`<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No transfers needed</div><div class="empty-desc">Your squad looks solid for the ${horizonText.toLowerCase()}. No upgrades clearly improve your projection.</div></div>`;
+    return;
+  }
+  const FTN=FT>=15?suggestions.length:FT;
+  const topN=FT>=15?suggestions:suggestions.slice(0,Math.max(FTN+2,4));
+  body.innerHTML=topN.map((s,i)=>{
+    const isFree=i<FTN;
+    const hitB=isFree?`<span class="hit-badge hit-free">✓ Free transfer</span>`:`<span class="hit-badge hit-cost">−4 hit</span>`;
+    const net=+(s.gain-(isFree?0:4)).toFixed(1);
+    const nc=net>=0?'gain-pos':'gain-neg';
+    const sF=s.sell.fixes?.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`).join('')||'';
+    const bF=s.buy.fixes?.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`).join('')||'';
+    return`<div class="suggestion-card">
+      <div class="suggestion-rank">Transfer ${i+1} &nbsp; ${hitB}</div>
+      <div class="swap-row">
+        <div class="swap-side">
+          <div class="player-shirt ${SHIRT[s.sell.pos]}" style="flex-shrink:0">${TMAP[s.sell.teamId]?.short??'?'}</div>
+          <div class="swap-text">
+            <div class="swap-name sell">↑ Sell: ${s.sell.name}</div>
+            <div class="swap-meta">£${s.sell.price.toFixed(1)}m · ${s.sell.ownedPct.toFixed(1)}% owned</div>
+            <div class="swap-fixes">${sF}</div>
+          </div>
+        </div>
+        <div class="swap-arrow">→</div>
+        <div class="swap-side buy">
+          <div class="player-shirt ${SHIRT[s.buy.pos]}" style="flex-shrink:0">${TMAP[s.buy.teamId]?.short??'?'}</div>
+          <div class="swap-text" style="text-align:right">
+            <div class="swap-name buy">↓ Buy: ${s.buy.name}</div>
+            <div class="swap-meta">£${s.buy.price.toFixed(1)}m · ${s.buy.ownedPct.toFixed(1)}% owned</div>
+            <div class="swap-fixes" style="justify-content:flex-end">${bF}</div>
+          </div>
+        </div>
+      </div>
+      <div class="sug-stats">
+        <div class="sug-stat"><div class="sug-val" style="color:var(--accent)">${s.sellProj.toFixed(1)}</div><div class="sug-lbl">Out proj</div></div>
+        <div class="sug-stat"><div class="sug-val gain-pos">${s.buyProj.toFixed(1)}</div><div class="sug-lbl">In proj</div></div>
+        <div class="sug-stat"><div class="sug-val ${s.gain>=0?'gain-pos':'gain-neg'}">${s.gain>=0?'+':''}${s.gain.toFixed(1)}</div><div class="sug-lbl">Pts gain</div></div>
+        <div class="sug-stat"><div class="sug-val ${nc}">${net>=0?'+':''}${net.toFixed(1)}</div><div class="sug-lbl">Net gain</div></div>
+      </div>
+      <button class="cmp-btn" data-sell="${s.sell.id}" data-buy="${s.buy.id}">Compare in detail →</button>
+    </div>`;
+  }).join('');
+  if(!FT>=15&&suggestions.length>FTN){
+    body.innerHTML+=`<div style="font-size:11px;color:var(--muted);padding:6px 4px;font-family:var(--font-m)">Transfers ${FTN+1}+ require a −4 hit. Only worth it if net gain is clearly positive.</div>`;
+  }
+}
+
+function renderSummary(suggestions){
+  const FTN=FT>=15?suggestions.length:FT;
+  const hitSwaps=suggestions.slice(FTN);
+  const totalGain=suggestions.reduce((s,x)=>s+x.gain,0);
+  const hitCost=hitSwaps.length*4;
+  const netGain=+(totalGain-hitCost).toFixed(1);
+  document.getElementById('sumGain').textContent=(totalGain>=0?'+':'')+totalGain.toFixed(1);
+  document.getElementById('sumTransfers').textContent=suggestions.length;
+  document.getElementById('sumHitCost').textContent=hitCost>0?`-${hitCost}`:'0';
+  document.getElementById('sumHitCost').style.color=hitCost>0?'var(--accent)':'var(--muted)';
+  document.getElementById('sumNetGain').textContent=(netGain>=0?'+':'')+netGain.toFixed(1);
+  document.getElementById('sumNetGain').className='sum-val '+(netGain>=0?'gain-pos':'gain-neg');
+}
+
+// ── COMPARISON PANEL ─────────────────────────────────────────
+function openComparison(sellId, buyId){
+  const sell = ALL.find(p=>p.id===sellId);
+  const buy  = ALL.find(p=>p.id===buyId);
+  if(!sell||!buy) return;
+
+  const panel   = document.getElementById('cmpPanel');
+  const overlay = document.getElementById('cmpOverlay');
+  const body    = document.getElementById('cmpBody');
+
+  body.innerHTML = buildComparisonHTML(sell, buy);
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeComparison(){
+  document.getElementById('cmpPanel').classList.remove('open');
+  document.getElementById('cmpOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function buildComparisonHTML(sell, buy){
+  const sellTeam = TMAP[sell.teamId]?.short??'?';
+  const buyTeam  = TMAP[buy.teamId]?.short??'?';
+
+  // ── PLAYER CARDS ──
+  const playerCards = `
+    <div class="cmp-players">
+      <div class="cmp-player-card sell">
+        <div class="cmp-player-label" style="color:var(--accent)">↑ Selling</div>
+        <div class="cmp-player-shirt ${SHIRT[sell.pos]}">${sellTeam}</div>
+        <div class="cmp-player-name">${sell.name}</div>
+        <div class="cmp-player-meta">${sell.pos} · ${sellTeam} · £${sell.price.toFixed(1)}m</div>
+      </div>
+      <div class="cmp-player-card buy">
+        <div class="cmp-player-label" style="color:var(--grass-l)">↓ Buying</div>
+        <div class="cmp-player-shirt ${SHIRT[buy.pos]}">${buyTeam}</div>
+        <div class="cmp-player-name">${buy.name}</div>
+        <div class="cmp-player-meta">${buy.pos} · ${buyTeam} · £${buy.price.toFixed(1)}m</div>
+      </div>
+    </div>`;
+
+  // ── HEAD TO HEAD STATS ──
+  const stats = [
+    { label:'Proj pts (next GW)', sVal: sell.epNext>0?sell.epNext.toFixed(1):'—', bVal: buy.epNext>0?buy.epNext.toFixed(1):'—',
+      sNum: sell.epNext, bNum: buy.epNext, higherWins: true },
+    { label:'Form', sVal: sell.form.toFixed(1), bVal: buy.form.toFixed(1),
+      sNum: sell.form, bNum: buy.form, higherWins: true },
+    { label:'Owned %', sVal: sell.ownedPct.toFixed(1)+'%', bVal: buy.ownedPct.toFixed(1)+'%',
+      sNum: sell.ownedPct, bNum: buy.ownedPct, higherWins: false },
+    { label:'Pts/£m', sVal: sell.totalPts>0?(sell.totalPts/sell.price).toFixed(1):'—',
+      bVal: buy.totalPts>0?(buy.totalPts/buy.price).toFixed(1):'—',
+      sNum: sell.totalPts/sell.price, bNum: buy.totalPts/buy.price, higherWins: true },
+    { label:'Mins reliability', sVal: Math.round(sell.minsRel||75)+"'", bVal: Math.round(buy.minsRel||75)+"'",
+      sNum: sell.minsRel||75, bNum: buy.minsRel||75, higherWins: true },
+    { label:`Proj (${HORIZON===1?'next GW':HORIZON===7?'run-in':'next '+HORIZON+' GWs'})`,
+      sVal: projectPts(sell,HORIZON).toFixed(1)+'pts', bVal: projectPts(buy,HORIZON).toFixed(1)+'pts',
+      sNum: projectPts(sell,HORIZON), bNum: projectPts(buy,HORIZON), higherWins: true },
+  ];
+
+  const statsHTML = `
+    <div class="cmp-section">
+      <div class="cmp-section-title">Head to Head</div>
+      ${stats.map(s=>{
+        const sellWins = s.higherWins ? s.sNum >= s.bNum : s.sNum <= s.bNum;
+        const buyWins  = s.higherWins ? s.bNum > s.sNum  : s.bNum < s.sNum;
+        return `<div class="cmp-stat-row">
+          <div class="cmp-stat-val sell ${sellWins&&s.sNum!==s.bNum?'winner':'loser'}">${s.sVal}</div>
+          <div class="cmp-stat-label">${s.label}</div>
+          <div class="cmp-stat-val buy ${buyWins?'winner':'loser'}">${s.bVal}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── FIXTURE RUN COMPARISON ──
+  const maxGws = Math.max(sell.fixes?.length||0, buy.fixes?.length||0);
+  const gwsToShow = Math.min(maxGws, 7);
+  let fixRows = '';
+  for(let i=0;i<gwsToShow;i++){
+    const sf = sell.fixes?.[i];
+    const bf = buy.fixes?.[i];
+    const gwLabel = sf?.gw || bf?.gw || (GW+i);
+    const sellPill = sf ? `<span class="fix-pill ${FIX_CLS[sf.diff]}">${sf.opp} ${sf.ha}</span>`
+                        : `<span style="font-size:9px;color:var(--muted);font-family:var(--font-m)">BGW</span>`;
+    const buyPill  = bf ? `<span class="fix-pill ${FIX_CLS[bf.diff]}">${bf.opp} ${bf.ha}</span>`
+                        : `<span style="font-size:9px;color:var(--muted);font-family:var(--font-m)">BGW</span>`;
+    fixRows += `<div class="cmp-stat-row" style="grid-template-columns:1fr 32px 1fr">
+      <div style="display:flex;justify-content:flex-start">${sellPill}</div>
+      <div class="cmp-stat-label">GW${gwLabel}</div>
+      <div style="display:flex;justify-content:flex-end">${buyPill}</div>
+    </div>`;
+  }
+  const fixHTML = `
+    <div class="cmp-section">
+      <div class="cmp-section-title">Fixture Run</div>
+      ${fixRows||'<div style="font-size:11px;color:var(--muted)">No upcoming fixtures</div>'}
+    </div>`;
+
+  // ── POINTS TRAJECTORY (last 6 GWs projected) ──
+  const gwProjs = Array.from({length:6},(_,i)=>{
+    const sf=sell.fixes?.[i], bf=buy.fixes?.[i];
+    const dm=d=>DIFF_MULT[d]??1, hm=h=>HA_MULT[h]??1;
+    const smf=Math.min((sell.minsRel||75)/90,1), bmf=Math.min((buy.minsRel||75)/90,1);
+    const sBase=i===0?sell.epNext||sell.form*0.6:(sell.form||3)*0.65;
+    const bBase=i===0?buy.epNext||buy.form*0.6:(buy.form||3)*0.65;
+    const sProj=sf?+(sBase*dm(sf.diff)*hm(sf.ha)*smf).toFixed(1):0;
+    const bProj=bf?+(bBase*dm(bf.diff)*hm(bf.ha)*bmf).toFixed(1):0;
+    return{gw:GW+i,sProj,bProj};
+  });
+  const maxProj=Math.max(...gwProjs.map(g=>Math.max(g.sProj,g.bProj)),1);
+
+  const chartHTML = `
+    <div class="cmp-section">
+      <div class="cmp-section-title">Points Projection by GW</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9px;color:var(--accent);font-family:var(--font-m);letter-spacing:1px;margin-bottom:4px">OUT: ${sell.name}</div>
+          <div class="cmp-chart">
+            ${gwProjs.map(g=>{
+              const h=Math.max((g.sProj/maxProj)*48,3);
+              const c=g.sProj>=7?'var(--grass-l)':g.sProj>=4?'var(--blue)':g.sProj>=2?'var(--gold)':'var(--muted)';
+              return`<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:${h}px;background:${c}"></div><div class="cmp-bar-lbl">${g.sProj||'—'}</div></div>`;
+            }).join('')}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--grass-l);font-family:var(--font-m);letter-spacing:1px;margin-bottom:4px">IN: ${buy.name}</div>
+          <div class="cmp-chart">
+            ${gwProjs.map(g=>{
+              const h=Math.max((g.bProj/maxProj)*48,3);
+              const c=g.bProj>=7?'var(--grass-l)':g.bProj>=4?'var(--blue)':g.bProj>=2?'var(--gold)':'var(--muted)';
+              return`<div class="cmp-bar-wrap"><div class="cmp-bar" style="height:${h}px;background:${c}"></div><div class="cmp-bar-lbl">${g.bProj||'—'}</div></div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // ── BREAK-EVEN ──
+  const priceDiff = +(buy.price - sell.price).toFixed(1);
+  const epDiff    = +(buy.epNext - sell.epNext).toFixed(1);
+  const breakEvenGws = priceDiff <= 0 ? 0
+    : epDiff <= 0 ? 99
+    : Math.ceil(priceDiff * 10 / epDiff); // rough: £0.1m = ~1pt premium needed
+  const breakEvenHTML = `
+    <div class="cmp-section">
+      <div class="cmp-section-title">Break-even Analysis</div>
+      <div class="cmp-beq">
+        <div class="cmp-beq-val">${priceDiff>0?`${breakEvenGws===99?'Never':breakEvenGws+' GW'+( breakEvenGws===1?'':'s')}`:'Instant'}</div>
+        <div class="cmp-beq-text">
+          ${priceDiff>0
+            ? `${buy.name} costs <strong>£${priceDiff.toFixed(1)}m more</strong>. At ${epDiff>0?'+'+epDiff.toFixed(1):epDiff.toFixed(1)} pts/GW advantage, the premium pays off ${breakEvenGws===99?'only if form improves significantly':('in ~'+breakEvenGws+' GW'+(breakEvenGws===1?'':'s'))}.`
+            : `${buy.name} costs <strong>£${Math.abs(priceDiff).toFixed(1)}m less</strong> — immediate budget saving with no break-even needed.`
+          }
+        </div>
+      </div>
+    </div>`;
+
+  // ── VERDICT ──
+  const gainOverHorizon = +(projectPts(buy,HORIZON) - projectPts(sell,HORIZON)).toFixed(1);
+  const rotRisk = (buy.minsRel||75) < 65;
+  const goodBuy = gainOverHorizon > 1 && !rotRisk && buy.status !== 'd';
+  const verdictHTML = `
+    <div class="cmp-section">
+      <div class="cmp-section-title">Verdict</div>
+      <div class="cmp-verdict ${goodBuy?'buy':'hold'}">
+        ${goodBuy
+          ? `<strong>Make this transfer.</strong> ${buy.name} projects <strong>+${gainOverHorizon.toFixed(1)} pts</strong> more than ${sell.name} over the ${HORIZON===1?'next GW':HORIZON===7?'run-in':'next '+HORIZON+' GWs'}${priceDiff>0?`, and the £${priceDiff.toFixed(1)}m premium breaks even in ${breakEvenGws===99?'the long run':breakEvenGws+' GW'+(breakEvenGws===1?'':'s')}`:''}. ${buy.status==='d'?'⚠ Check fitness before transferring.':''}`
+          : `<strong>Think carefully.</strong> ${gainOverHorizon>0?`${buy.name} projects +${gainOverHorizon.toFixed(1)} pts more but`:'The points gain is marginal.'} ${rotRisk?`${buy.name} has a rotation risk (${Math.round(buy.minsRel||75)} avg mins/game) — check starting status.`:'Consider whether the upgrade justifies the transfer cost.'}`
+        }
+      </div>
+    </div>`;
+
+  return playerCards + statsHTML + fixHTML + chartHTML + breakEvenHTML + verdictHTML;
+}
+
+// Wire compare buttons (delegated from suggestions body)
+document.getElementById('suggestionsBody').addEventListener('click', e=>{
+  const btn = e.target.closest('.cmp-btn');
+  if(!btn) return;
+  openComparison(+btn.dataset.sell, +btn.dataset.buy);
+});
+document.getElementById('cmpClose').addEventListener('click', closeComparison);
+document.getElementById('cmpOverlay').addEventListener('click', closeComparison);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeComparison(); });
+
+function wireSettings(){
+  document.getElementById('ftPills').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-ft]');if(!btn)return;
+    document.querySelectorAll('#ftPills .pill').forEach(p=>{p.classList.remove('active','green','gold');});
+    btn.classList.add('active');
+    btn.dataset.ft==='15'?btn.classList.add('gold'):btn.classList.add('green');
+    FT=parseInt(btn.dataset.ft,10);
+    if(SQUAD.length)runSuggestions();
+  });
+  document.getElementById('horizonPills').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-gws]');if(!btn)return;
+    document.querySelectorAll('#horizonPills .pill').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    HORIZON=parseInt(btn.dataset.gws,10);
+    if(SQUAD.length)runSuggestions();
+  });
+  document.getElementById('importBtn').addEventListener('click',loadSquad);
+  document.getElementById('rerunBtn').addEventListener('click',runSuggestions);
+  document.getElementById('teamIdInput').addEventListener('keydown',e=>{if(e.key==='Enter')loadSquad();});
+}
+
+wireSettings();
+loadBootstrap().then(()=>{
+  const saved=lsGet('piq_team_id','');
+  if(saved&&ALL.length){document.getElementById('teamIdInput').value=saved;loadSquad();}
 });
 </script>
-
-<div style="border-top:1px solid rgba(255,255,255,0.07);margin-top:48px;padding-top:32px 0 0">
-  <div style="max-width:1280px;margin:0 auto;padding:0 28px 40px">
-    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:16px">Also useful</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
-      <a href="player-scout.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">🔍</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Player Scout</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Find the best transfer in</div>
-        </div>
-      </a>
-      <a href="hit-calculator.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">🎯</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Hit Calculator</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Is a -4 hit worth taking?</div>
-        </div>
-      </a>
-      <a href="differential-finder.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">💎</span>
-        <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Differential Finder</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Low-ownership gems</div>
-        </div>
-      </a>
-    </div>
-  </div>
-</div>
-<footer style="border-top:1px solid rgba(255,255,255,0.07);padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:40px;position:relative;z-index:1;background:var(--ink-2,#161b22)">
-  <a href="index.html" style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--cream,#f0ece3);text-decoration:none">PITCH<span style="color:var(--grass,#27ae60);opacity:0.6">IQ</span></a>
-  <span style="font-size:12px;color:var(--muted,#6b7280)">
-    <a href="index.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s;font-weight:500" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">← All tools</a>
-    &nbsp;·&nbsp;
-    <a href="privacy.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">Privacy Policy</a>
-    &nbsp;·&nbsp;
-    <a href="methodology.html" style="color:var(--muted,#6b7280);text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='#f0ece3'" onmouseout="this.style.color='#6b7280'">How it works</a>
-    &nbsp;·&nbsp;
-    © 2026 PitchIQ · Not affiliated with the Premier League or FPL
-  </span>
-</footer>
 </body>
 </html>

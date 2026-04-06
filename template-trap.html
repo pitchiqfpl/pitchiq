@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12,20 +11,20 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pitchiqfpl.com/template-trap.html">
-  <meta property="og:title" content="Beat the Template — FPL Squad Uniqueness Scorer | PitchIQ">
+  <meta property="og:title" content="FPL Template Trap — Squad Uniqueness Scorer | PitchIQ">
   <meta property="og:description" content="Identify overvalued template FPL players dragging down your rank. See who the elite managers own and where you can diverge to gain ground in your mini-league.">
   <meta property="og:site_name" content="PitchIQ">
   <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Beat the Template — FPL Squad Uniqueness Scorer | PitchIQ">
+  <meta name="twitter:title" content="FPL Template Trap — Squad Uniqueness Scorer | PitchIQ">
   <meta name="twitter:description" content="Identify overvalued template FPL players dragging down your rank. See who the elite managers own and where you can diverge to gain ground in your mini-league.">
   <meta name="twitter:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="shortcut icon" href="favicon.svg">
   <meta name="theme-color" content="#27ae60">
-<title>PitchIQ — Beat the Template</title>
+<title>PitchIQ — Template Trap</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -168,14 +167,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -197,7 +199,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
   <div class="page-header">
     <div>
       <a href="index.html" class="logo" style="text-decoration:none">PITCH<span>IQ</span></a>
-      <div class="header-sub">BEAT THE TEMPLATE</div>
+      <div class="header-sub">TEMPLATE TRAP</div>
     </div>
     <div id="dataBadge" class="data-badge loading"><div class="data-dot"></div><span id="dataBadgeText">Loading…</span></div>
   </div>
@@ -277,7 +279,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const SHIRT_CLS={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
 const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
-let ALL=[],TMAP={},GW=1;
+let ALL=[],TMAP={},GW=1,
 
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
@@ -286,7 +288,7 @@ async function loadData(){
   setBadge('loading','Fetching live data…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,4);
     ALL=buildPlayers(bs.elements,fm);
@@ -545,7 +547,7 @@ function renderResults(squad){
     const tagText=isTmpl?'Widely owned':isUnique?'Differential':'Mid-owned';
     const fixHtml=p.fixes.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp}</span>`).join('');
     return`<div class="squad-player-row ${rowCls}">
-      <div class="spr-shirt ${SHIRT_CLS[p.pos]}">${p.name.charAt(0)}</div>
+      <div class="spr-shirt ${SHIRT_CLS[p.pos]}">${TMAP[p.teamId]?.short??'?'}</div>
       <div style="flex:1;min-width:0">
         <div class="spr-name">${p.name}</div>
         <div class="spr-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m · Form: ${p.form.toFixed(1)}</div>
@@ -627,12 +629,12 @@ function renderResults(squad){
 }
 
 // Demo squad fallback if API unavailable
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Burnley',short:'BRN'},18:{name:'Spurs',short:'TOT'},19:{name:'Leeds',short:'LEE'},20:{name:'Sunderland',short:'SUN'}};
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
 const FB_PLAYERS=[
   {id:1,name:'Salah',fullName:'Mohamed Salah',teamId:12,pos:'MID',price:13.2,form:11.2,xg90:0.82,epNext:9.8,ownedPct:73.2,transfersIn:120000,totalPts:226,status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3}]},
-  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,epNext:8.2,ownedPct:54.1,transfersIn:0,totalPts:198,status:'a',fixes:[{gw:34,opp:'SUN',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3}]},
-  {id:3,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'FWD',price:8.3,form:10.8,xg90:0.71,epNext:7.6,ownedPct:41.2,transfersIn:0,totalPts:184,status:'a',fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3}]},
-  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,epNext:7.1,ownedPct:49.8,transfersIn:0,totalPts:177,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1}]},
+  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,epNext:8.2,ownedPct:54.1,transfersIn:0,totalPts:198,status:'a',fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3}]},
+  {id:3,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'FWD',price:8.3,form:10.8,xg90:0.71,epNext:7.6,ownedPct:41.2,transfersIn:0,totalPts:184,status:'a',fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3}]},
+  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,epNext:7.1,ownedPct:49.8,transfersIn:0,totalPts:177,status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1}]},
   {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,epNext:6.4,ownedPct:37.4,transfersIn:0,totalPts:162,status:'a',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3}]},
   {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,epNext:5.8,ownedPct:22.1,transfersIn:0,totalPts:141,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4}]},
   {id:7,name:'Watkins',fullName:'Ollie Watkins',teamId:2,pos:'FWD',price:9.5,form:5.9,xg90:0.52,epNext:5.4,ownedPct:31.6,transfersIn:0,totalPts:138,status:'a',fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2}]},
@@ -642,7 +644,7 @@ const FB_PLAYERS=[
   {id:11,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,epNext:5.2,ownedPct:26.1,transfersIn:0,totalPts:97,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4}]},
   {id:12,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,epNext:4.1,ownedPct:18.4,transfersIn:0,totalPts:80,status:'d',fixes:[{gw:34,opp:'FUL',ha:'A',diff:2}]},
   {id:13,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,epNext:4.8,ownedPct:21.8,transfersIn:0,totalPts:74,status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4}]},
-  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,epNext:4.8,ownedPct:12.4,transfersIn:0,totalPts:82,status:'a',fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2}]},
+  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,epNext:4.8,ownedPct:12.4,transfersIn:0,totalPts:82,status:'a',fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2}]},
   {id:15,name:'Wood',fullName:'Chris Wood',teamId:16,pos:'FWD',price:6.5,form:6.2,xg90:0.44,epNext:5.6,ownedPct:7.2,transfersIn:0,totalPts:109,status:'a',fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2}]},
 ];
 // Demo squad — realistic mix of template and differential players

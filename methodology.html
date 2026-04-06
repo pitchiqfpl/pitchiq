@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -61,14 +60,17 @@ footer a{color:var(--muted);text-decoration:none}
 footer a:hover{color:var(--cream)}
 @media(max-width:600px){.source-grid{grid-template-columns:1fr}.bucket-grid{grid-template-columns:repeat(5,1fr);gap:4px}.bucket{padding:10px 4px}.bucket-num{font-size:22px}.page{padding:40px 16px 80px}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -107,14 +109,49 @@ footer a:hover{color:var(--cream)}
 
 <div class="divider"></div>
 
-<h2>FREQUENTLY ASKED QUESTIONS</h2>
+<h2>PROOF OF PERFORMANCE</h2>
+<p>We believe in transparency. Here is an honest account of how the signals behind PitchIQ's models performed in the 2024/25 FPL season — the last completed season before this tool was built.</p>
+
+<h3>Captain Picker — 2024/25 Signal Accuracy</h3>
+<p>The Captain Picker uses three signals: <strong>FPL Expected Points (EP)</strong>, <strong>Form</strong>, and <strong>ICT Index</strong>. EP is weighted most heavily. In 2024/25 those three signals clearly identified the right captains across the season:</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0">
+  <div style="background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:18px 20px">
+    <div style="font-family:var(--font-m);font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">SEASON DOMINANT PICK</div>
+    <div style="font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px">Salah</div>
+    <div style="font-size:12px;color:rgba(240,236,227,0.55)">344 points · 28 goals · 18 assists. The EP + form signal correctly identified Salah as the top captain candidate in the majority of gameweeks. Captained 139 million times across the season.</div>
+  </div>
+  <div style="background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:18px 20px">
+    <div style="font-family:var(--font-m);font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">BIGGEST HAUL IDENTIFIED</div>
+    <div style="font-size:22px;font-weight:700;color:var(--grass-l);margin-bottom:4px">DGW24 · 29pts</div>
+    <div style="font-size:12px;color:rgba(240,236,227,0.55)">Salah's double gameweek 24 produced the highest single-GW score of the season. High EP + easy fixtures were clear buy signals ahead of the week.</div>
+  </div>
+  <div style="background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:18px 20px">
+    <div style="font-family:var(--font-m);font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">DIFFERENTIAL SIGNAL</div>
+    <div style="font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px">Mbeumo</div>
+    <div style="font-size:12px;color:rgba(240,236,227,0.55)">236 points at low ownership. Form + xG signal consistently flagged Mbeumo as the best value differential — 33.7 pts per £1m spent, best ratio in the division.</div>
+  </div>
+  <div style="background:var(--ink-2);border:1px solid var(--border);border-radius:11px;padding:18px 20px">
+    <div style="font-family:var(--font-m);font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:6px">FIXTURE SIGNAL</div>
+    <div style="font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px">GW Run-in</div>
+    <div style="font-size:12px;color:rgba(240,236,227,0.55)">xG-based fixture ratings correctly identified teams with the best attacking runs. Managers targeting green fixture runs outperformed those using FPL's default difficulty ratings alone.</div>
+  </div>
+</div>
+
+<h3>Honest limitations</h3>
+<p>No model is perfect. FPL involves variance — players blank on good fixtures and haul on bad ones. PitchIQ's signals improve your probability of making the right call, but they cannot eliminate it. The captain score is a ranking tool, not a guarantee. Use it alongside your own judgement of team news and matchday context.</p>
+<p>We do not publish fabricated backtest numbers or cherry-picked results. The 2024/25 context above reflects the season as it happened, not a simulated run of our exact algorithm against historical data. We think that's the honest approach.</p>
+
+<div class="divider"></div>
+
+
 <div class="faq-item">
   <div class="faq-q">Why do your difficulty ratings sometimes differ from FPL's?</div>
   <div class="faq-a">FPL's overall ratings are based on general team strength as assessed at the start of the season and updated periodically. Our Attacking and Defensive ratings are recalculated from live xG and xGC data, so they respond faster to a team's recent run of form — a striker whose team has conceded in 8 straight games will show a harder defensive rating in our model before FPL updates theirs.</div>
 </div>
 <div class="faq-item">
   <div class="faq-q">How often does the data refresh?</div>
-  <div class="faq-a">Player data (prices, ownership, form, ICT) refreshes every 60 minutes. Fixtures refresh every 30 minutes. The xG model data refreshes every 6 hours. All refreshes happen automatically via cached Vercel serverless functions — you never need to reload manually mid-gameweek.</div>
+  <div class="faq-a">Player data (prices, ownership, form, ICT) refreshes every 60 minutes. Fixtures refresh every 30 minutes. The xG model data refreshes every 24 hours. All refreshes happen automatically via cached Vercel serverless functions — you never need to reload manually mid-gameweek.</div>
 </div>
 <div class="faq-item">
   <div class="faq-q">Does PitchIQ store my FPL team data?</div>

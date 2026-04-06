@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- PitchIQ build: 2026-03-22 16:11:15 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -112,7 +111,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 @media(hover:hover){.diff-card:hover{border-color:rgba(39,174,96,0.25);transform:translateY(-1px)}}
 .diff-card.in-squad{border-color:rgba(240,180,41,0.2);background:linear-gradient(135deg,rgba(240,180,41,0.04) 0%,var(--ink-2) 60%)}
 .diff-card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
-.d-shirt{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.d-shirt{width:32px;height:32px;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);line-height:1.2;text-align:center}
 .shirt-gk{background:#f59e0b;color:#1a1a1a}.shirt-def{background:#3b82f6;color:white}.shirt-mid{background:#10b981;color:white}.shirt-fwd{background:#ef4444;color:white}
 .d-name{font-weight:600;font-size:13px;color:var(--cream);line-height:1.2}
 .d-meta{font-size:10px;color:var(--muted);margin-top:2px}
@@ -193,14 +192,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-MGL92YFHE0 with your Measurement ID from analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-MGL92YFHE0');
-  </script>
+    gtag('config', 'G-XXXXXXXXXX');
+  </script> -->
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
 </head>
 <body>
 <script src="nav.js"></script>
@@ -324,7 +326,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...( bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);
@@ -568,7 +570,7 @@ function cardHtml(p){
 
   return`<div class="diff-card${inSquad?' in-squad':''}" data-id="${p.id}">
     <div class="diff-card-top">
-      <div class="d-shirt ${SHIRT[p.pos]}">${p.name.charAt(0)}</div>
+      <div class="d-shirt ${SHIRT[p.pos]}">${TMAP[p.teamId]?.short_name??'?'}</div>
       <div style="flex:1;min-width:0">
         <div class="d-name">${p.name}</div>
         <div class="d-meta">${p.pos} · ${team.short} · £${p.price.toFixed(1)}m</div>
@@ -672,21 +674,21 @@ function setSquadTag(state,text){
 }
 
 // FALLBACK DATA
-const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Burnley',short:'BRN'},18:{name:'Spurs',short:'TOT'},19:{name:'Leeds',short:'LEE'},20:{name:'Sunderland',short:'SUN'}};
+const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Leeds United',short:'LDS'},11:{name:'Liverpool',short:'LIV'},12:{name:'Man City',short:'MCI'},13:{name:'Man United',short:'MUN'},14:{name:'Newcastle',short:'NEW'},15:{name:"Nott'm Forest",short:'NFO'},16:{name:'Sunderland',short:'SUN'},17:{name:'West Ham',short:'WHU'},18:{name:'Spurs',short:'TOT'},19:{name:'Wolves',short:'WOL'},20:{name:'Burnley',short:'BRN'}};
 const FB_PLAYERS=[
   {id:8, name:'Neto',      teamId:6, pos:'MID',price:6.8,form:7.8,xg90:0.55,epNext:5.2,ownedPct:6.4, priceChg:1, netIn:62000, status:'a',fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2},{gw:38,opp:'MCI',ha:'A',diff:4}]},
   {id:24,name:'Wood',      teamId:16,pos:'FWD',price:6.5,form:6.2,xg90:0.44,epNext:5.6,ownedPct:7.2, priceChg:1, netIn:22000, status:'a',fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3},{gw:38,opp:'MUN',ha:'H',diff:3}]},
-  {id:25,name:'Wissa',     teamId:4, pos:'FWD',price:6.0,form:5.4,xg90:0.41,epNext:4.9,ownedPct:8.8, priceChg:0, netIn:11000, status:'a',fixes:[{gw:34,opp:'WHU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
-  {id:10,name:'Diallo',    teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,epNext:3.9,ownedPct:3.8, priceChg:0, netIn:28000, status:'a',fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'WHU',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'BRE',ha:'H',diff:2},{gw:38,opp:'NFO',ha:'A',diff:2}]},
+  {id:25,name:'Wissa',     teamId:4, pos:'FWD',price:6.0,form:5.4,xg90:0.41,epNext:4.9,ownedPct:8.8, priceChg:0, netIn:11000, status:'a',fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
+  {id:10,name:'Diallo',    teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,epNext:3.9,ownedPct:3.8, priceChg:0, netIn:28000, status:'a',fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'BRN',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'BRE',ha:'H',diff:2},{gw:38,opp:'NFO',ha:'A',diff:2}]},
   {id:26,name:'Semenyo',   teamId:3, pos:'FWD',price:5.5,form:6.1,xg90:0.48,epNext:5.0,ownedPct:9.2, priceChg:1, netIn:35000, status:'a',fixes:[{gw:34,opp:'LIV',ha:'H',diff:3},{gw:35,opp:'AVL',ha:'A',diff:3},{gw:36,opp:'WHU',ha:'H',diff:2},{gw:37,opp:'TOT',ha:'A',diff:3},{gw:38,opp:'CRY',ha:'H',diff:2}]},
-  {id:27,name:'Doucouré',  teamId:8, pos:'MID',price:5.2,form:5.2,xg90:0.32,epNext:4.6,ownedPct:5.1, priceChg:0, netIn:18000, status:'a',fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'NEW',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'BRE',ha:'H',diff:2}]},
-  {id:28,name:'Mykolenko', teamId:8, pos:'DEF',price:4.5,form:4.8,xg90:0.15,epNext:4.2,ownedPct:4.2, priceChg:0, netIn:9000,  status:'a',fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'NEW',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'BRE',ha:'H',diff:2}]},
+  {id:27,name:'Doucouré',  teamId:8, pos:'MID',price:5.2,form:5.2,xg90:0.32,epNext:4.6,ownedPct:5.1, priceChg:0, netIn:18000, status:'a',fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'NEW',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1},{gw:38,opp:'BRE',ha:'H',diff:2}]},
+  {id:28,name:'Mykolenko', teamId:8, pos:'DEF',price:4.5,form:4.8,xg90:0.15,epNext:4.2,ownedPct:4.2, priceChg:0, netIn:9000,  status:'a',fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'NEW',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1},{gw:38,opp:'BRE',ha:'H',diff:2}]},
   {id:12,name:'Trent A-A', teamId:12,pos:'DEF',price:7.2,form:7.1,xg90:0.42,epNext:6.2,ownedPct:12.4,priceChg:1, netIn:55000, status:'a',fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2},{gw:38,opp:'ARS',ha:'A',diff:3}]},
-  {id:29,name:'Timber',    teamId:1, pos:'DEF',price:5.2,form:5.6,xg90:0.18,epNext:4.8,ownedPct:8.1, priceChg:0, netIn:14000, status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
-  {id:13,name:'Raya',      teamId:1, pos:'GK', price:5.5,form:5.8,xg90:0,    epNext:5.2,ownedPct:4.9, priceChg:0, netIn:12000, status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'WHU',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
-  {id:30,name:'Flekken',   teamId:4, pos:'GK', price:4.5,form:5.4,xg90:0,    epNext:4.8,ownedPct:6.2, priceChg:0, netIn:8000,  status:'a',fixes:[{gw:34,opp:'WHU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
+  {id:29,name:'Timber',    teamId:1, pos:'DEF',price:5.2,form:5.6,xg90:0.18,epNext:4.8,ownedPct:8.1, priceChg:0, netIn:14000, status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
+  {id:13,name:'Raya',      teamId:1, pos:'GK', price:5.5,form:5.8,xg90:0,    epNext:5.2,ownedPct:4.9, priceChg:0, netIn:12000, status:'a',fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1},{gw:38,opp:'EVE',ha:'H',diff:2}]},
+  {id:30,name:'Flekken',   teamId:4, pos:'GK', price:4.5,form:5.4,xg90:0,    epNext:4.8,ownedPct:6.2, priceChg:0, netIn:8000,  status:'a',fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
   {id:21,name:'Andreas',   teamId:9, pos:'MID',price:6.2,form:5.8,xg90:0.35,epNext:5.1,ownedPct:11.4,priceChg:0, netIn:9000,  status:'a',fixes:[{gw:34,opp:'TOT',ha:'H',diff:3},{gw:35,opp:'CRY',ha:'H',diff:2},{gw:36,opp:'WOL',ha:'A',diff:2},{gw:37,opp:'SUN',ha:'H',diff:1},{gw:38,opp:'BHA',ha:'A',diff:3}]},
-  {id:31,name:'Mbeumo',    teamId:4, pos:'FWD',price:8.3,form:10.8,xg90:0.71,epNext:7.6,ownedPct:14.1,priceChg:1, netIn:82000, status:'a',fixes:[{gw:34,opp:'WHU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
+  {id:31,name:'Mbeumo',    teamId:4, pos:'FWD',price:8.3,form:10.8,xg90:0.71,epNext:7.6,ownedPct:14.1,priceChg:1, netIn:82000, status:'a',fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2},{gw:38,opp:'WOL',ha:'H',diff:2}]},
 ];
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -745,11 +747,11 @@ document.addEventListener('DOMContentLoaded',()=>{
           <div style="font-size:11px;color:#6b7280;line-height:1.4">Pick your armband with data</div>
         </div>
       </a>
-      <a href="player-scout.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
-        <span style="font-size:20px;flex-shrink:0">🔍</span>
+      <a href="template-trap.html" style="display:flex;align-items:flex-start;gap:12px;padding:16px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;text-decoration:none;transition:border-color 0.2s,background 0.2s" onmouseover="this.style.borderColor='rgba(39,174,96,0.35)';this.style.background='rgba(39,174,96,0.04)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.07)';this.style.background='rgba(255,255,255,0.03)'">
+        <span style="font-size:20px;flex-shrink:0">🧮</span>
         <div>
-          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Player Scout</div>
-          <div style="font-size:11px;color:#6b7280;line-height:1.4">Find the best transfer in</div>
+          <div style="font-size:13px;font-weight:600;color:#f0ece3;margin-bottom:3px">Template Trap</div>
+          <div style="font-size:11px;color:#6b7280;line-height:1.4">Beat the 50% squad</div>
         </div>
       </a>
     </div>

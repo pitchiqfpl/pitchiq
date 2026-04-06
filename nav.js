@@ -11,7 +11,7 @@
     { href: 'captain-picker.html',       label: 'Captain Picker',    icon: '⚡', group: 'Picks & Transfers' },
     { href: 'player-scout.html',         label: 'Player Scout',      icon: '🔍', group: 'Picks & Transfers' },
     { href: 'differential-finder.html',  label: 'Differentials',     icon: '💎', group: 'Picks & Transfers' },
-    { href: 'value-tracker.html',        label: 'Value Tracker',     icon: '💰', group: 'Picks & Transfers' },
+    { href: 'value-tracker.html',        label: 'Transfer Planner',  icon: '💰', group: 'Picks & Transfers' },
     { href: 'hit-calculator.html',       label: 'Hit Calculator',    icon: '🎯', group: 'Picks & Transfers' },
     { href: 'gw-live.html',              label: 'GW Live',           icon: '🔴', group: 'My Team' },
     { href: 'my-team.html',              label: 'My Team',           icon: '👕', group: 'My Team' },
@@ -88,7 +88,16 @@
     /* ── HAMBURGER (mobile) ── */
     .piq-hamburger {
       display:none; background:none; border:none;
-      color:rgba(240,236,227,0.6); font-size:20px; cursor:pointer; padding:4px;
+      color:rgba(240,236,227,0.7); cursor:pointer; padding:6px;
+      flex-direction:column; gap:5px; align-items:center; justify-content:center;
+      width:36px; height:36px; border-radius:8px;
+      transition:background 0.15s;
+    }
+    .piq-hamburger:hover { background:rgba(255,255,255,0.07); }
+    .piq-hamburger span {
+      display:block; width:18px; height:2px;
+      background:currentColor; border-radius:2px;
+      transition:transform 0.2s, opacity 0.2s;
     }
 
     /* ── MOBILE DRAWER ── */
@@ -197,8 +206,8 @@
       #pitchiq-nav { padding:0 14px; }
       .piq-nav-links { display:none; }
       .piq-home-btn { display:flex; }
-      .piq-hamburger { display:block; }
-      .piq-tools-btn { padding:5px 10px; font-size:11px; }
+      .piq-hamburger { display:flex; }
+      .piq-tools-btn { display:none; }
       #piq-tools-panel { width:100%; right:-100%; }
     }
   `;
@@ -269,7 +278,9 @@
       <button class="piq-tools-btn" id="piqToolsBtn" aria-label="All tools">
         ⚡ All Tools
       </button>
-      <button class="piq-hamburger" id="piqHamburger" aria-label="Menu">☰</button>
+      <button class="piq-hamburger" id="piqHamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   `;
 
@@ -315,8 +326,11 @@
     panel.classList.add('open');
     overlay.classList.add('open');
     toolsBtn.classList.add('open');
-    toolsBtn.textContent = '✕ Close';
+    toolsBtn.innerHTML = '✕ Close';
     document.body.style.overflow = 'hidden';
+    // Close mobile drawer if open
+    drawer.classList.remove('open');
+    closeDrawer();
   }
   function closePanel() {
     panel.classList.remove('open');
@@ -324,31 +338,50 @@
     toolsBtn.classList.remove('open');
     toolsBtn.innerHTML = '⚡ All Tools';
     document.body.style.overflow = '';
+  }
+  function openDrawer() {
+    drawer.classList.add('open');
+    // Animate to X
+    const spans = hamburger.querySelectorAll('span');
+    if (spans.length === 3) {
+      spans[0].style.transform = 'translateY(7px) rotate(45deg)';
+      spans[1].style.opacity = '0';
+      spans[2].style.transform = 'translateY(-7px) rotate(-45deg)';
+    }
+    document.body.style.overflow = 'hidden';
+    closePanel();
+  }
+  function closeDrawer() {
     drawer.classList.remove('open');
+    // Reset hamburger
+    const spans = hamburger.querySelectorAll('span');
+    if (spans.length === 3) {
+      spans[0].style.transform = '';
+      spans[1].style.opacity = '';
+      spans[2].style.transform = '';
+    }
+    document.body.style.overflow = '';
   }
 
   toolsBtn.addEventListener('click', () => {
     if (panel.classList.contains('open')) { closePanel(); }
-    else { closePanel(); openPanel(); }
+    else { openPanel(); }
   });
   panelClose.addEventListener('click', closePanel);
-  overlay.addEventListener('click', closePanel);
+  overlay.addEventListener('click', () => { closePanel(); closeDrawer(); });
 
   hamburger.addEventListener('click', () => {
-    const isOpen = drawer.classList.toggle('open');
-    hamburger.textContent = isOpen ? '✕' : '☰';
-    if (isOpen) closePanel();
+    if (drawer.classList.contains('open')) { closeDrawer(); }
+    else { openDrawer(); }
   });
 
-  // Close panel on Escape
+  // Close everything on Escape
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closePanel(); hamburger.textContent = '☰'; drawer.classList.remove('open'); }
+    if (e.key === 'Escape') { closePanel(); closeDrawer(); }
   });
 
-  // Close drawer when a link clicked
-  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    drawer.classList.remove('open'); hamburger.textContent = '☰';
-  }));
+  // Close drawer when a link is clicked
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeDrawer));
   panel.querySelectorAll('a').forEach(a => a.addEventListener('click', closePanel));
 
 })();

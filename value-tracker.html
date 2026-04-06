@@ -304,7 +304,7 @@ const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const FIX_CLS={1:'d1',2:'d2',3:'d3',4:'d4',5:'d5'};
 
 function setBadge(t,x){const b=document.getElementById('dataBadge');b.className='data-badge '+t;document.getElementById('dataBadgeText').textContent=x;}
-function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function lsGet(k,d){try{let v=localStorage.getItem(k);if(v===null)return d;if(v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return d;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
 
@@ -425,7 +425,9 @@ async function loadSquad(){
   if(!id||isNaN(id)||id<1){st.className='import-status err';st.textContent='Please enter a valid Team ID';return;}
   btn.disabled=true;st.className='import-status';st.textContent='Loading your squad…';
   try{
-    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW}`);
+    let data,_gwU=GW||1;
+    try{data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}
+    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}else throw e;}
     if(!data?.picks?.length) throw Object.assign(new Error('No picks'),{status:404});
     BANK=(data.entry_history?.bank||0)/10;
     SQUAD=data.picks.map(pick=>{

@@ -192,14 +192,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
+  
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
@@ -326,7 +319,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt&&cur.finished)return nxt.id;return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);
@@ -652,7 +645,9 @@ async function loadSquad(){
   if(isNaN(id)||id<1||id>999999999){setSquadTag('error','⚠ Enter a valid Team ID');return;}
   btn.disabled=true;setSquadTag('loading','Loading…');
   try{
-    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    let data,_gwU=GW||1;
+    try{data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}
+    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}else throw e;}
     if(!data||!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
     const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
     if(!ids.length)throw new Error('No valid player IDs');

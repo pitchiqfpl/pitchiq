@@ -259,14 +259,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
+  
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
@@ -486,16 +479,26 @@ async function loadSquad(){
   if(isNaN(id)||id<1||id>999999999){st.className='import-status err';st.textContent='⚠ Enter a valid Team ID';return;}
   btn.disabled=true;st.className='import-status loading';st.textContent='Loading…';
   try{
-    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    // Try current GW first — if 404 (GW not started yet), fall back to previous GW
+    let data, gwUsed=GW||1;
+    try{
+      data=await fetchJ(`api/fpl-picks?team=${id}&gw=${gwUsed}`);
+    }catch(e){
+      if(e.status===404&&gwUsed>1){
+        gwUsed=gwUsed-1;
+        data=await fetchJ(`api/fpl-picks?team=${id}&gw=${gwUsed}`);
+      } else throw e;
+    }
     if(!data||!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
     const ids=data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
     if(!ids.length)throw new Error('No valid player IDs');
     PICKS=data.picks;
     SQUAD_IDS=new Set(PICKS.map(p=>p.element));
     lsS('teamId',String(id));lsS('picks',PICKS);
-    st.className='import-status ok';st.textContent=`✓ ${PICKS.length} players loaded`;
-    renderLiveContent(); // show squad immediately with whatever live data we have
-    fetchLive();         // then fetch live data and re-render when it resolves
+    st.className='import-status ok';
+    st.textContent=`✓ ${PICKS.length} players loaded${gwUsed<GW?' (GW'+gwUsed+' squad — GW'+GW+' not yet submitted)':''}`;
+    renderLiveContent();
+    fetchLive();
   }catch(err){
     st.className='import-status err';
     if(err.status===404)      st.textContent='⚠ Team not found — check your ID';

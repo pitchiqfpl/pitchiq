@@ -267,14 +267,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
+  
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
@@ -493,7 +486,7 @@ async function loadData(){
   setBadge('loading','Fetching fixture data…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt&&cur.finished)return nxt.id;return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     EVENTS=bs.events??[];
     ALL_FIXTURES=Array.isArray(fixes)?fixes:[];
@@ -551,7 +544,9 @@ async function loadSquad(){
   setSquadTag('loading','Loading squad…');
 
   try{
-    const data=await fetchJ(`api/fpl-picks?team=${id}&gw=${GW||1}`);
+    let data,_gwU=GW||1;
+    try{data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}
+    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`);}else throw e;}
 
     // Validate response shape
     if(!data||typeof data!=='object'){throw new Error('Unexpected response format');}

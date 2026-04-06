@@ -357,14 +357,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
+  
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
@@ -681,9 +674,9 @@ async function fetchJ(url) {
 async function loadData() {
   setBadge('loading', 'Fetching live FPL data…');
   try {
-    const bs = await fetchJ('api/fpl-bootstrap');
+    const [bs, allFix] = await Promise.all([fetchJ('api/fpl-bootstrap'), fetchJ('api/fpl-fixtures').catch(()=>[])]);
     if (!Array.isArray(bs.teams) || !Array.isArray(bs.elements)) throw new Error('Bad bootstrap');
-    CURRENT_GW   = resolveGw(bs);
+    CURRENT_GW   = resolveGw(bs, allFix);
     SELECTED_GW  = CURRENT_GW;
     MAX_GW       = bs.events ? Math.max(...bs.events.map(e=>e.id)) : 38;
     TEAMS_MAP    = buildTeamsMap(bs.teams);
@@ -868,7 +861,9 @@ async function loadSquad(teamId) {
   el.style.display='flex'; el.className='squad-status loading'; el.textContent='Loading squad…';
 
   try {
-    const data = await fetchJ(`api/fpl-picks?team=${id}&gw=${CURRENT_GW||1}`);
+    let data, _gwU=CURRENT_GW||1;
+    try{ data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`); }
+    catch(e){ if(e.status===404&&_gwU>1){ _gwU--; data=await fetchJ(`api/fpl-picks?team=${id}&gw=${_gwU}`); } else throw e; }
     if (!data || !Array.isArray(data.picks)) throw new Error('Unexpected response format');
     if (!data.picks.length) throw new Error('Squad is empty — check your Team ID is correct');
     const ids = data.picks.map(p=>p.element).filter(n=>typeof n==='number'&&n>0);
@@ -893,8 +888,12 @@ async function loadSquad(teamId) {
   }
 }
 
-function resolveGw(bs) {
-  return (()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+function resolveGw(bs, fixes) {
+  const cur=bs.events?.find(e=>e.is_current);
+  const nxt=bs.events?.find(e=>e.is_next);
+  const prv=bs.events?.find(e=>e.is_previous);
+  if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}
+  return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
 }
 
 function resolveDeadline(bs) {

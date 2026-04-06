@@ -36,7 +36,8 @@ export default async function handler(req, res) {
     );
 
     if (response.status === 404) {
-      return res.status(404).json({ error: `GW${gw} results not available yet` });
+      // Results not available yet (between GWs or GW not finished) — return empty gracefully
+      return res.status(200).json({ results: [], total: 0 });
     }
     if (!response.ok) {
       return res.status(502).json({ error: `FPL API returned ${response.status}` });

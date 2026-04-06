@@ -167,14 +167,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 @media(max-width:760px){body.ads-enabled{padding-bottom:50px}}
 @media(max-width:760px){.ad-slot-leaderboard,.ad-slot-content{display:none!important}}
 </style>
-  <!-- Google Analytics — replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com -->
-  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script> -->
+  
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-MGL92YFHE0"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-MGL92YFHE0');</script>
@@ -279,7 +272,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const SHIRT_CLS={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
 const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
-let ALL=[],TMAP={},GW=1,
+let ALL=[],TMAP={},GW=1;
 
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
@@ -288,7 +281,7 @@ async function loadData(){
   setBadge('loading','Fetching live data…');
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt&&cur.finished)return nxt.id;return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,4);
     ALL=buildPlayers(bs.elements,fm);
@@ -410,7 +403,9 @@ async function analyse(){
   let picks=[];
   let squadLoadedSuccessfully=false;
   try{
-    const data=await fetchJ(`api/fpl-picks?team=${teamId}&gw=${GW}`);
+    let data,_gwU=GW||1;
+    try{data=await fetchJ(`api/fpl-picks?team=${teamId}&gw=${_gwU}`);}
+    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${teamId}&gw=${_gwU}`);}else throw e;}
     if(!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
     picks=data.picks;
     st.className='squad-status loaded';st.textContent=`✓ Squad loaded — ${picks.length} players`;

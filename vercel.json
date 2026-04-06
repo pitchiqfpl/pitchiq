@@ -1,15 +1,7 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/api/fpl-bootstrap",      "dest": "/api/fpl-bootstrap.js" },
-    { "src": "/api/fpl-fixtures",       "dest": "/api/fpl-fixtures.js" },
-    { "src": "/api/fpl-live",           "dest": "/api/fpl-live.js" },
-    { "src": "/api/fpl-picks",          "dest": "/api/fpl-picks.js" },
-    { "src": "/api/fpl-player-summary", "dest": "/api/fpl-player-summary.js" },
-    { "src": "/api/fpl-results",        "dest": "/api/fpl-results.js" },
-    { "src": "/api/fpl-transfers",      "dest": "/api/fpl-transfers.js" },
-    { "src": "/api/xg-data",            "dest": "/api/xg-data.js" },
-    { "src": "/(.*)\\.html",            "dest": "/$1.html" },
-    { "src": "/",                       "dest": "/index.html" }
-  ]
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "cleanUrls": false,
+  "trailingSlash": false
 }

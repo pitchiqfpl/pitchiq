@@ -1,13 +1,21 @@
 {
-  "rewrites": [
-    { "source": "/api/fpl-bootstrap",      "destination": "/fpl-bootstrap.js" },
-    { "source": "/api/fpl-fixtures",        "destination": "/fpl-fixtures.js" },
-    { "source": "/api/fpl-picks",           "destination": "/fpl-picks.js" },
-    { "source": "/api/fpl-live",            "destination": "/fpl-live.js" },
-    { "source": "/api/fpl-player-summary",  "destination": "/fpl-player-summary.js" },
-    { "source": "/api/fpl-transfers",       "destination": "/fpl-transfers.js" },
-    { "source": "/api/fpl-results",         "destination": "/fpl-results.js" },
-    { "source": "/api/xg-data",             "destination": "/xg-data.js" },
-    { "source": "/api/fpl-data",            "destination": "/fpl-data.js" }
+  "version": 2,
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    { "src": "/api/fpl-bootstrap",      "dest": "/api/fpl-bootstrap.js" },
+    { "src": "/api/fpl-fixtures",       "dest": "/api/fpl-fixtures.js" },
+    { "src": "/api/fpl-live",           "dest": "/api/fpl-live.js" },
+    { "src": "/api/fpl-picks",          "dest": "/api/fpl-picks.js" },
+    { "src": "/api/fpl-player-summary", "dest": "/api/fpl-player-summary.js" },
+    { "src": "/api/fpl-results",        "dest": "/api/fpl-results.js" },
+    { "src": "/api/fpl-transfers",      "dest": "/api/fpl-transfers.js" },
+    { "src": "/api/xg-data",            "dest": "/api/xg-data.js" },
+    { "src": "/(.*)\\.html",            "dest": "/$1.html" },
+    { "src": "/",                       "dest": "/index.html" }
   ]
 }

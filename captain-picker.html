@@ -647,8 +647,10 @@ const S = {
 ══════════════════════════════════════════════════ */
 function ls(key, fallback) {
   try {
-    const v = localStorage.getItem(LS_KEY + key);
+    let v = localStorage.getItem(LS_KEY + key);
     if (v === null) return fallback;
+    // Strip JSON-stringified quotes if stored by another tool
+    if (typeof v === 'string' && v.startsWith('"') && v.endsWith('"')) v = v.slice(1,-1);
     const p = JSON.parse(v);
     return fallback instanceof Set ? new Set(p) : p;
   } catch { return fallback; }

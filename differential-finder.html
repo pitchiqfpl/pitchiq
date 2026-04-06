@@ -309,7 +309,7 @@ let SCORED=[]; // scored + typed pool, recomputed when data changes
 let F={pos:'ALL',own:15,price:15,ml:0,type:'all'};
 let SEL_ID=null;
 
-function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
+function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null)return fb;if(typeof v==='string'&&v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return fb;}}
 function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}

@@ -415,7 +415,7 @@ let DROP_SORT='prob';
 let PRICE_VIEW='split';   // split | all
 let ALL_SORT='change';    // change | rise | drop | net | price
 
-function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v!==null?JSON.parse(v):fb;}catch{return fb;}}
+function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null)return fb;if(typeof v==='string'&&v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return fb;}}
 function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){

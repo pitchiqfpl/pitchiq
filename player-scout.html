@@ -605,7 +605,7 @@ const PINNED    = new Set(lsG('pins',[]));
 const SQUAD_IDS = new Set(lsG('squad',[]));
 const F={pos:'MID',team:'ALL',price:15,form:0,own:80,xg:0,xa:0,xgc:3,cs:0,saves:0,defContrib:0,avail:true,squadOnly:false,sort:'scout',sortDir:1,search:'',mode:'buy',bannerPrice:15,fixDiff:5};
 
-function lsG(k,fb){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):fb;}catch{return fb;}}
+function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null||v==='')return fb;if(typeof v==='string'&&v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return fb;}}
 function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function savePins(){lsS('pins',[...PINNED]);}
 
@@ -632,7 +632,7 @@ async function loadData(){
   try{
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     if(!Array.isArray(bs.teams)||!Array.isArray(bs.elements))throw new Error('Bad bootstrap');
-    GW=resolveGw(bs);
+    GW=resolveGw(bs,fixes);
     TMAP=buildTmap(bs.teams);
     fillTeamSel(bs.teams);
     const fm=buildFixMap(fixes,GW,TMAP);
@@ -654,7 +654,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
+function resolveGw(bs,fixes){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');

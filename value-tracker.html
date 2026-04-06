@@ -302,29 +302,62 @@ let ALL=[],TMAP={},SQUAD=[],GW=1,FT=1,HORIZON=1,BANK=0;
 const SHIRT={GK:'shirt-gk',DEF:'shirt-def',MID:'shirt-mid',FWD:'shirt-fwd'};
 const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const FIX_CLS={1:'d1',2:'d2',3:'d3',4:'d4',5:'d5'};
-const DIFF_MULT={1:1.35,2:1.15,3:1.0,4:0.82,5:0.65};
-const HA_MULT={H:1.08,A:0.93};
 
 function setBadge(t,x){const b=document.getElementById('dataBadge');b.className='data-badge '+t;document.getElementById('dataBadgeText').textContent=x;}
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
 
-function projectPts(p,gws){
-  const base=p.epNext>0?p.epNext:(p.form||3);
-  const mf=Math.min((p.minsRel||75)/90,1);
-  const sf=p.status==='i'?0:p.status==='d'?0.6:1;
-  if(!p.fixes||!p.fixes.length) return+(base*mf*sf).toFixed(1);
+// Difficulty/HA weights — calibrated so diff-3 = 1.0 baseline
+function diffWeight(d){return[0,1.28,1.12,1.0,0.84,0.68][d]??1.0;}
+function haWeight(ha){return ha==='H'?1.06:0.94;}
+
+// World-class projection engine — same model as Player Scout
+function projEngine(p, gwIndex){
+  const chanceNext = p.chanceNext??100;
+  const availFactor = chanceNext < 100 ? chanceNext/100
+                    : p.status==='i' ? 0 : p.status==='d' ? 0.55 : 1;
+  const minsFactor  = Math.min((p.minsRel||75)/90, 1);
+  const bonusPerGame= p.starts>0 ? Math.min((p.bonusPts||0)/p.starts, 1.5) : 0;
+  const epNext      = p.epNext > 0 ? p.epNext : 0;
+  const ppg         = p.ppg > 0 ? p.ppg : p.form > 0 ? p.form : 3.5;
+  const blendedEP   = gwIndex===0
+    ? (epNext > 0 ? epNext : ppg)
+    : epNext > 0 ? (epNext*0.55 + ppg*0.45) : ppg;
+  const f0    = p.fixes?.[0];
+  const fThis = p.fixes?.[gwIndex];
+  if(!fThis) return 0;
+  const anchorW = f0 ? diffWeight(f0.diff)*haWeight(f0.ha) : 1.0;
+  const thisW   = diffWeight(fThis.diff)*haWeight(fThis.ha);
+  let proj;
+  if(gwIndex===0){
+    proj = (epNext>0?epNext:ppg) * minsFactor * availFactor;
+  } else {
+    const ratio = anchorW>0 ? thisW/anchorW : thisW;
+    proj = blendedEP * ratio * minsFactor * availFactor;
+  }
+  proj += bonusPerGame * minsFactor * availFactor;
+  return Math.max(Math.round(proj*10)/10, 0);
+}
+
+function projectPts(p, gws){
+  if(!p.fixes||!p.fixes.length){
+    const ppg=p.ppg>0?p.ppg:p.form>0?p.form:3.5;
+    const mf=Math.min((p.minsRel||75)/90,1);
+    const af=p.chanceNext<100?p.chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
+    return+(ppg*mf*af*gws).toFixed(1);
+  }
   let total=0;
   const n=Math.min(gws,p.fixes.length);
-  for(let i=0;i<n;i++){
-    const f=p.fixes[i];
-    const dm=DIFF_MULT[f.diff]??1,hm=HA_MULT[f.ha]??1;
-    const gb=i===0?base:(p.form||3)*0.65;
-    total+=gb*dm*hm*mf*sf;
+  for(let i=0;i<n;i++) total+=projEngine(p,i);
+  // Extend beyond available fixtures at blended EP level
+  if(p.fixes.length<gws){
+    const mf=Math.min((p.minsRel||75)/90,1);
+    const af=p.chanceNext<100?p.chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
+    const ppg=p.ppg>0?p.ppg:p.form>0?p.form:3.5;
+    total+=(ppg*mf*af)*(gws-p.fixes.length);
   }
-  if(p.fixes.length<gws) total+=(total/n)*(gws-p.fixes.length);
-  return+total.toFixed(1);
+  return+Math.max(total,0).toFixed(1);
 }
 
 function sellUrgency(p){
@@ -353,6 +386,9 @@ function buildPlayer(e,fixMap){
     id:e.id,name:e.web_name,teamId:e.team,pos,price,
     form:parseFloat(e.form)||0,
     epNext:parseFloat(e.ep_next)||0,
+    ppg:parseFloat(e.points_per_game)||0,
+    chanceNext:e.chance_of_playing_next_round??100,
+    bonusPts:e.bonus||0,
     ownedPct:parseFloat(e.selected_by_percent)||0,
     status:e.status,priceChg:e.cost_change_event||0,
     totalPts:e.total_points||0,starts:e.starts??games,
@@ -364,9 +400,7 @@ async function loadBootstrap(){
   setBadge('loading','Fetching live data…');
   try{
     const[bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??
-        bs.events?.find(e=>e.is_previous)??
-        [...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=allFix.filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fixMap={};
     allFix.filter(f=>f.event>=GW&&!f.finished).forEach(f=>{
@@ -639,17 +673,13 @@ function buildComparisonHTML(sell, buy){
       ${fixRows||'<div style="font-size:11px;color:var(--muted)">No upcoming fixtures</div>'}
     </div>`;
 
-  // ── POINTS TRAJECTORY (last 6 GWs projected) ──
-  const gwProjs = Array.from({length:6},(_,i)=>{
-    const sf=sell.fixes?.[i], bf=buy.fixes?.[i];
-    const dm=d=>DIFF_MULT[d]??1, hm=h=>HA_MULT[h]??1;
-    const smf=Math.min((sell.minsRel||75)/90,1), bmf=Math.min((buy.minsRel||75)/90,1);
-    const sBase=i===0?sell.epNext||sell.form*0.6:(sell.form||3)*0.65;
-    const bBase=i===0?buy.epNext||buy.form*0.6:(buy.form||3)*0.65;
-    const sProj=sf?+(sBase*dm(sf.diff)*hm(sf.ha)*smf).toFixed(1):0;
-    const bProj=bf?+(bBase*dm(bf.diff)*hm(bf.ha)*bmf).toFixed(1):0;
-    return{gw:GW+i,sProj,bProj};
-  });
+  // ── POINTS TRAJECTORY (next 6 GWs projected) ──
+  // Use the full projection engine for consistency
+  const gwProjs = Array.from({length:6},(_,i)=>({
+    gw:GW+i,
+    sProj:projEngine(sell,i),
+    bProj:projEngine(buy,i),
+  }));
   const maxProj=Math.max(...gwProjs.map(g=>Math.max(g.sProj,g.bProj)),1);
 
   const chartHTML = `

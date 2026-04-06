@@ -894,7 +894,7 @@ async function loadSquad(teamId) {
 }
 
 function resolveGw(bs) {
-  return (bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+  return (()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
 }
 
 function resolveDeadline(bs) {
@@ -971,6 +971,9 @@ function buildPlayers(elements) {
         minsReliability: minsPerGame,  // 0–90, meaningful spread now
         totalPts:     e.total_points   || 0,
         epNext:       parseFloat(e.ep_next) || 0,
+        ppg:          parseFloat(e.points_per_game) || 0,
+        chanceNext:   e.chance_of_playing_next_round ?? 100,
+        bonusPts:     e.bonus || 0,
         // Captaincy history: FPL tracks total_points but not captain pts directly.
         // We derive avg captain pts from total_points / starts as a reasonable proxy.
         // starts field available in bootstrap from 2023/24 onwards.
@@ -1279,7 +1282,7 @@ function renderCard(p, rank) {
   const avgPts   = p.starts > 0 ? (p.totalPts / p.starts).toFixed(1) : '—';
   const statsRow = `<div class="cap-stats-row">
     <div class="cap-stat">
-      <div class="cap-stat-label">Projected pts</div>
+      <div class="cap-stat-label">Proj pts</div>
       <div class="cap-stat-val ep">${p.epNext > 0 ? p.epNext.toFixed(1) : '—'}</div>
       <div class="cap-stat-sub">next GW estimate</div>
     </div>

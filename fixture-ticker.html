@@ -417,11 +417,16 @@ const ENGINE = (() => {
     return r.json();
   }
 
-  function resolveGw(bs){
+  function resolveGw(bs, allFix){
     const cur=bs.events?.find(e=>e.is_current);
     const nxt=bs.events?.find(e=>e.is_next);
     const prev=bs.events?.find(e=>e.is_previous);
     const lastFinished=[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0];
+    // If is_current exists but all its fixtures are done, FPL just hasn't closed it yet — skip to next
+    if(cur && nxt){
+      const curFixes=(allFix||[]).filter(f=>f.event===cur.id);
+      if(curFixes.length>0 && curFixes.every(f=>f.finished)) return nxt.id;
+    }
     const gw=(cur??nxt??prev??lastFinished)?.id;
     if(!gw){console.warn('[ENGINE] GW unknown, defaulting to 1');return 1;}
     return gw;
@@ -568,7 +573,7 @@ const ENGINE = (() => {
       console.warn('[ENGINE] xg-data unavailable — using FPL strength fallback');
     }
 
-    const curGw=resolveGw(bs);
+    const curGw=resolveGw(bs,allFix);
     const MAX_GW=38; // Premier League always ends at GW38
     const GWS_TO_SHOW=8; // show next 8 GWs
     const sGw=fromGw??curGw, eGw=toGw??Math.min(sGw+GWS_TO_SHOW-1,MAX_GW);

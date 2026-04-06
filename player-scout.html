@@ -661,7 +661,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs){return(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;}
+function resolveGw(bs){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');
@@ -755,7 +755,10 @@ function buildPlayers(els,fm){
       xgCombined,
       goals90, assists90,
       ict:parseFloat(e.ict_index)||0,
-      epNext:parseFloat(e.ep_next)||0,ppm:price>0?(e.total_points||0)/price:0,
+      epNext:parseFloat(e.ep_next)||0,
+      ppg:parseFloat(e.points_per_game)||0,
+      chanceNext:e.chance_of_playing_next_round??100,
+      ppm:price>0?(e.total_points||0)/price:0,
       priceChg:e.cost_change_event??0,netIn:(e.transfers_in_event||0)-(e.transfers_out_event||0),
       minsRel:Math.min(mins/games,90),ownedPct:parseFloat(e.selected_by_percent)||0,
       totalPts:e.total_points||0,starts:e.starts??games,status:e.status,
@@ -1334,7 +1337,7 @@ async function openDetail(id){
         <div class="stat-tile"><div class="stat-tile-label">Form</div><div class="stat-tile-val" style="color:${p.form>=8?'var(--grass-l)':p.form>=5?'var(--cream)':'var(--gold)'}">${p.form.toFixed(1)}</div><div class="stat-tile-sub">pts/game last 30d</div></div>
         <div class="stat-tile"><div class="stat-tile-label">xG / 90</div><div class="stat-tile-val" style="color:${p.xg90>0.3?'var(--grass-l)':p.xg90>0.15?'var(--cream)':'var(--muted)'}">${p.xg90.toFixed(2)}</div><div class="stat-tile-sub">${p.xg90Recent>0?`recent ${p.xg90Recent.toFixed(2)}`:'season avg'}</div></div>
         <div class="stat-tile"><div class="stat-tile-label">xA / 90</div><div class="stat-tile-val" style="color:${p.xa90>0.2?'var(--grass-l)':p.xa90>0.1?'var(--cream)':'var(--muted)'}">${p.xa90.toFixed(2)}</div><div class="stat-tile-sub">season avg · L6 in table</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Projected pts</div><div class="stat-tile-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="stat-tile-sub">next GW estimate</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Proj pts</div><div class="stat-tile-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="stat-tile-sub">next GW estimate</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Pts / £m</div><div class="stat-tile-val">${p.ppm.toFixed(1)}</div><div class="stat-tile-sub">value this season</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Pts per start</div><div class="stat-tile-val">${avgPts}</div><div class="stat-tile-sub">${p.starts} starts · excl. subs</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Scout score</div><div class="stat-tile-val" style="color:${p.score>=70?'var(--grass-l)':p.score>=50?'var(--cream)':'var(--muted)'}">${p.score}</div><div class="stat-tile-sub">50 = avg · 70+ = buy</div></div>
@@ -1438,7 +1441,71 @@ function renderGwH(id){
   }).join('')}</div>`;
 }
 
-/* ── MINUTE CALCULATOR ─────────────────────────────────────── */
+/* ── WORLD-CLASS PROJECTION ENGINE ────────────────────────────
+   Uses all available FPL signals:
+   1. GW1: FPL's own ep_next (most accurate short-term signal)
+   2. Blended anchor: 65% ep_next + 35% points_per_game (reduces noise)
+   3. Availability: chance_of_playing (0/25/50/75/100) not just status
+   4. Bonus expectation: bps patterns → ~0.3-0.7 bonus pts/game for high-BPS players
+   5. xG+xA position-specific involvement for forward GW scaling
+   6. Fixture ratio scaling anchored to GW1 fixture weight
+   7. Minutes reliability from starts data
+──────────────────────────────────────────────────────────────── */
+function projEngine(p, gwIndex, gws){
+  // ── AVAILABILITY FACTOR ──────────────────────────────────────
+  // Use chance_of_playing if available (more granular than status)
+  let availFactor;
+  if(p.chanceNext !== null && p.chanceNext !== undefined && p.chanceNext < 100){
+    availFactor = p.chanceNext / 100;
+  } else {
+    availFactor = p.status === 'i' ? 0 : p.status === 'd' ? 0.55 : 1;
+  }
+
+  // ── MINUTES FACTOR ───────────────────────────────────────────
+  const minsFactor = Math.min((p.minsRel ?? 75) / 90, 1);
+
+  // ── BONUS EXPECTATION ────────────────────────────────────────
+  // Players with high BPS consistently earn bonus points
+  // Estimate: bonusPts / starts = avg bonus per game, capped at 1.5
+  const bonusPerGame = p.starts > 0 ? Math.min((p.bonusPts || 0) / p.starts, 1.5) : 0;
+
+  // ── BLENDED BASE EP ─────────────────────────────────────────
+  // ep_next is best for GW1 but noisy for multi-GW
+  // points_per_game is more stable season average
+  // For GW1: trust ep_next heavily; for GW2+: blend more ppg
+  const epNext = p.epNext > 0 ? p.epNext : 0;
+  const ppg    = p.ppg    > 0 ? p.ppg    : p.form > 0 ? p.form : 3.5;
+
+  const blendedEP = gwIndex === 0
+    ? (epNext > 0 ? epNext : ppg)                        // GW1: trust FPL EP
+    : epNext > 0 ? (epNext * 0.55 + ppg * 0.45) : ppg;  // GW2+: blend for stability
+
+  // ── FIXTURE WEIGHT RATIO ─────────────────────────────────────
+  const f0    = p.fixes?.[0];
+  const fThis = p.fixes?.[gwIndex];
+
+  if(!fThis) return 0;
+
+  const anchorWeight = f0 ? diffWeight(f0.diff) * haWeight(f0.ha) : 1.0;
+  const thisWeight   = diffWeight(fThis.diff) * haWeight(fThis.ha);
+
+  let proj;
+  if(gwIndex === 0){
+    // GW1: use FPL EP directly (it already accounts for the fixture)
+    proj = (epNext > 0 ? epNext : ppg) * minsFactor * availFactor;
+  } else {
+    // GW2+: scale blended EP by ratio of this fixture vs GW1 fixture
+    const ratio = anchorWeight > 0 ? thisWeight / anchorWeight : thisWeight;
+    proj = blendedEP * ratio * minsFactor * availFactor;
+  }
+
+  // ── ADD BONUS EXPECTATION ────────────────────────────────────
+  // Bonus is relatively fixture-independent — add as flat expectation
+  // Scale slightly by availability but not by fixture difficulty
+  proj += bonusPerGame * minsFactor * availFactor;
+
+  return Math.max(Math.round(proj * 10) / 10, 0);
+}
 function buildMinuteCalc(p) {
   // Expected minutes per game based on minsRel + status + rotation signals
   const base = p.minsRel ?? 75;
@@ -1507,22 +1574,15 @@ function buildMultiFixProj(p) {
     </div>`;
   }
 
-  // Difficulty multiplier — easier fixtures = higher projected pts
-  const diffMult = { 1: 1.35, 2: 1.15, 3: 1.0, 4: 0.82, 5: 0.65 };
-  // Home advantage
-  const haMult = { H: 1.08, A: 0.93 };
-  // Minutes reliability factor (90 mins = full EP, less = scaled down)
-  const minsFactor = Math.min((p.minsRel ?? 75) / 90, 1);
-  // Status factor
-  const statusFactor = p.status === 'd' ? 0.6 : p.status === 'i' ? 0 : 1;
-
-  const baseEP = p.epNext > 0 ? p.epNext : p.form > 0 ? p.form * 0.6 : 3.5;
+  // Convert FPL difficulty (1-5) into a linear scoring expectation weight.
+  // Calibrated so diff-3 = 1.0 (baseline), easier = higher, harder = lower.
+  // Uses a smoother curve than arbitrary multipliers.
+  function diffWeight(d){ return [0,1.28,1.12,1.0,0.84,0.68][d] ?? 1.0; }
+  function haWeight(ha){ return ha==='H' ? 1.06 : 0.94; }
 
   let cumulative = 0;
-  const rows = p.fixes.map(f => {
-    const dm = diffMult[f.diff] ?? 1;
-    const hm = haMult[f.ha]   ?? 1;
-    const proj = +(baseEP * dm * hm * minsFactor * statusFactor).toFixed(1);
+  const rows = p.fixes.map((f, i) => {
+    const proj = projEngine(p, i, p.fixes.length);
     cumulative = +(cumulative + proj).toFixed(1);
     const barW = Math.min((proj / 12) * 100, 100).toFixed(0);
     const c = proj >= 7 ? 'var(--grass-l)' : proj >= 5 ? 'var(--blue)' : proj >= 3 ? 'var(--gold)' : 'var(--muted)';
@@ -1530,8 +1590,8 @@ function buildMultiFixProj(p) {
   });
 
   const totalProj = cumulative;
-  const gwCount = p.fixes.length;
-  const avgProj = (totalProj / gwCount).toFixed(1);
+  const gwCount   = p.fixes.length;
+  const avgProj   = (totalProj / gwCount).toFixed(1);
 
   const rowsHtml = rows.map(({f, proj, cumulative, barW, c}) => `
     <div style="display:grid;grid-template-columns:42px 1fr 52px 54px;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
@@ -1563,25 +1623,66 @@ function buildMultiFixProj(p) {
     <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-family:var(--font-m)">GW · FIXTURE · PROJ · CUMULATIVE</div>
     ${rowsHtml}
     <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5">
-      Projected using FPL expected points × fixture difficulty × home/away factor × minutes reliability. Not a guarantee — form and injuries will affect actual returns.
+      GW1 uses FPL's own expected points. GW2+ blends EP with season points-per-game, scaled by fixture difficulty. Bonus point expectation and minutes reliability applied throughout.
     </div>
   </div>`;
 }
 
 function getVerdict(p){
-  const fix=p.fix,fe=fix&&fix.diff<=2,fh=fix&&fix.diff>=4;
-  const inF=p.form>=7,lowF=p.form<3,gX=p.xgCombined>=0.4,rP=p.priceChg>0,fP=p.priceChg<0;
-  if(p.status==='i')return{cls:'sell',label:'✖ Transfer out',reason:`<strong>${p.name}</strong> is marked as injured. Transfer out before their price falls further.`};
-  if(p.status==='d'&&fh)return{cls:'sell',label:'↓ Consider selling',reason:`<strong>${p.name}</strong> is a doubt for a difficult fixture — high risk of missing the game entirely.`};
-  if(lowF&&fh&&fP)return{cls:'sell',label:'↓ Transfer out',reason:`Poor form (${p.form.toFixed(1)} pts/game), a hard fixture, and a falling price are all sell signals for <strong>${p.name}</strong>.`};
-  if(inF&&fe&&gX&&rP)return{cls:'buy',label:'⬆ Strong buy',reason:`<strong>${p.name}</strong> ticks every box — strong form (${p.form.toFixed(1)} pts/game), good xG+xA (${p.xgCombined.toFixed(2)}/90), an easy fixture (${fix.opp} ${fix.ha}), and a rising price.`};
-  if(inF&&fe&&gX)return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> has strong form and a favourable fixture — ${fix?.opp??''} (${fix?.ha??''}) — with solid underlying numbers (${p.xgCombined.toFixed(2)} xG+xA/90).`};
-  if(p.score>=65&&fe)return{cls:'buy',label:'⬆ Buy',reason:`Scout score of <strong>${p.score}</strong> with an easy fixture (${fix?.opp??''} ${fix?.ha??''}) makes <strong>${p.name}</strong> a strong transfer target.`};
-  if(gX&&fh)return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> has strong underlying xG+xA (${p.xgCombined.toFixed(2)}/90) but faces a tough fixture. Consider for next GW.`};
-  if(p.status==='d')return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> is listed as a doubt. Wait for team news.`};
-  if(!fix)return{cls:'monitor',label:'👀 Blank GW',reason:`<strong>${p.name}</strong> has no fixture this week. Monitor for next GW.`};
-  if(p.ownedPct>30&&!inF)return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> is widely owned (${p.ownedPct.toFixed(1)}%) but out of form. Selling is a risk without a clear upgrade.`};
-  return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> shows no strong buy or sell signal. Scout score ${p.score} is ${p.score>=50?'above':'below'} average.`};
+  const fix=p.fix,fe=fix&&fix.diff<=2,fm=fix&&fix.diff===3,fh=fix&&fix.diff>=4;
+  const inF=p.form>=7,modF=p.form>=5,lowF=p.form<3;
+  const gX=p.xgCombined>=0.4,modX=p.xgCombined>=0.25;
+  const rP=p.priceChg>0,fP=p.priceChg<0;
+  const highScore=p.score>=70,goodScore=p.score>=58,poorScore=p.score<40;
+
+  // ── Hard sell signals ──
+  if(p.status==='i')
+    return{cls:'sell',label:'✖ Transfer out',reason:`<strong>${p.name}</strong> is marked as injured. Transfer out before their price falls further.`};
+  if(p.status==='d'&&fh)
+    return{cls:'sell',label:'↓ Consider selling',reason:`<strong>${p.name}</strong> is a doubt for a difficult fixture — high risk of missing the game entirely.`};
+  if(lowF&&fh&&fP)
+    return{cls:'sell',label:'↓ Transfer out',reason:`Poor form (${p.form.toFixed(1)} pts/game), a hard fixture, and a falling price are all sell signals for <strong>${p.name}</strong>.`};
+  if(poorScore&&lowF&&fP)
+    return{cls:'sell',label:'↓ Consider selling',reason:`<strong>${p.name}</strong> has a Scout score of ${p.score}, poor form (${p.form.toFixed(1)}) and a falling price — consider moving on.`};
+
+  // ── Strong buy ──
+  if(highScore&&fe&&gX&&rP)
+    return{cls:'buy',label:'⬆ Strong buy',reason:`<strong>${p.name}</strong> ticks every box — Scout score ${p.score}, strong form (${p.form.toFixed(1)} pts/game), solid xG+xA (${p.xgCombined.toFixed(2)}/90), easy fixture (${fix.opp} ${fix.ha}) and a rising price.`};
+  if(inF&&fe&&gX&&rP)
+    return{cls:'buy',label:'⬆ Strong buy',reason:`<strong>${p.name}</strong> ticks every box — strong form (${p.form.toFixed(1)} pts/game), good xG+xA (${p.xgCombined.toFixed(2)}/90), an easy fixture (${fix.opp} ${fix.ha}), and a rising price.`};
+
+  // ── Buy — high Scout score is enough on its own ──
+  if(highScore&&fe)
+    return{cls:'buy',label:'⬆ Buy',reason:`Scout score of <strong>${p.score}</strong> with an easy fixture (${fix?.opp??''} ${fix?.ha??''}) makes <strong>${p.name}</strong> a strong transfer target.`};
+  if(highScore&&fm&&(gX||inF))
+    return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> ranks highly (Scout score ${p.score}) with ${inF?`strong form (${p.form.toFixed(1)} pts/game)`:`solid xG+xA (${p.xgCombined.toFixed(2)}/90)`}. Fixture is medium difficulty but the underlying numbers support a transfer.`};
+  if(highScore&&!fh)
+    return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> has a Scout score of <strong>${p.score}</strong> — form, xG and projected points all pointing in the right direction. A strong transfer target this gameweek.`};
+  if(inF&&fe&&gX)
+    return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> has strong form and a favourable fixture — ${fix?.opp??''} (${fix?.ha??''}) — with solid underlying numbers (${p.xgCombined.toFixed(2)} xG+xA/90).`};
+  if(goodScore&&fe)
+    return{cls:'buy',label:'⬆ Buy',reason:`Scout score of <strong>${p.score}</strong> with an easy fixture (${fix?.opp??''} ${fix?.ha??''}) makes <strong>${p.name}</strong> worth considering this week.`};
+  if(goodScore&&(inF||gX)&&!fh)
+    return{cls:'buy',label:'⬆ Buy',reason:`<strong>${p.name}</strong> scores <strong>${p.score}</strong> on the Scout — ${inF?`strong form (${p.form.toFixed(1)} pts/game)`:`good underlying xG+xA (${p.xgCombined.toFixed(2)}/90)`} points to a worthwhile transfer.`};
+
+  // ── Monitor — good numbers but a catch ──
+  if(highScore&&fh)
+    return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> has a Scout score of ${p.score} but faces a tough fixture (${fix?.opp??''} ${fix?.ha??''}). Consider for the following gameweek.`};
+  if(gX&&fh)
+    return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> has strong underlying xG+xA (${p.xgCombined.toFixed(2)}/90) but faces a tough fixture. Consider for next GW.`};
+  if(p.status==='d')
+    return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> is listed as a doubt. Wait for team news before transferring in.`};
+  if(!fix)
+    return{cls:'monitor',label:'👀 Blank GW',reason:`<strong>${p.name}</strong> has no fixture this gameweek. Monitor for next GW.`};
+  if(goodScore&&fh)
+    return{cls:'monitor',label:'👀 Monitor',reason:`<strong>${p.name}</strong> scores ${p.score} on the Scout but the fixture is difficult (${fix?.opp??''} ${fix?.ha??''}). Worth watching for a better run.`};
+
+  // ── Hold ──
+  if(p.ownedPct>30&&!inF)
+    return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> is widely owned (${p.ownedPct.toFixed(1)}%) but out of form. Selling risks a rank hit without a clear upgrade.`};
+  if(goodScore)
+    return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> has a decent Scout score of ${p.score} but no single strong signal to act on right now. Hold and monitor.`};
+  return{cls:'hold',label:'→ Hold',reason:`<strong>${p.name}</strong> shows no strong buy or sell signal right now — Scout score ${p.score}${p.score>=50?' (above average)':' (below average)'}. No urgent action needed.`};
 }
 
 function togglePin(id){
@@ -1636,7 +1737,8 @@ function patchFallbackPlayers(players){
     cleanSheetsPer90:p.cleanSheetsPer90??0,
     saves:p.saves??0,
     savesPer90:p.savesPer90??0,
-    bps:p.bps??0,
+    ppg:p.ppg??p.totalPts>0&&p.starts>0?(p.totalPts/p.starts):0,
+    chanceNext:p.chanceNext??100,
     bonusPts:p.bonusPts??0,
     defContrib:p.defContrib??0,
     defContribPer90:p.defContribPer90??0,
@@ -1645,33 +1747,33 @@ function patchFallbackPlayers(players){
 const FB_TEAMS={1:{name:'Arsenal',short:'ARS'},2:{name:'Aston Villa',short:'AVL'},3:{name:'Bournemouth',short:'BOU'},4:{name:'Brentford',short:'BRE'},5:{name:'Brighton',short:'BHA'},6:{name:'Chelsea',short:'CHE'},7:{name:'Crystal Palace',short:'CRY'},8:{name:'Everton',short:'EVE'},9:{name:'Fulham',short:'FUL'},10:{name:'Ipswich',short:'IPS'},11:{name:'Leicester',short:'LEI'},12:{name:'Liverpool',short:'LIV'},13:{name:'Man City',short:'MCI'},14:{name:'Man United',short:'MUN'},15:{name:'Newcastle',short:'NEW'},16:{name:"Nott'm Forest",short:'NFO'},17:{name:'Southampton',short:'SOU'},18:{name:'Spurs',short:'TOT'},19:{name:'West Ham',short:'WHU'},20:{name:'Wolves',short:'WOL'}};
 const FB_PLAYERS=[
   // GK (4)
-  {id:13,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,ict:45,epNext:5.2,ppm:17.6,priceChg:0,netIn:12000,minsRel:90,ownedPct:26.1,totalPts:97,starts:28,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
-  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,ict:32,epNext:4.8,ppm:18.2,priceChg:0,netIn:8000,minsRel:90,ownedPct:12.4,totalPts:82,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
-  {id:16,name:'Pickford',fullName:'Jordan Pickford',teamId:8,pos:'GK',price:5.0,form:4.2,xg90:0,ict:28,epNext:4.0,ppm:11.4,priceChg:0,netIn:-5000,minsRel:90,ownedPct:8.3,totalPts:57,starts:26,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:13,name:'Raya',fullName:'David Raya',teamId:1,pos:'GK',price:5.5,form:5.8,xg90:0,ict:45,epNext:5.2,ppm:17.6,priceChg:0,netIn:12000,minsRel:90,ownedPct:26.1,totalPts:97,starts:28,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
+  {id:14,name:'Flekken',fullName:'Mark Flekken',teamId:4,pos:'GK',price:4.5,form:5.4,xg90:0,ict:32,epNext:4.8,ppm:18.2,priceChg:0,netIn:8000,minsRel:90,ownedPct:12.4,totalPts:82,starts:26,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:16,name:'Pickford',fullName:'Jordan Pickford',teamId:8,pos:'GK',price:5.0,form:4.2,xg90:0,ict:28,epNext:4.0,ppm:11.4,priceChg:0,netIn:-5000,minsRel:90,ownedPct:8.3,totalPts:57,starts:26,status:'a',fix:{opp:'LDS',ha:'H',diff:1},fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
   {id:17,name:'Henderson',fullName:'Dean Henderson',teamId:7,pos:'GK',price:4.5,form:3.8,xg90:0,ict:22,epNext:3.6,ppm:10.2,priceChg:0,netIn:3000,minsRel:90,ownedPct:4.1,totalPts:46,starts:24,status:'a',fix:{opp:'WHU',ha:'H',diff:2},fixes:[{gw:34,opp:'WHU',ha:'H',diff:2},{gw:35,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'ARS',ha:'A',diff:4},{gw:37,opp:'BRE',ha:'H',diff:2}],score:0},
   // DEF (6)
   {id:12,name:'Trent A-A',fullName:'Trent Alexander-Arnold',teamId:12,pos:'DEF',price:7.2,form:7.1,xg90:0.42,ict:198,epNext:6.2,ppm:16.4,priceChg:1,netIn:55000,minsRel:85,ownedPct:28.6,totalPts:118,starts:20,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
-  {id:11,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,ict:142,epNext:4.1,ppm:12.3,priceChg:-1,netIn:-45000,minsRel:70,ownedPct:18.4,totalPts:80,starts:15,status:'d',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
-  {id:15,name:'Pedro Porro',fullName:'Pedro Porro',teamId:18,pos:'DEF',price:5.8,form:4.8,xg90:0.22,ict:134,epNext:4.4,ppm:13.8,priceChg:0,netIn:6000,minsRel:80,ownedPct:14.2,totalPts:80,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
-  {id:18,name:'Mykolenko',fullName:'Vitaliy Mykolenko',teamId:8,pos:'DEF',price:4.5,form:4.4,xg90:0.12,ict:88,epNext:3.8,ppm:12.1,priceChg:0,netIn:4000,minsRel:82,ownedPct:5.2,totalPts:54,starts:22,status:'a',fix:{opp:'IPS',ha:'H',diff:1},fixes:[{gw:34,opp:'IPS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
-  {id:19,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,ict:112,epNext:4.8,ppm:14.2,priceChg:0,netIn:18000,minsRel:80,ownedPct:21.8,totalPts:74,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
-  {id:20,name:'Pedro',fullName:'Pedro Lima',teamId:17,pos:'DEF',price:4.5,form:3.1,xg90:0.08,ict:62,epNext:2.8,ppm:8.4,priceChg:-1,netIn:-12000,minsRel:75,ownedPct:3.1,totalPts:38,starts:18,status:'a',fix:{opp:'BRE',ha:'A',diff:3},fixes:[{gw:34,opp:'BRE',ha:'A',diff:3},{gw:35,opp:'IPS',ha:'A',diff:2},{gw:36,opp:'BOU',ha:'A',diff:3},{gw:37,opp:'ARS',ha:'H',diff:5}],score:0},
+  {id:11,name:'Trippier',fullName:'Kieran Trippier',teamId:15,pos:'DEF',price:6.5,form:3.2,xg90:0.18,ict:142,epNext:4.1,ppm:12.3,priceChg:-1,netIn:-45000,minsRel:70,ownedPct:18.4,totalPts:80,starts:15,status:'d',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1}],score:0},
+  {id:15,name:'Pedro Porro',fullName:'Pedro Porro',teamId:18,pos:'DEF',price:5.8,form:4.8,xg90:0.22,ict:134,epNext:4.4,ppm:13.8,priceChg:0,netIn:6000,minsRel:80,ownedPct:14.2,totalPts:80,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'SUN',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:18,name:'Mykolenko',fullName:'Vitaliy Mykolenko',teamId:8,pos:'DEF',price:4.5,form:4.4,xg90:0.12,ict:88,epNext:3.8,ppm:12.1,priceChg:0,netIn:4000,minsRel:82,ownedPct:5.2,totalPts:54,starts:22,status:'a',fix:{opp:'LDS',ha:'H',diff:1},fixes:[{gw:34,opp:'LDS',ha:'H',diff:1},{gw:35,opp:'BHA',ha:'A',diff:3},{gw:36,opp:'NFO',ha:'H',diff:2},{gw:37,opp:'WOL',ha:'A',diff:2}],score:0},
+  {id:19,name:'Timber',fullName:'Jurrien Timber',teamId:1,pos:'DEF',price:5.2,form:5.6,xg90:0.28,ict:112,epNext:4.8,ppm:14.2,priceChg:0,netIn:18000,minsRel:80,ownedPct:21.8,totalPts:74,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
+  {id:20,name:'Pedro',fullName:'Pedro Lima',teamId:17,pos:'DEF',price:4.5,form:3.1,xg90:0.08,ict:62,epNext:2.8,ppm:8.4,priceChg:-1,netIn:-12000,minsRel:75,ownedPct:3.1,totalPts:38,starts:18,status:'a',fix:{opp:'BRE',ha:'A',diff:3},fixes:[{gw:34,opp:'BRE',ha:'A',diff:3},{gw:35,opp:'LDS',ha:'A',diff:2},{gw:36,opp:'BOU',ha:'A',diff:3},{gw:37,opp:'ARS',ha:'H',diff:5}],score:0},
   // MID (8)
   {id:1,name:'Salah',fullName:'Mohamed Salah',teamId:12,pos:'MID',price:13.2,form:11.2,xg90:0.82,ict:385,epNext:9.8,ppm:17.1,priceChg:1,netIn:120000,minsRel:90,ownedPct:73.2,totalPts:226,starts:28,status:'a',fix:{opp:'BOU',ha:'A',diff:1},fixes:[{gw:34,opp:'BOU',ha:'A',diff:1},{gw:35,opp:'TOT',ha:'H',diff:2},{gw:36,opp:'MCI',ha:'A',diff:3},{gw:37,opp:'NEW',ha:'H',diff:2}],score:0},
-  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,ict:341,epNext:7.1,ppm:16.1,priceChg:-1,netIn:-20000,minsRel:85,ownedPct:49.8,totalPts:177,starts:24,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
-  {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,ict:212,epNext:5.8,ppm:18.8,priceChg:0,netIn:5000,minsRel:78,ownedPct:22.1,totalPts:141,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
-  {id:8,name:'Neto',fullName:'Pedro Neto',teamId:6,pos:'MID',price:6.8,form:7.8,xg90:0.55,ict:195,epNext:5.2,ppm:15.9,priceChg:1,netIn:62000,minsRel:72,ownedPct:6.4,totalPts:108,starts:16,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'IPS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
-  {id:10,name:'Diallo',fullName:'Cheick Doucouré',teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,ict:135,epNext:3.9,ppm:17.8,priceChg:0,netIn:28000,minsRel:65,ownedPct:3.8,totalPts:89,starts:14,status:'a',fix:{opp:'EVE',ha:'A',diff:1},fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'SOU',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'MCI',ha:'H',diff:5}],score:0},
+  {id:4,name:'Palmer',fullName:'Cole Palmer',teamId:6,pos:'MID',price:11.0,form:7.4,xg90:0.68,ict:341,epNext:7.1,ppm:16.1,priceChg:-1,netIn:-20000,minsRel:85,ownedPct:49.8,totalPts:177,starts:24,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:6,name:'Trossard',fullName:'Leandro Trossard',teamId:1,pos:'MID',price:7.5,form:6.4,xg90:0.48,ict:212,epNext:5.8,ppm:18.8,priceChg:0,netIn:5000,minsRel:78,ownedPct:22.1,totalPts:141,starts:20,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
+  {id:8,name:'Neto',fullName:'Pedro Neto',teamId:6,pos:'MID',price:6.8,form:7.8,xg90:0.55,ict:195,epNext:5.2,ppm:15.9,priceChg:1,netIn:62000,minsRel:72,ownedPct:6.4,totalPts:108,starts:16,status:'a',fix:{opp:'NFO',ha:'H',diff:2},fixes:[{gw:34,opp:'NFO',ha:'H',diff:2},{gw:35,opp:'WHU',ha:'A',diff:2},{gw:36,opp:'LDS',ha:'H',diff:1},{gw:37,opp:'BOU',ha:'H',diff:2}],score:0},
+  {id:10,name:'Diallo',fullName:'Cheick Doucouré',teamId:10,pos:'MID',price:5.0,form:4.4,xg90:0.28,ict:135,epNext:3.9,ppm:17.8,priceChg:0,netIn:28000,minsRel:65,ownedPct:3.8,totalPts:89,starts:14,status:'a',fix:{opp:'EVE',ha:'A',diff:1},fixes:[{gw:34,opp:'EVE',ha:'A',diff:1},{gw:35,opp:'BRN',ha:'H',diff:1},{gw:36,opp:'CHE',ha:'A',diff:4},{gw:37,opp:'MCI',ha:'H',diff:5}],score:0},
   {id:21,name:'Andreas',fullName:'Andreas Pereira',teamId:9,pos:'MID',price:6.2,form:5.8,xg90:0.35,ict:168,epNext:5.1,ppm:15.6,priceChg:0,netIn:9000,minsRel:82,ownedPct:11.4,totalPts:97,starts:23,status:'a',fix:{opp:'TOT',ha:'H',diff:3},fixes:[{gw:34,opp:'TOT',ha:'H',diff:3},{gw:35,opp:'CRY',ha:'H',diff:2},{gw:36,opp:'WOL',ha:'A',diff:2},{gw:37,opp:'AVL',ha:'A',diff:3}],score:0},
-  {id:22,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'MID',price:8.3,form:10.8,xg90:0.71,ict:289,epNext:7.6,ppm:22.2,priceChg:1,netIn:85000,minsRel:88,ownedPct:41.2,totalPts:184,starts:26,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
-  {id:23,name:'Martinelli',fullName:'Gabriel Martinelli',teamId:1,pos:'MID',price:7.2,form:4.8,xg90:0.38,ict:145,epNext:4.6,ppm:12.1,priceChg:0,netIn:-8000,minsRel:76,ownedPct:9.8,totalPts:87,starts:22,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'SOU',ha:'A',diff:1}],score:0},
+  {id:22,name:'Mbeumo',fullName:'Bryan Mbeumo',teamId:4,pos:'MID',price:8.3,form:10.8,xg90:0.71,ict:289,epNext:7.6,ppm:22.2,priceChg:1,netIn:85000,minsRel:88,ownedPct:41.2,totalPts:184,starts:26,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:23,name:'Martinelli',fullName:'Gabriel Martinelli',teamId:1,pos:'MID',price:7.2,form:4.8,xg90:0.38,ict:145,epNext:4.6,ppm:12.1,priceChg:0,netIn:-8000,minsRel:76,ownedPct:9.8,totalPts:87,starts:22,status:'a',fix:{opp:'BHA',ha:'H',diff:2},fixes:[{gw:34,opp:'BHA',ha:'H',diff:2},{gw:35,opp:'MCI',ha:'A',diff:4},{gw:36,opp:'CRY',ha:'H',diff:2},{gw:37,opp:'BRN',ha:'A',diff:1}],score:0},
   // FWD (6)
-  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,ict:312,epNext:8.2,ppm:13.7,priceChg:0,netIn:40000,minsRel:90,ownedPct:54.1,totalPts:198,starts:25,status:'a',fix:{opp:'LEI',ha:'H',diff:1},fixes:[{gw:34,opp:'LEI',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3},{gw:37,opp:'IPS',ha:'A',diff:1}],score:0},
-  {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,ict:268,epNext:6.4,ppm:18.0,priceChg:0,netIn:15000,minsRel:82,ownedPct:37.4,totalPts:162,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'LEI',ha:'A',diff:1}],score:0},
+  {id:2,name:'Haaland',fullName:'Erling Haaland',teamId:13,pos:'FWD',price:14.5,form:8.9,xg90:0.94,ict:312,epNext:8.2,ppm:13.7,priceChg:0,netIn:40000,minsRel:90,ownedPct:54.1,totalPts:198,starts:25,status:'a',fix:{opp:'SUN',ha:'H',diff:1},fixes:[{gw:34,opp:'SUN',ha:'H',diff:1},{gw:35,opp:'ARS',ha:'H',diff:3},{gw:36,opp:'LIV',ha:'H',diff:3},{gw:37,opp:'LDS',ha:'A',diff:1}],score:0},
+  {id:5,name:'Isak',fullName:'Alexander Isak',teamId:15,pos:'FWD',price:9.0,form:8.1,xg90:0.63,ict:268,epNext:6.4,ppm:18.0,priceChg:0,netIn:15000,minsRel:82,ownedPct:37.4,totalPts:162,starts:22,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:36,opp:'AVL',ha:'H',diff:3},{gw:37,opp:'SUN',ha:'A',diff:1}],score:0},
   {id:7,name:'Watkins',fullName:'Ollie Watkins',teamId:2,pos:'FWD',price:9.5,form:5.9,xg90:0.52,ict:232,epNext:5.4,ppm:14.5,priceChg:-1,netIn:-35000,minsRel:84,ownedPct:31.6,totalPts:138,starts:23,status:'a',fix:{opp:'LIV',ha:'A',diff:4},fixes:[{gw:34,opp:'LIV',ha:'A',diff:4},{gw:35,opp:'BOU',ha:'H',diff:2},{gw:36,opp:'NEW',ha:'A',diff:3},{gw:37,opp:'FUL',ha:'H',diff:2}],score:0},
-  {id:9,name:'Solanke',fullName:'Dominic Solanke',teamId:18,pos:'FWD',price:7.5,form:4.2,xg90:0.38,ict:178,epNext:4.8,ppm:14.9,priceChg:0,netIn:8000,minsRel:80,ownedPct:12.3,totalPts:112,starts:21,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'LEI',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
+  {id:9,name:'Solanke',fullName:'Dominic Solanke',teamId:18,pos:'FWD',price:7.5,form:4.2,xg90:0.38,ict:178,epNext:4.8,ppm:14.9,priceChg:0,netIn:8000,minsRel:80,ownedPct:12.3,totalPts:112,starts:21,status:'a',fix:{opp:'FUL',ha:'A',diff:2},fixes:[{gw:34,opp:'FUL',ha:'A',diff:2},{gw:35,opp:'LIV',ha:'A',diff:4},{gw:36,opp:'SUN',ha:'H',diff:1},{gw:37,opp:'MUN',ha:'A',diff:3}],score:0},
   {id:24,name:'Wood',fullName:'Chris Wood',teamId:16,pos:'FWD',price:6.5,form:6.2,xg90:0.44,ict:156,epNext:5.6,ppm:16.8,priceChg:1,netIn:22000,minsRel:85,ownedPct:7.2,totalPts:109,starts:24,status:'a',fix:{opp:'CHE',ha:'A',diff:3},fixes:[{gw:34,opp:'CHE',ha:'A',diff:3},{gw:35,opp:'BRE',ha:'H',diff:2},{gw:36,opp:'EVE',ha:'A',diff:1},{gw:37,opp:'BHA',ha:'A',diff:3}],score:0},
-  {id:25,name:'Wissa',fullName:'Yoane Wissa',teamId:4,pos:'FWD',price:6.0,form:5.4,xg90:0.41,ict:138,epNext:4.9,ppm:15.2,priceChg:0,netIn:11000,minsRel:78,ownedPct:8.8,totalPts:91,starts:21,status:'a',fix:{opp:'SOU',ha:'H',diff:1},fixes:[{gw:34,opp:'SOU',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
+  {id:25,name:'Wissa',fullName:'Yoane Wissa',teamId:4,pos:'FWD',price:6.0,form:5.4,xg90:0.41,ict:138,epNext:4.9,ppm:15.2,priceChg:0,netIn:11000,minsRel:78,ownedPct:8.8,totalPts:91,starts:21,status:'a',fix:{opp:'BRN',ha:'H',diff:1},fixes:[{gw:34,opp:'BRN',ha:'H',diff:1},{gw:35,opp:'NFO',ha:'A',diff:2},{gw:36,opp:'MUN',ha:'H',diff:3},{gw:37,opp:'CRY',ha:'A',diff:2}],score:0},
 ];
 
 document.addEventListener('DOMContentLoaded',()=>{

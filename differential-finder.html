@@ -326,7 +326,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(bs.events?.find(e=>e.is_current)??bs.events?.find(e=>e.is_next)??bs.events?.find(e=>e.is_previous)??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur){const curFixes=(allFix||[]).filter(f=>f.event===cur.id);const allDone=curFixes.length>0&&curFixes.every(f=>f.finished);if(allDone&&nxt)return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);
@@ -621,7 +621,7 @@ function openDetail(id){
       <div class="dp-stat-grid">
         <div class="dp-tile"><div class="dp-tile-val" style="color:${p.form>=6?'var(--grass-l)':'var(--cream)'}">${p.form.toFixed(1)}</div><div class="dp-tile-label">Form (pts/game)</div></div>
         <div class="dp-tile"><div class="dp-tile-val" style="color:${p.xg90>=0.4?'var(--grass-l)':'var(--cream)'}">${p.xg90.toFixed(2)}</div><div class="dp-tile-label">xG+xA per 90</div></div>
-        <div class="dp-tile"><div class="dp-tile-val" style="color:var(--gold)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="dp-tile-label">Projected pts</div></div>
+        <div class="dp-tile"><div class="dp-tile-val" style="color:var(--gold)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="dp-tile-label">Proj pts</div></div>
         <div class="dp-tile"><div class="dp-tile-val" style="color:${p.ownedPct<5?'var(--grass-l)':p.ownedPct<10?'var(--blue)':'var(--cream)'}">${p.ownedPct.toFixed(1)}%</div><div class="dp-tile-label">Ownership</div></div>
         <div class="dp-tile"><div class="dp-tile-val" style="color:${p.priceChg>0?'var(--grass-l)':p.priceChg<0?'var(--accent)':'var(--muted)'}">${p.priceChg>0?'↑ Rising':p.priceChg<0?'↓ Falling':'Stable'}</div><div class="dp-tile-label">Price trend</div></div>
         <div class="dp-tile"><div class="dp-tile-val">${p.percentile}<span style="font-size:12px;color:var(--muted)">th</span></div><div class="dp-tile-label">Percentile (all players)</div></div>

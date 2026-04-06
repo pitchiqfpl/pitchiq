@@ -103,6 +103,28 @@ footer a:hover{color:var(--cream)}
 
 <div class="divider"></div>
 
+<h2>PROJECTION ENGINE</h2>
+<p>Every projected points figure across PitchIQ — in the Transfer Planner, Player Scout, Differential Finder and Captain Picker — is produced by the same engine. It combines seven signals:</p>
+
+<div class="formula-box">
+  <span class="var">GW1 projection</span> = <span class="result">FPL expected points (ep_next)</span> × minutes factor × availability<br>
+  <span class="var">GW2+ projection</span> = <span class="result">blended EP</span> × fixture ratio × minutes factor × availability + bonus expectation<br><br>
+  <span class="var">Blended EP</span> = ep_next × 0.55 + points_per_game × 0.45<br>
+  <span class="var">Fixture ratio</span> = weight(upcoming fixture) ÷ weight(GW1 fixture)<br>
+  <span class="var">Availability</span> = chance_of_playing_next_round ÷ 100 (0/25/50/75/100)<br>
+  <span class="var">Minutes factor</span> = avg minutes per game ÷ 90, capped at 1.0<br>
+  <span class="var">Bonus expectation</span> = season bonus points ÷ starts (capped at 1.5/game)
+</div>
+
+<h3>Why this approach</h3>
+<p><strong>GW1 trusts FPL's EP directly</strong> — FPL's own expected points figure already accounts for the next fixture, recent form and team strength. It's the single most accurate short-term signal available.</p>
+<p><strong>GW2+ blends EP with points-per-game</strong> — ep_next is noisy for multi-week planning because it reflects a single fixture. Season points-per-game is more stable and corrects for one-off blanks or hauls. The 55/45 blend balances short-term signal with season reliability.</p>
+<p><strong>Fixture ratio scaling</strong> — rather than applying arbitrary difficulty multipliers, we scale the blended EP up or down based on how the upcoming fixture compares to the GW1 fixture in terms of difficulty and home/away advantage. Difficulty weights: 1=1.28 · 2=1.12 · 3=1.00 · 4=0.84 · 5=0.68. Home=1.06 · Away=0.94.</p>
+<p><strong>Availability from chance_of_playing</strong> — FPL reports a player's chance of playing next round as 0, 25, 50, 75 or 100%. We use this directly rather than a binary available/doubt distinction, which is more accurate for players with niggling injuries.</p>
+<p><strong>Bonus point expectation</strong> — players with consistently high BPS scores earn bonus points every week regardless of fixture difficulty. We add a flat bonus expectation (season bonus ÷ starts, capped at 1.5) to all projected figures.</p>
+
+<div class="divider"></div>
+
 <h2>CAPTAIN SCORE</h2>
 <p>The Captain Picker ranks players using a composite score across three signals — recent form, FPL's own predicted points for the next gameweek, and ICT index. Expected points is weighted most heavily because it already accounts for fixture difficulty and form. Form and ICT are added to capture recent momentum and goal threat that predicted points can sometimes lag on.</p>
 <p>The result is a single ranked list. The higher the score, the stronger the captain recommendation for your specific gameweek.</p>

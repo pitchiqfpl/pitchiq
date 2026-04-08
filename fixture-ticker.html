@@ -558,7 +558,13 @@ const ENGINE = (() => {
       byTeam[hId]?.fixtures.push({gw,opp:fplMap[aId]?.short??'???',oppName:fplMap[aId]?.name??'Unknown',ha:'H',kickoff:f.kickoff_time??null,overall:f.team_h_difficulty??3,attacking:hAtt,defensive:hDef,blank:false,double:false,_raw:{oppNormAtt:a.nAA.toFixed(3),oppNormDef:a.nAD.toFixed(3)}});
       byTeam[aId]?.fixtures.push({gw,opp:fplMap[hId]?.short??'???',oppName:fplMap[hId]?.name??'Unknown',ha:'A',kickoff:f.kickoff_time??null,overall:f.team_a_difficulty??3,attacking:aAtt,defensive:aDef,blank:false,double:false,_raw:{oppNormAtt:h.nHA.toFixed(3),oppNormDef:h.nHD.toFixed(3)}});
     });
-    Object.values(byTeam).forEach(t=>t.fixtures.sort((a,b)=>a.gw-b.gw));
+    Object.values(byTeam).forEach(t=>{
+      t.fixtures.sort((a,b)=>a.gw-b.gw);
+      // Mark double gameweeks — any GW where a team has 2+ fixtures
+      const gwCounts={};
+      t.fixtures.forEach(f=>{gwCounts[f.gw]=(gwCounts[f.gw]||0)+1;});
+      t.fixtures.forEach(f=>{if(gwCounts[f.gw]>1)f.double=true;});
+    });
     return byTeam;
   }
 
@@ -582,7 +588,8 @@ const ENGINE = (() => {
     const ns=normalise(rawScores(xgMap));
     const thresholds=computeThresholds(ns);
     // Try unfinished fixtures first; fall back to all fixtures in range if none found
-    let upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&f.finished===false);
+    // Use !f.finished instead of f.finished===false to catch null/undefined too
+    let upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&!f.finished);
     if(upcoming.length===0){
       // Between GWs — include recently finished GW too so ticker isn't empty
       upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw);
@@ -1000,15 +1007,35 @@ function rBody(ts) {
     const hl  = avg < 2.0 && S.hl;
 
     const cells = gws.map(gw => {
-      const f = t.fx.find(x => x.gw === gw);
+      const gwFixes = t.fx.filter(x => x.gw === gw);
+      const f = gwFixes[0];
+      const f2 = gwFixes[1]; // second fixture in a DGW
 
       if (!f || f.blank) {
         return `<td class="fix-td"><div class="fix-cell fix-blank" style="width:58px;height:38px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;">—</div></td>`;
       }
 
-      // Store fixture with a numeric key — safe, no JSON in HTML attributes
+      // Store fixture(s) with a numeric key
       const k = fixKey++;
-      FIX_STORE.set(k, { ...f, teamName: t.name });
+      FIX_STORE.set(k, { ...f, teamName: t.name, f2: f2 || null });
+
+      // Double GW — show split cell with both opponents
+      if (f2) {
+        const v1 = fv(f) ?? 3;
+        const v2 = fv(f2) ?? 3;
+        return `<td class="fix-td">
+          <div class="split-cell fix-double" onmouseenter="showTT(event,${k})" onmouseleave="hideTT()">
+            <div class="split-half d${v1}">
+              <span class="fix-opp" style="font-size:9px">${f.opp}</span>
+              <span class="fix-ha">${f.ha}</span>
+            </div>
+            <div class="split-half d${v2}">
+              <span class="fix-opp" style="font-size:9px">${f2.opp}</span>
+              <span class="fix-ha">${f2.ha}</span>
+            </div>
+          </div>
+        </td>`;
+      }
 
       if (S.mode === 'split') {
         return `<td class="fix-td">
@@ -1130,7 +1157,7 @@ function showTT(e, key) {
 
   document.getElementById('ttInner').innerHTML = `
     <div class="tt-hd">
-      <span class="tt-match">vs ${f.opp} (${f.ha})</span>
+      <span class="tt-match">vs ${f.opp} (${f.ha})${f.f2 ? ` &amp; ${f.f2.opp} (${f.f2.ha})` : ''}</span>
       <span class="tt-gw">GW${f.gw}</span>
     </div>
     <div class="tt-ctx">${ctx[S.mode]}</div>
@@ -1139,7 +1166,7 @@ function showTT(e, key) {
     <div class="tt-bar"><span class="tt-bl">Overall</span><div class="tt-bt"><div class="tt-bf" style="width:${f.overall*20}%;background:var(--grass)"></div></div><span class="tt-bv">${DF[f.overall]}</span></div>
     ${xgRows}
     ${f.ha==='H'?'<div class="tt-note" style="color:var(--grass-l)">🏟 Home advantage factored into xG ratings</div>':''}
-    ${f.double?'<div class="tt-note" style="color:var(--gold)">⚡ Double GW — two games this week</div>':''}`;
+    ${f.f2?'<div class="tt-note" style="color:var(--gold)">⚡ Double GW — two games this week</div>':''}`;
 
   const tt   = document.getElementById('tooltip');
   const rect = e.currentTarget.getBoundingClientRect();

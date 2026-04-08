@@ -1559,13 +1559,14 @@ function projEngine(p, gwIndex){
   if(!fThis) return 0;
 
   if(gwIndex === 0){
-    // GW1: blend ep_next with ppg to dampen post-haul spikes
-    // FPL's ep_next is form-weighted and can overshoot after a big return
-    // e.g. Saliba scores a goal → ep_next spikes to 12+ for one week
-    // Blending 70/30 with ppg keeps it form-responsive but grounded
-    const base = epNext > 0
-      ? epNext * 0.70 + ppg * 0.30
-      : ppg;
+    // GW1: position-specific blend of ep_next and ppg
+    // DEF/GK: 40% ep_next + 60% ppg — CS luck means ep_next overshoots more
+    // MID/FWD: 65% ep_next + 35% ppg — ep_next is more reliable for attackers
+    // Blending grounds projections against post-haul spikes in ep_next
+    const pos = p.pos;
+    const wEp  = (pos==='DEF'||pos==='GK') ? 0.40 : 0.65;
+    const wPpg = 1 - wEp;
+    const base = epNext > 0 ? epNext * wEp + ppg * wPpg : ppg;
     return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
   } else {
     // GW2+: physics model — ep_next is no longer relevant for future fixtures

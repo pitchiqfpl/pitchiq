@@ -178,7 +178,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 /* SIDE PANEL */
 .side-panel{display:flex;flex-direction:column;gap:14px}
 .stat-card{background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:16px}
-.stat-card-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.stat-card-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat-tile{background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 12px;border:1px solid var(--border)}
 .stat-tile-val{font-family:var(--font-d);font-size:24px;line-height:1;color:var(--cream)}
@@ -195,7 +195,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 /* TRANSFER PANEL */
 .xfer-panel{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;margin-bottom:14px}
 .xfer-panel-header{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
-.xfer-panel-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.xfer-panel-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
 .xfer-panel-badge{font-family:var(--font-m);font-size:10px;padding:2px 8px;border-radius:5px;background:rgba(99,179,237,0.1);color:var(--blue)}
 .xfer-card{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
 .xfer-card:last-child{border-bottom:none}
@@ -413,6 +413,9 @@ function buildPlayers(els,fm){
     price:e.now_cost/10,
     form:parseFloat(e.form)||0,
     epNext:parseFloat(e.ep_next)||0,
+    ppg:parseFloat(e.points_per_game)||0,
+    starts:e.starts||0,
+    chanceNext:e.chance_of_playing_next_round??100,
     ownedPct:parseFloat(e.selected_by_percent)||0,
     status:e.status,
     fixes:fm[e.team]??[],
@@ -702,9 +705,17 @@ function tokenHtml(p,isSub){
   const statusDot = p.status==='d'
     ? `<div class="status-dot doubt" title="Doubt"></div>`
     : p.status==='i' ? `<div class="status-dot injured" title="Injured"></div>` : '';
-  const epBadge = p.epNext>0
-    ? `<div class="ep-badge">${p.epNext.toFixed(1)}<span class="ep-pts">pts</span></div>`
-    : '';
+  const epBadge = p.(()=>{
+    const ep=p.epNext||0,ppg=p.ppg>0?p.ppg:p.pos==='GK'||p.pos==='DEF'?4.5:5.0;
+    const caps={'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
+    const epC=ep>0?Math.min(ep,caps[p.pos]??12):0;
+    const wEp=p.pos==='GK'||p.pos==='DEF'?0.40:0.65;
+    const proj=epC>0?epC*wEp+ppg*(1-wEp):ppg;
+    const mf=Math.min((p.starts>0?(p.minutes||0)/p.starts:75)/90,1)||1;
+    const avail=p.chanceNext<100?p.chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
+    const final=Math.round(proj*mf*avail*10)/10;
+    return final>0?`<div class="ep-badge">${final.toFixed(1)}<span class="ep-pts">pts</span></div>`:'';
+  })();
 
   const isXferIn  = PENDING_TRANSFERS.some(t=>t.element_in===p.id);
   const isXferOut = PENDING_TRANSFERS.some(t=>t.element_out===p.id);

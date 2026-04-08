@@ -1554,7 +1554,13 @@ function projEngine(p, gwIndex){
   const mins   = p.minsRel ?? 75;
   const mf     = Math.min(mins/90, 1);
   const epNext = p.epNext > 0 ? p.epNext : 0;
-  const ppg    = p.ppg > 0 ? p.ppg : p.form > 0 ? p.form : 3.5;
+  // Cap ep_next at realistic position ceiling — prevents impossible spikes
+  const epCaps={'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
+  const epCapped = epNext > 0 ? Math.min(epNext, epCaps[p.pos]??12.0) : 0;
+  // ppg fallback: use position average if ppg=0 (new player or insufficient games)
+  // Do NOT use FPL form as fallback — form spikes wildly after hauls (can be 14+)
+  const posPpgDefault = p.pos==='GK'?4.5:p.pos==='DEF'?4.5:p.pos==='MID'?5.0:5.0;
+  const ppg = p.ppg > 0 ? p.ppg : posPpgDefault;
   const fThis  = p.fixes?.[gwIndex];
   if(!fThis) return 0;
 
@@ -1566,7 +1572,7 @@ function projEngine(p, gwIndex){
     const pos = p.pos;
     const wEp  = (pos==='DEF'||pos==='GK') ? 0.40 : 0.65;
     const wPpg = 1 - wEp;
-    const base = epNext > 0 ? epNext * wEp + ppg * wPpg : ppg;
+    const base = epCapped > 0 ? epCapped * wEp + ppg * wPpg : ppg;
     return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
   } else {
     // GW2+: physics model — ep_next is no longer relevant for future fixtures

@@ -76,7 +76,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .hero-section{margin-bottom:20px;display:none}
 .hero-section.visible{display:block}
 .hero-card{padding:22px 24px;border-radius:14px;background:linear-gradient(135deg,rgba(39,174,96,0.08) 0%,rgba(13,17,23,0) 60%);border:1px solid rgba(39,174,96,0.25);display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start}
-.hero-eyebrow{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grass-l);margin-bottom:6px}
+.hero-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--grass-l);margin-bottom:6px}
 .hero-name{font-family:var(--font-d);font-size:38px;letter-spacing:1px;color:var(--cream);line-height:1.1;margin-bottom:4px}
 .hero-meta{font-size:12px;color:var(--muted);margin-bottom:12px}
 .hero-stats{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
@@ -151,7 +151,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .dp-meta{font-size:11px;color:var(--muted)}
 .dp-body{padding:16px 20px}
 .dp-section{margin-bottom:18px}
-.dp-section-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.dp-section-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .dp-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dp-tile{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:7px;padding:9px 11px}
 .dp-tile-val{font-family:var(--font-d);font-size:20px;line-height:1;color:var(--cream)}
@@ -352,7 +352,8 @@ function buildFixMap(fixtures,gw,count){
 
 function buildPlayers(els,fm){
   return els.filter(e=>e.element_type>0&&e.status!=='u').map(e=>{
-    const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+    const mins=e.minutes||1;
+    const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
     const xg90=Math.min(((parseFloat(e.expected_goals)||0)+(parseFloat(e.expected_assists)||0))/(mins/90),1.5);
     return{
       id:e.id,name:e.web_name,teamId:e.team,

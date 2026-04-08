@@ -386,6 +386,10 @@ function buildPlayers(els,fm){
       form:parseFloat(e.form)||0,xg90,
       ict:parseFloat(e.ict_index)||0,
       epNext:parseFloat(e.ep_next)||0,
+      ppg:parseFloat(e.points_per_game)||0,
+      starts:e.starts||0,
+      minutes:e.minutes||0,
+      chanceNext:e.chance_of_playing_next_round??100,
       totalPts:e.total_points||0,
       ownedPct:parseFloat(e.selected_by_percent)||0,
       status:e.status,
@@ -403,21 +407,36 @@ function buildPlayers(els,fm){
    This gives a reasonable forward projection without needing
    actual future ep data which isn't in the bootstrap.
 ─────────────────────────────────────────────────────────────────── */
-function projectPoints(player,numGws){
-  const base=player.epNext>0?player.epNext:Math.max(player.form*0.9,1);
-  const pts=[];
-  const fixes=player.fixes.slice(0,numGws);
-  for(let i=0;i<numGws;i++){
-    const fix=fixes[i]??null;
-    if(!fix){pts.push(0);continue;} // blank GW
-    const diffMult=fix.diff<=2?1.18:fix.diff===3?1.0:fix.diff===4?0.82:0.65;
-    const gwMult=i===0?1.0:0.92; // slight decay for uncertainty
-    pts.push(Math.max(parseFloat((base*diffMult*gwMult).toFixed(2)),0.5));
+function projectPoints(player, numGws){
+  // Position-specific blend: DEF/GK 40% ep + 60% ppg, MID/FWD 65% ep + 35% ppg
+  const pos = player.pos;
+  const ep  = player.epNext > 0 ? player.epNext : 0;
+  const caps = {'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
+  const epC = ep > 0 ? Math.min(ep, caps[pos]??12.0) : 0;
+  const ppgDefault = pos==='GK'||pos==='DEF' ? 4.5 : 5.0;
+  const ppg = player.ppg > 0 ? player.ppg : ppgDefault;
+  const wEp = pos==='GK'||pos==='DEF' ? 0.40 : 0.65;
+  const base = epC > 0 ? epC * wEp + ppg * (1-wEp) : ppg;
+  const starts = player.starts > 0 ? player.starts : Math.max(Math.round((player.minutes||75)/75),1);
+  const mf = Math.min((player.minutes||75) / starts / 90, 1);
+  const avail = player.chanceNext < 100 ? player.chanceNext/100
+              : player.status==='i' ? 0 : player.status==='d' ? 0.55 : 1;
+  const pts = [];
+  const fixes = (player.fixes||[]).slice(0, numGws);
+  for(let i = 0; i < numGws; i++){
+    const fix = fixes[i] ?? null;
+    if(!fix){ pts.push(0); continue; }
+    if(i === 0){
+      // GW1: blended ep is already fixture-aware
+      pts.push(Math.max(Math.round(base * mf * avail * 10)/10, 0));
+    } else {
+      // GW2+: scale base by difficulty relative to average (diff 3 = 1.0)
+      const diffMult = [0,1.18,1.09,1.0,0.86,0.72][fix.diff??3] ?? 1.0;
+      pts.push(Math.max(Math.round(base * diffMult * mf * avail * 10)/10, 0));
+    }
   }
   return pts;
 }
-
-/* ── AUTOCOMPLETE ─────────────────────────────────────────────── */
 function setupSearch(inputId,acId,onSelect){
   const inp=document.getElementById(inputId);
   const ac=document.getElementById(acId);

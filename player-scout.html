@@ -588,6 +588,7 @@ const SORT_FN = {
   savesPer90:      (a,b)=>b.savesPer90-a.savesPer90,
   defContribPer90: (a,b)=>b.defContribPer90-a.defContribPer90,
   fixes:           (a,b)=>(a.fix?.diff??3)-(b.fix?.diff??3),
+  proj:            (a,b)=>(b.projPts??b.epNext)-(a.projPts??a.epNext),
   ep:              (a,b)=>b.epNext-a.epNext,
   own:             (a,b)=>a.ownedPct-b.ownedPct,
   scout:           (a,b)=>b.score-a.score,
@@ -787,7 +788,11 @@ function buildFixMap(fixtures,gw,tmap,bs,xgData){
 }
 function buildPlayers(els,fm){
   return els.filter(e=>e.element_type>0).map(e=>{
-    const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+    const mins=e.minutes||1;
+    // Use actual starts from FPL bootstrap — more accurate than estimating from minutes
+    // Falls back to minutes/75 estimate only if starts not available
+    const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
+    const games=starts; // alias for xG/90 calculations below
     const xg90=Math.min((parseFloat(e.expected_goals)||0)/(mins/90),1.0);
     const xa90=Math.min((parseFloat(e.expected_assists)||0)/(mins/90),0.8);
     const goals90=Math.min((e.goals_scored||0)/(mins/90),1.5);
@@ -815,8 +820,8 @@ function buildPlayers(els,fm){
       chanceNext:e.chance_of_playing_next_round??100,
       ppm:price>0?(e.total_points||0)/price:0,
       priceChg:e.cost_change_event??0,netIn:(e.transfers_in_event||0)-(e.transfers_out_event||0),
-      minsRel:Math.min(mins/games,90),ownedPct:parseFloat(e.selected_by_percent)||0,
-      totalPts:e.total_points||0,starts:e.starts??games,status:e.status,
+      minsRel:Math.min(starts>0?mins/starts:90,90),ownedPct:parseFloat(e.selected_by_percent)||0,
+      totalPts:e.total_points||0,starts,status:e.status,
       // Defensive stats
       xgc90:Math.min((parseFloat(e.expected_goals_conceded)||0)/(mins/90),3.0),
       xgc90Season:Math.min((parseFloat(e.expected_goals_conceded)||0)/(mins/90),3.0),
@@ -841,6 +846,9 @@ function buildPlayers(els,fm){
 
 function scoreAll(){
   if(!ALL.length)return;
+  // Compute projected points for each player using the engine
+  // Do this before z-score normalisation so projPts is available for sorting
+  ALL.forEach(p=>{ p.projPts = projEngine(p, 0); });
   const Z=2.5;
   const zn=vs=>{const m=vs.reduce((s,v)=>s+v,0)/vs.length,sd=Math.sqrt(vs.reduce((s,v)=>s+(v-m)**2,0)/vs.length)||1;return vs.map(v=>(Math.max(-Z,Math.min(Z,(v-m)/sd))+Z)/(Z*2));};
   const nF=zn(ALL.map(p=>p.form));
@@ -927,7 +935,7 @@ let VP_POS='MID';
 function valueScore(p){
   // Composite: form (30%) + xG+xA per 90 (25%) + fixture ease (25%) + ep_next (20%), all divided by price
   const fixEase=p.fixes.length ? p.fixes.slice(0,3).reduce((s,f)=>s+(6-f.diff),0)/p.fixes.length : 3;
-  const raw=(p.form*0.30)+(p.xgCombined*25*0.25)+(fixEase*2*0.25)+(p.epNext*0.20);
+  const raw=(p.form*0.30)+(p.xgCombined*25*0.25)+(fixEase*2*0.25)+(((p.projPts??p.epNext)||0)*0.20);
   return p.price>0 ? raw/p.price : 0;
 }
 
@@ -990,7 +998,7 @@ function renderValuePicks(pos){
           <div class="vp-stat-label">${statB.lbl}</div>
         </div>
         <div class="vp-stat">
-          <div class="vp-stat-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div>
+          <div class="vp-stat-val" style="color:var(--grass-l)">${p.projPts!=null?p.projPts.toFixed(1):p.epNext>0?p.epNext.toFixed(1):'—'}</div>
           <div class="vp-stat-label">Proj pts</div>
         </div>
       </div>
@@ -1099,7 +1107,7 @@ function renderTransferSuggester(){
           <div class="ts-player-stats">
             <div class="ts-stat"><span class="ts-stat-val" style="color:${sell.score>=60?'var(--cream)':'var(--accent)'}">${sell.score}</span><span class="ts-stat-label">Scout</span></div>
             <div class="ts-stat"><span class="ts-stat-val">${sell.form.toFixed(1)}</span><span class="ts-stat-label">Form</span></div>
-            <div class="ts-stat"><span class="ts-stat-val">${sell.epNext>0?sell.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${sell.projPts!=null?sell.projPts.toFixed(1):sell.epNext>0?sell.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
           </div>
           <div style="display:flex;gap:3px;margin-top:8px;flex-wrap:wrap">${sellFixHtml||'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div>
         </div>
@@ -1124,7 +1132,7 @@ function renderTransferSuggester(){
           <div class="ts-player-stats">
             <div class="ts-stat"><span class="ts-stat-val" style="color:${buy.score>=65?'var(--grass-l)':buy.score>=50?'var(--cream)':'var(--muted)'}">${buy.score}</span><span class="ts-stat-label">Scout</span></div>
             <div class="ts-stat"><span class="ts-stat-val">${buy.form.toFixed(1)}</span><span class="ts-stat-label">Form</span></div>
-            <div class="ts-stat"><span class="ts-stat-val">${buy.epNext>0?buy.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
+            <div class="ts-stat"><span class="ts-stat-val">${buy.projPts!=null?buy.projPts.toFixed(1):buy.epNext>0?buy.epNext.toFixed(1):'—'}</span><span class="ts-stat-label">Proj pts</span></div>
           </div>
           <div style="display:flex;gap:3px;margin-top:8px;flex-wrap:wrap">${buyFixHtml||'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div>
         </div>
@@ -1235,7 +1243,7 @@ function renderTargets(){
 function getColDefs(pos){
   const common = [
     {key:'price', hdr:'Price',     tip:'Current FPL price. ↑↓ shows price movement this GW.'},
-    {key:'ep',    hdr:'Proj pts',  tip:'Projected points next GW.'},
+    {key:'proj',  hdr:'Proj pts',  tip:'Projected points next GW — ep_next adjusted for minutes reliability and availability.'},
     {key:'own',   hdr:'Owned%',    tip:'% of FPL managers who own this player.'},
     {key:'form',  hdr:'Form',      tip:'FPL avg pts per game over the last 30 days.'},
     {key:'fixes', hdr:'Next 4 GWs', tip:null},
@@ -1291,6 +1299,7 @@ function renderColCell(p, key){
     case 'savesPer90': return `<td class="${p.savesPer90>3?'stat-good':p.savesPer90>2?'stat-ok':'stat-warn'}">${p.savesPer90.toFixed(1)}</td>`;
     case 'defContribPer90': return `<td class="${p.defContribPer90>3?'stat-good':p.defContribPer90>1.5?'stat-ok':'stat-warn'}">${p.defContribPer90.toFixed(1)}</td>`;
     case 'fixes': return `<td><div class="tbl-fix-run">${p.fixes.length?p.fixes.map(f=>`<span class="frs-pill ${FIX_CLS[f.diff]}" title="GW${f.gw} vs ${f.opp} (${f.ha})">${f.opp}</span>`).join(''):'<span style="color:var(--muted);font-size:10px">BGW</span>'}</div></td>`;
+    case 'proj':  return `<td class="${(p.projPts??p.epNext)>=7?'stat-good':(p.projPts??p.epNext)>=5?'stat-ok':'stat-warn'}">${(p.projPts??p.epNext)>0?(p.projPts??p.epNext).toFixed(1):'—'}</td>`;
     case 'ep':    return `<td class="${p.epNext>=7?'stat-good':p.epNext>=5?'stat-ok':'stat-warn'}">${p.epNext>0?p.epNext.toFixed(1):'—'}</td>`;
     case 'own':   return `<td class="${p.ownedPct<10?'stat-good':p.ownedPct<30?'stat-ok':'stat-warn'}">${p.ownedPct.toFixed(1)}%</td>`;
 
@@ -1396,7 +1405,7 @@ async function openDetail(id){
         <div class="stat-tile"><div class="stat-tile-label">Form</div><div class="stat-tile-val" style="color:${p.form>=8?'var(--grass-l)':p.form>=5?'var(--cream)':'var(--gold)'}">${p.form.toFixed(1)}</div><div class="stat-tile-sub">pts/game last 30d</div></div>
         <div class="stat-tile"><div class="stat-tile-label">xG / 90</div><div class="stat-tile-val" style="color:${p.xg90>0.3?'var(--grass-l)':p.xg90>0.15?'var(--cream)':'var(--muted)'}">${p.xg90.toFixed(2)}</div><div class="stat-tile-sub">${p.xg90Recent>0?`recent ${p.xg90Recent.toFixed(2)}`:'season avg'}</div></div>
         <div class="stat-tile"><div class="stat-tile-label">xA / 90</div><div class="stat-tile-val" style="color:${p.xa90>0.2?'var(--grass-l)':p.xa90>0.1?'var(--cream)':'var(--muted)'}">${p.xa90.toFixed(2)}</div><div class="stat-tile-sub">season avg · L6 in table</div></div>
-        <div class="stat-tile"><div class="stat-tile-label">Proj pts</div><div class="stat-tile-val" style="color:var(--grass-l)">${p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="stat-tile-sub">next GW estimate</div></div>
+        <div class="stat-tile"><div class="stat-tile-label">Proj pts</div><div class="stat-tile-val" style="color:var(--grass-l)">${p.projPts!=null?p.projPts.toFixed(1):p.epNext>0?p.epNext.toFixed(1):'—'}</div><div class="stat-tile-sub">next GW (mins & avail adjusted)</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Pts / £m</div><div class="stat-tile-val">${p.ppm.toFixed(1)}</div><div class="stat-tile-sub">value this season</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Pts per start</div><div class="stat-tile-val">${avgPts}</div><div class="stat-tile-sub">${p.starts} starts · excl. subs</div></div>
         <div class="stat-tile"><div class="stat-tile-label">Scout score</div><div class="stat-tile-val" style="color:${p.score>=70?'var(--grass-l)':p.score>=50?'var(--cream)':'var(--muted)'}">${p.score}</div><div class="stat-tile-sub">50 = avg · 70+ = buy</div></div>
@@ -1500,15 +1509,16 @@ function renderGwH(id){
   }).join('')}</div>`;
 }
 
-/* ── WORLD-CLASS PROJECTION ENGINE ────────────────────────────
-   Position-specific model using:
-   1. Real xG/xGC per team from API-Football (falls back to FPL strength)
-   2. Player xG/xA — season avg blended with L6 rolling (when available)
-   3. Set piece bonus — penalty takers get +0.7pts/game
-   4. Poisson clean sheet probability
-   5. GK save pts from opponent xG
-   6. GW1: ep_next calibrated by fixture scalar
-   7. GW2+: 45% ppg + 55% physics
+/* ── PROJECTION ENGINE ─────────────────────────────────────────
+   GW1:  ep_next × minutes_factor × availability
+         FPL's ep_next already accounts for the next fixture, form,
+         team context and set piece roles. Trust it directly.
+         Only apply minutes reliability and injury/doubt factor.
+
+   GW2+: 45% ppg + 55% physics model
+         ep_next is fixture-specific and becomes stale for future GWs.
+         Physics model uses player xG/xA, opponent xG/xGC, position
+         scoring values, Poisson CS probability and set piece bonus.
 ──────────────────────────────────────────────────────────────── */
 function diffWeight(d){ return [0,1.28,1.12,1.0,0.84,0.68][d]??1.0; }
 function haWeight(ha){ return ha==='H'?1.06:0.94; }
@@ -1517,79 +1527,54 @@ function physicsPts(p, fix, mins){
   if(!fix) return 0;
   const mf = Math.min(mins/90, 1);
   const pos = p.pos;
-
-  // Appearance points
   const app = mins >= 60 ? 2 : 1;
-
-  // Opponent strength — real xG if available, else difficulty fallback
   const oppXg  = fix.oppXg  ?? [0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
   const oppXgc = fix.oppXgc ?? [0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
-
-  // Opponent defensive weakness vs league average
-  const oppDefFactor = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
-
-  // Player xG/xA — blend season avg with L6 rolling if available
-  // L6 captures current form; season avg captures true ability
-  const l6 = L6_CACHE.get(p.id);
-  const pXgSeason = p.xg90 || 0;
-  const pXaSeason = p.xa90 || 0;
+  const oppDef = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
+  // Blend season xG/xA with L6 cache if available
+  const l6 = typeof L6_CACHE !== 'undefined' ? L6_CACHE.get(p.id) : null;
   const pXgL6 = l6?.xg90L6 ?? p.xg90Recent ?? 0;
   const pXaL6 = l6?.xa90L6 ?? 0;
-  // If we have L6 data, blend 50/50 season + L6 for best estimate
-  const pXg = pXgL6 > 0.01
-    ? Math.min(pXgSeason * 0.50 + pXgL6 * 0.50, 1.2)
-    : pXgSeason;
-  const pXa = pXaL6 > 0.01
-    ? Math.min(pXaSeason * 0.50 + pXaL6 * 0.50, 0.9)
-    : pXaSeason;
-
-  // Goal/assist returns scaled by opponent weakness
+  const pXg = pXgL6 > 0.01 ? Math.min((p.xg90||0)*0.5 + pXgL6*0.5, 1.2) : (p.xg90||0);
+  const pXa = pXaL6 > 0.01 ? Math.min((p.xa90||0)*0.5 + pXaL6*0.5, 0.9) : (p.xa90||0);
   const goalPts = pos==='FWD' ? 4 : pos==='MID' ? 5 : 6;
-  const attPts  = (pXg * oppDefFactor * goalPts + pXa * oppDefFactor * 3) * mf;
-
-  // Set piece bonus — penalty taker worth ~0.7 extra pts/game
-  // primary penalty taker (penOrder===1) averages ~0.25 penalties scored/game
-  // 0.25 × (4 or 5 or 6 goal pts) ≈ 1.0-1.5pts but net of xG already counted ≈ +0.7
-  const setPiecePts = p.isPenTaker ? 0.7 * mf : 0;
-
-  // Clean sheet probability — Poisson: P(0 goals) = e^(-lambda)
-  const csLambda = oppXg * mf;
-  const csProb = Math.exp(-Math.max(csLambda, 0.01));
-  const csPtsPerPos = pos==='GK'||pos==='DEF' ? 4 : pos==='MID' ? 1 : 0;
-  const csPts = csProb * csPtsPerPos * (mins >= 60 ? 1.0 : 0.5);
-
-  // GK save pts — ~2.5 shots per xG unit, 1pt per 3 saves
-  const savePts = pos==='GK' ? (oppXg * 2.5 * mf) / 3 : 0;
-
-  return app + attPts + setPiecePts + csPts + savePts;
+  const attPts  = (pXg * oppDef * goalPts + pXa * oppDef * 3) * mf;
+  const setPiece = p.isPenTaker ? 0.7 * mf : 0;
+  const csProb   = Math.exp(-Math.max(oppXg * mf, 0.01));
+  const csPer    = pos==='GK'||pos==='DEF' ? 4 : pos==='MID' ? 1 : 0;
+  const csPts    = csProb * csPer * (mins >= 60 ? 1.0 : 0.5);
+  const savePts  = pos==='GK' ? (oppXg * 2.5 * mf) / 3 : 0;
+  return app + attPts + setPiece + csPts + savePts;
 }
 
 function projEngine(p, gwIndex){
   const chanceNext = p.chanceNext ?? 100;
   const avail = chanceNext < 100 ? chanceNext/100
               : p.status==='i' ? 0 : p.status==='d' ? 0.55 : 1;
-
   const mins   = p.minsRel ?? 75;
+  const mf     = Math.min(mins/90, 1);
   const epNext = p.epNext > 0 ? p.epNext : 0;
   const ppg    = p.ppg > 0 ? p.ppg : p.form > 0 ? p.form : 3.5;
   const fThis  = p.fixes?.[gwIndex];
-
   if(!fThis) return 0;
 
   if(gwIndex === 0){
-    // GW1: scale ep_next by how this fixture compares to an average fixture
-    const physThis = physicsPts(p, fThis, mins);
-    const physAvg  = physicsPts(p, {diff:3,ha:'H',oppXg:1.3,oppXgc:1.25}, mins);
-    const fixtureScalar = physAvg > 0.5 ? physThis / physAvg : 1.0;
-    const result = epNext > 0 ? epNext * fixtureScalar : physThis;
-    return Math.max(Math.round(result * avail * 10) / 10, 0);
+    // GW1: blend ep_next with ppg to dampen post-haul spikes
+    // FPL's ep_next is form-weighted and can overshoot after a big return
+    // e.g. Saliba scores a goal → ep_next spikes to 12+ for one week
+    // Blending 70/30 with ppg keeps it form-responsive but grounded
+    const base = epNext > 0
+      ? epNext * 0.70 + ppg * 0.30
+      : ppg;
+    return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
   } else {
-    // GW2+: blend stable ppg with physics model for this specific fixture
+    // GW2+: physics model — ep_next is no longer relevant for future fixtures
     const phys   = physicsPts(p, fThis, mins);
     const result = ppg * 0.45 + phys * 0.55;
     return Math.max(Math.round(result * avail * 10) / 10, 0);
   }
 }
+
 function buildMinuteCalc(p) {
   // Expected minutes per game based on minsRel + status + rotation signals
   const base = p.minsRel ?? 75;
@@ -1793,7 +1778,7 @@ function renderCompare(){
         <div class="compare-stat"><span class="compare-stat-label">Scout</span><span class="compare-stat-val${p.score===bS?' best':''}">${p.score}</span></div>
         <div class="compare-stat"><span class="compare-stat-label">Form</span><span class="compare-stat-val${p.form===bF?' best':''}">${p.form.toFixed(1)}</span></div>
         <div class="compare-stat"><span class="compare-stat-label">xG+xA</span><span class="compare-stat-val${p.xgCombined===bX?' best':''}">${p.xgCombined.toFixed(2)}</span></div>
-        <div class="compare-stat"><span class="compare-stat-label">Proj pts</span><span class="compare-stat-val">${p.epNext>0?p.epNext.toFixed(1):'—'}</span></div>
+        <div class="compare-stat"><span class="compare-stat-label">Proj pts</span><span class="compare-stat-val">${p.projPts!=null?p.projPts.toFixed(1):p.epNext>0?p.epNext.toFixed(1):'—'}</span></div>
         ${fix?`<div class="compare-stat"><span class="compare-stat-label">Next fix</span><span class="compare-stat-val"><span class="fix-mini ${FIX_CLS[fix.diff]}">${fix.opp} ${fix.ha}</span></span></div>`:''}
       </div>
     </div>`;

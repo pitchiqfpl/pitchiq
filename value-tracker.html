@@ -309,50 +309,64 @@ function lsGet(k,d){try{let v=localStorage.getItem(k);if(v===null)return d;if(v.
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
 
-// Position-specific physics-based projection engine
-function diffWeight(d){return[0,1.28,1.12,1.0,0.84,0.68][d]??1.0;}
-function haWeight(ha){return ha==='H'?1.06:0.94;}
+/* ── PROJECTION ENGINE ─────────────────────────────────────────
+   GW1:  ep_next × minutes_factor × availability
+         FPL's ep_next already accounts for the next fixture, form,
+         team context and set piece roles. Trust it directly.
+         Only apply minutes reliability and injury/doubt factor.
 
-function physicsPts(p,fix,mins){
-  if(!fix)return 0;
-  const mf=Math.min(mins/90,1);
-  const pos=p.pos;
-  const app=mins>=60?2:1;
-  const oppXg=fix.oppXg??[0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
-  const oppXgc=fix.oppXgc??[0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
-  const oppDef=Math.max(0.45,Math.min(oppXgc/1.25,2.2));
-  const pXgSeason=p.xg90||0;
-  const pXgRecent=p.xg90Recent||0;
-  const pXg=pXgRecent>0.01?Math.min(pXgSeason*0.5+pXgRecent*0.5,1.2):pXgSeason;
-  const pXa=p.xa90||0;
-  const goalPts=pos==='FWD'?4:pos==='MID'?5:6;
-  const attPts=(pXg*oppDef*goalPts+pXa*oppDef*3)*mf;
-  const setPiecePts=p.isPenTaker?0.7*mf:0;
-  const csProb=Math.exp(-Math.max(oppXg*mf,0.01));
-  const csPtsPerPos=pos==='GK'||pos==='DEF'?4:pos==='MID'?1:0;
-  const csPts=csProb*csPtsPerPos*(mins>=60?1:0.5);
-  const savePts=pos==='GK'?(oppXg*2.5*mf)/3:0;
-  return app+attPts+setPiecePts+csPts+savePts;
+   GW2+: 45% ppg + 55% physics model
+         ep_next is fixture-specific and becomes stale for future GWs.
+         Physics model uses player xG/xA, opponent xG/xGC, position
+         scoring values, Poisson CS probability and set piece bonus.
+──────────────────────────────────────────────────────────────── */
+function diffWeight(d){ return [0,1.28,1.12,1.0,0.84,0.68][d]??1.0; }
+function haWeight(ha){ return ha==='H'?1.06:0.94; }
+
+function physicsPts(p, fix, mins){
+  if(!fix) return 0;
+  const mf = Math.min(mins/90, 1);
+  const pos = p.pos;
+  const app = mins >= 60 ? 2 : 1;
+  const oppXg  = fix.oppXg  ?? [0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
+  const oppXgc = fix.oppXgc ?? [0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
+  const oppDef = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
+  // Blend season xG/xA with L6 cache if available
+  const pXgR = p.xg90Recent ?? 0;
+  const pXg = pXgR > 0.01 ? Math.min((p.xg90||0)*0.5 + pXgR*0.5, 1.2) : (p.xg90||0);
+  const pXa = p.xa90 || 0;
+  const goalPts = pos==='FWD' ? 4 : pos==='MID' ? 5 : 6;
+  const attPts  = (pXg * oppDef * goalPts + pXa * oppDef * 3) * mf;
+  const setPiece = p.isPenTaker ? 0.7 * mf : 0;
+  const csProb   = Math.exp(-Math.max(oppXg * mf, 0.01));
+  const csPer    = pos==='GK'||pos==='DEF' ? 4 : pos==='MID' ? 1 : 0;
+  const csPts    = csProb * csPer * (mins >= 60 ? 1.0 : 0.5);
+  const savePts  = pos==='GK' ? (oppXg * 2.5 * mf) / 3 : 0;
+  return app + attPts + setPiece + csPts + savePts;
 }
 
-function projEngine(p,gwIndex){
-  const chanceNext=p.chanceNext??100;
-  const avail=chanceNext<100?chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
-  const mins=p.minsRel??75;
-  const epNext=p.epNext>0?p.epNext:0;
-  const ppg=p.ppg>0?p.ppg:p.form>0?p.form:3.5;
-  const fThis=p.fixes?.[gwIndex];
-  if(!fThis)return 0;
-  if(gwIndex===0){
-    const physThis=physicsPts(p,fThis,mins);
-    const physAvg=physicsPts(p,{diff:3,ha:'H',oppXg:1.3,oppXgc:1.25},mins);
-    const scalar=physAvg>0.5?physThis/physAvg:1.0;
-    const result=epNext>0?epNext*scalar:physThis;
-    return Math.max(Math.round(result*avail*10)/10,0);
+function projEngine(p, gwIndex){
+  const chanceNext = p.chanceNext ?? 100;
+  const avail = chanceNext < 100 ? chanceNext/100
+              : p.status==='i' ? 0 : p.status==='d' ? 0.55 : 1;
+  const mins   = p.minsRel ?? 75;
+  const mf     = Math.min(mins/90, 1);
+  const epNext = p.epNext > 0 ? p.epNext : 0;
+  const ppg    = p.ppg > 0 ? p.ppg : p.form > 0 ? p.form : 3.5;
+  const fThis  = p.fixes?.[gwIndex];
+  if(!fThis) return 0;
+
+  if(gwIndex === 0){
+    // GW1: blend ep_next with ppg to dampen post-haul spikes
+    // FPL's ep_next overshoots after big returns (e.g. DEF scores → ep spikes to 12+)
+    // 70/30 blend keeps it form-responsive but grounded in season baseline
+    const base = epNext > 0 ? epNext * 0.70 + ppg * 0.30 : ppg;
+    return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
   } else {
-    const phys=physicsPts(p,fThis,mins);
-    const result=ppg*0.45+phys*0.55;
-    return Math.max(Math.round(result*avail*10)/10,0);
+    // GW2+: physics model — ep_next is no longer relevant for future fixtures
+    const phys   = physicsPts(p, fThis, mins);
+    const result = ppg * 0.45 + phys * 0.55;
+    return Math.max(Math.round(result * avail * 10) / 10, 0);
   }
 }
 
@@ -387,7 +401,8 @@ function sellUrgency(p){
 }
 
 function buildPlayer(e,fixMap,teamStr){
-  const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+  const mins=e.minutes||1;
+  const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
   const pos=POS_ID[e.element_type]??'MID';
   const price=(e.now_cost||0)/10;
   const rawFixes=(fixMap[e.team]||[]);
@@ -414,8 +429,8 @@ function buildPlayer(e,fixMap,teamStr){
     fkOrder:e.direct_freekicks_order??null,
     ownedPct:parseFloat(e.selected_by_percent)||0,
     status:e.status,priceChg:e.cost_change_event||0,
-    totalPts:e.total_points||0,starts:e.starts??games,
-    minsRel:Math.min(mins/games,90),fixes,
+    totalPts:e.total_points||0,starts,
+    minsRel:Math.min(starts>0?mins/starts:90,90),fixes,
   };
 }
 

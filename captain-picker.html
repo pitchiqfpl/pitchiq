@@ -947,16 +947,14 @@ function buildPlayers(elements) {
     .filter(e => e.status !== 'u')
     .map(e => {
       const mins = e.minutes || 1;
-      const gamesPlayed = Math.max(Math.round(mins / 75), 1); // estimate games from minutes
+      const starts = e.starts > 0 ? e.starts : Math.max(Math.round(mins / 75), 1);
       // xG+xA per 90 — capped at 1.5 to prevent early-season outliers dominating
       const xg90 = Math.min(
         ((parseFloat(e.expected_goals)||0) + (parseFloat(e.expected_assists)||0)) / (mins/90),
         1.5
       );
-      // Reliability: proportion of games where player completed 60+ mins
-      // ep_this (expected pts next GW) is a weak proxy for this — instead we
-      // use minutes_per_game as a cleaner signal: 90 = always plays full game
-      const minsPerGame = Math.min(mins / gamesPlayed, 90);
+      // Reliability: minutes per start — 90 = always plays full game
+      const minsPerGame = Math.min(mins / starts, 90);
       return {
         id:           e.id,
         name:         e.web_name,

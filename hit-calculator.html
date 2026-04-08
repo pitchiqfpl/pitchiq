@@ -376,7 +376,8 @@ function buildFixMap(fixtures,gw,count){
 
 function buildPlayers(els,fm){
   return els.filter(e=>e.element_type>0&&e.status!=='u').map(e=>{
-    const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
+    const mins=e.minutes||1;
+    const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
     const xg90=Math.min(((parseFloat(e.expected_goals)||0)+(parseFloat(e.expected_assists)||0))/(mins/90),1.5);
     const pos=POS_ID[e.element_type]??'MID';
     return{

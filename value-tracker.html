@@ -9,6 +9,7 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://pitchiqfpl.com/value-tracker.html">
 <meta property="og:type" content="website">
+  <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
 <meta property="og:url" content="https://pitchiqfpl.com/value-tracker.html">
 <meta property="og:title" content="FPL Transfer Planner — Maximise Your Free Transfers | PitchIQ">
 <meta property="og:description" content="Enter your Team ID, set your free transfers and time horizon — PitchIQ ranks every possible swap by projected points gain so you know exactly who to bring in.">
@@ -52,14 +53,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 /* SETTINGS */
 .settings-strip{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px;background:var(--ink-2);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
 .setting-group{display:flex;flex-direction:column;gap:5px}
-.setting-label{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.setting-label{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
 .pill-group{display:flex;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
 .pill{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.45);cursor:pointer;transition:all 0.15s;font-family:var(--font-b);white-space:nowrap}
 .pill:hover{color:var(--cream)}.pill.active{background:var(--ink-3);color:var(--cream);box-shadow:0 1px 3px rgba(0,0,0,0.4)}
 .pill.active.green{color:var(--grass-l)}.pill.active.gold{color:var(--gold)}
 .sep{width:1px;height:32px;background:var(--border);flex-shrink:0}
 .budget-display{font-family:var(--font-m);font-size:18px;font-weight:600;color:var(--grass-l)}
-.budget-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.budget-label{font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 /* SUMMARY */
 .summary-box{background:var(--ink-2);border:1px solid rgba(39,174,96,0.2);border-radius:14px;padding:18px 20px;margin-bottom:20px}
 .summary-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grass-l);margin-bottom:12px}
@@ -87,7 +88,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .player-ep-col{text-align:right;flex-shrink:0}
 .ep-val{font-size:13px;font-weight:600;color:var(--grass-l)}
 .ep-lbl{font-size:10px;color:var(--muted);font-family:var(--font-m)}
-.pos-divider{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;margin-top:4px}
+.pos-divider{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;margin-top:4px}
 .fix-strip{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .fix-pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:700;font-family:var(--font-m)}
 .d1{background:#1a3d2a;color:#2ecc71}.d2{background:#1a2e1a;color:#68d391}
@@ -147,7 +148,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .cmp-player-meta{font-size:10px;color:var(--muted);font-family:var(--font-m)}
 .cmp-player-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-m);margin-bottom:6px}
 .cmp-section{margin-bottom:16px}
-.cmp-section-title{font-family:var(--font-m);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.cmp-section-title{font-family:var(--font-m);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
 .cmp-stat-row{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
 .cmp-stat-row:last-child{border-bottom:none}
 .cmp-stat-val{font-size:13px;font-weight:600;font-family:var(--font-m)}
@@ -248,14 +249,14 @@ body.ads-enabled .ad-slot{display:block}
         <span class="panel-title">Your Squad</span>
         <span style="font-size:11px;color:var(--muted)" id="squadMeta">—</span>
       </div>
-      <div class="panel-body" id="squadBody">
+      <div class="panel-body" id="squadBody" style="overflow-x:auto">
         <div class="empty-state"><div class="empty-icon">👕</div><div class="empty-title">No squad loaded</div><div class="empty-desc">Enter your FPL Team ID above to load your players</div></div>
       </div>
     </div>
     <div class="panel">
       <div class="panel-head">
         <span class="panel-title" id="suggestionsTitle">Transfer Suggestions</span>
-        <span style="font-size:11px;color:var(--muted)" id="horizonLabel">—</span>
+        <span style="font-size:10px;color:var(--muted)" id="horizonLabel">—</span>
       </div>
       <div class="panel-body" id="suggestionsBody">
         <div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">Load your squad first</div><div class="empty-desc">We'll rank every possible swap by projected points gain over your chosen time horizon</div></div>
@@ -308,39 +309,54 @@ function lsGet(k,d){try{let v=localStorage.getItem(k);if(v===null)return d;if(v.
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
 
-// Difficulty/HA weights — calibrated so diff-3 = 1.0 baseline
+// Position-specific physics-based projection engine
 function diffWeight(d){return[0,1.28,1.12,1.0,0.84,0.68][d]??1.0;}
 function haWeight(ha){return ha==='H'?1.06:0.94;}
 
-// World-class projection engine — same model as Player Scout
-function projEngine(p, gwIndex){
-  const chanceNext = p.chanceNext??100;
-  const availFactor = chanceNext < 100 ? chanceNext/100
-                    : p.status==='i' ? 0 : p.status==='d' ? 0.55 : 1;
-  const minsFactor  = Math.min((p.minsRel||75)/90, 1);
-  const bonusPerGame= p.starts>0 ? Math.min((p.bonusPts||0)/p.starts, 1.5) : 0;
-  const epNext      = p.epNext > 0 ? p.epNext : 0;
-  const ppg         = p.ppg > 0 ? p.ppg : p.form > 0 ? p.form : 3.5;
-  const blendedEP   = gwIndex===0
-    ? (epNext > 0 ? epNext : ppg)
-    : epNext > 0 ? (epNext*0.55 + ppg*0.45) : ppg;
-  const f0    = p.fixes?.[0];
-  const fThis = p.fixes?.[gwIndex];
-  if(!fThis) return 0;
-  const anchorW = f0 ? diffWeight(f0.diff)*haWeight(f0.ha) : 1.0;
-  const thisW   = diffWeight(fThis.diff)*haWeight(fThis.ha);
-  let proj;
-  if(gwIndex===0){
-    proj = (epNext>0?epNext:ppg) * minsFactor * availFactor;
-  } else {
-    const ratio = anchorW>0 ? thisW/anchorW : thisW;
-    proj = blendedEP * ratio * minsFactor * availFactor;
-  }
-  proj += bonusPerGame * minsFactor * availFactor;
-  return Math.max(Math.round(proj*10)/10, 0);
+function physicsPts(p,fix,mins){
+  if(!fix)return 0;
+  const mf=Math.min(mins/90,1);
+  const pos=p.pos;
+  const app=mins>=60?2:1;
+  const oppXg=fix.oppXg??[0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
+  const oppXgc=fix.oppXgc??[0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
+  const oppDef=Math.max(0.45,Math.min(oppXgc/1.25,2.2));
+  const pXgSeason=p.xg90||0;
+  const pXgRecent=p.xg90Recent||0;
+  const pXg=pXgRecent>0.01?Math.min(pXgSeason*0.5+pXgRecent*0.5,1.2):pXgSeason;
+  const pXa=p.xa90||0;
+  const goalPts=pos==='FWD'?4:pos==='MID'?5:6;
+  const attPts=(pXg*oppDef*goalPts+pXa*oppDef*3)*mf;
+  const setPiecePts=p.isPenTaker?0.7*mf:0;
+  const csProb=Math.exp(-Math.max(oppXg*mf,0.01));
+  const csPtsPerPos=pos==='GK'||pos==='DEF'?4:pos==='MID'?1:0;
+  const csPts=csProb*csPtsPerPos*(mins>=60?1:0.5);
+  const savePts=pos==='GK'?(oppXg*2.5*mf)/3:0;
+  return app+attPts+setPiecePts+csPts+savePts;
 }
 
-function projectPts(p, gws){
+function projEngine(p,gwIndex){
+  const chanceNext=p.chanceNext??100;
+  const avail=chanceNext<100?chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
+  const mins=p.minsRel??75;
+  const epNext=p.epNext>0?p.epNext:0;
+  const ppg=p.ppg>0?p.ppg:p.form>0?p.form:3.5;
+  const fThis=p.fixes?.[gwIndex];
+  if(!fThis)return 0;
+  if(gwIndex===0){
+    const physThis=physicsPts(p,fThis,mins);
+    const physAvg=physicsPts(p,{diff:3,ha:'H',oppXg:1.3,oppXgc:1.25},mins);
+    const scalar=physAvg>0.5?physThis/physAvg:1.0;
+    const result=epNext>0?epNext*scalar:physThis;
+    return Math.max(Math.round(result*avail*10)/10,0);
+  } else {
+    const phys=physicsPts(p,fThis,mins);
+    const result=ppg*0.45+phys*0.55;
+    return Math.max(Math.round(result*avail*10)/10,0);
+  }
+}
+
+function projectPts(p,gws){
   if(!p.fixes||!p.fixes.length){
     const ppg=p.ppg>0?p.ppg:p.form>0?p.form:3.5;
     const mf=Math.min((p.minsRel||75)/90,1);
@@ -349,8 +365,7 @@ function projectPts(p, gws){
   }
   let total=0;
   const n=Math.min(gws,p.fixes.length);
-  for(let i=0;i<n;i++) total+=projEngine(p,i);
-  // Extend beyond available fixtures at blended EP level
+  for(let i=0;i<n;i++)total+=projEngine(p,i);
   if(p.fixes.length<gws){
     const mf=Math.min((p.minsRel||75)/90,1);
     const af=p.chanceNext<100?p.chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
@@ -371,7 +386,7 @@ function sellUrgency(p){
   return s;
 }
 
-function buildPlayer(e,fixMap){
+function buildPlayer(e,fixMap,teamStr){
   const mins=e.minutes||1,games=Math.max(Math.round(mins/75),1);
   const pos=POS_ID[e.element_type]??'MID';
   const price=(e.now_cost||0)/10;
@@ -380,15 +395,23 @@ function buildPlayer(e,fixMap){
     const isHome=f.team_h===e.team;
     const oppId=isHome?f.team_a:f.team_h;
     const diff=isHome?f.team_h_difficulty:f.team_a_difficulty;
-    return{gw:f.event,opp:TMAP[oppId]?.short??'?',ha:isHome?'H':'A',diff:diff||3};
+    const oppStr=teamStr?.[oppId]??null;
+    const oppXg  = oppStr ? (isHome?oppStr.xgA:oppStr.xgH)   : [0,0.7,1.0,1.3,1.6,2.0][diff??3];
+    const oppXgc = oppStr ? (isHome?oppStr.xgcA:oppStr.xgcH) : [0,1.8,1.5,1.25,1.0,0.7][diff??3];
+    return{gw:f.event,opp:TMAP[oppId]?.short??'?',ha:isHome?'H':'A',diff:diff||3,oppXg,oppXgc};
   }).sort((a,b)=>a.gw-b.gw);
   return{
     id:e.id,name:e.web_name,teamId:e.team,pos,price,
     form:parseFloat(e.form)||0,
+    xg90:Math.min((parseFloat(e.expected_goals)||0)/(mins/90),1.0),
+    xa90:Math.min((parseFloat(e.expected_assists)||0)/(mins/90),0.8),
+    xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
     epNext:parseFloat(e.ep_next)||0,
     ppg:parseFloat(e.points_per_game)||0,
     chanceNext:e.chance_of_playing_next_round??100,
     bonusPts:e.bonus||0,
+    isPenTaker:e.penalties_order===1,
+    fkOrder:e.direct_freekicks_order??null,
     ownedPct:parseFloat(e.selected_by_percent)||0,
     status:e.status,priceChg:e.cost_change_event||0,
     totalPts:e.total_points||0,starts:e.starts??games,
@@ -402,18 +425,64 @@ async function loadBootstrap(){
     const[bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=allFix.filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
+
+    // Try to fetch real xG data — optional, falls back to FPL strength
+    let xgData=null;
+    try{ xgData=await fetchJ('api/xg-data'); }catch{}
+
+    // Build team xG/xGC map
+    const teamStr={};
+    if(xgData?.teams&&Object.keys(xgData.teams).length>0){
+      const canon=s=>s.toLowerCase().replace(/[^a-z0-9]/g,'').replace(/\b(fc|afc|city|united|utd|hotspur|wanderers|albion)\b/g,'').replace(/\s+/g,'');
+      const W_SEASON=0.60,W_FORM=0.40,HOME_ATT=1.10,HOME_DEF=0.88;
+      const fplList=bs.teams.map(t=>({id:t.id,c:canon(t.name)}));
+      Object.values(xgData.teams).forEach(x=>{
+        const xc=canon(x.name);
+        let m=fplList.find(f=>f.c===xc);
+        if(!m)m=fplList.find(f=>f.c.includes(xc)||xc.includes(f.c));
+        if(m&&!teamStr[m.id]){
+          const bA=x.xg_season*W_SEASON+(x.xg_last5||x.xg_season)*W_FORM;
+          const bD=x.xgc_season*W_SEASON+(x.xgc_last5||x.xgc_season)*W_FORM;
+          teamStr[m.id]={xgH:bA*HOME_ATT,xgA:bA/HOME_ATT,xgcH:bD*HOME_DEF,xgcA:bD/HOME_DEF};
+        }
+      });
+    }
+    // Fallback for any teams not matched
+    bs.teams.forEach(t=>{
+      if(!teamStr[t.id]){
+        const sAH=t.strength_attack_home||1100,sAA=t.strength_attack_away||1100;
+        const sDH=t.strength_defence_home||1100,sDA=t.strength_defence_away||1100;
+        teamStr[t.id]={
+          xgH:Math.max(0.6,Math.min((sAH/1100)*1.25,2.5)),
+          xgA:Math.max(0.5,Math.min((sAA/1100)*1.1,2.2)),
+          xgcH:Math.max(0.5,Math.min((1200/Math.max(sDH,800))*1.25,2.5)),
+          xgcA:Math.max(0.6,Math.min((1200/Math.max(sDA,800))*1.35,2.8)),
+        };
+      }
+    });
+
     const fixMap={};
     allFix.filter(f=>f.event>=GW&&!f.finished).forEach(f=>{
       [f.team_h,f.team_a].forEach(tid=>{if(!fixMap[tid])fixMap[tid]=[];fixMap[tid].push(f);});
     });
-    ALL=bs.elements.filter(e=>e.status!=='u').map(e=>buildPlayer(e,fixMap));
-    document.getElementById('headerSub').textContent=`TRANSFER PLANNER · GW${GW}`;
+    ALL=bs.elements.filter(e=>e.status!=='u').map(e=>buildPlayer(e,fixMap,teamStr));
+    const src=xgData?.teams?'xG-rated':'FPL-rated';
+    document.getElementById('headerSub').textContent=`TRANSFER PLANNER · GW${GW} · ${src}`;
     setBadge('live',`Live · GW${GW}`);
     const saved=lsGet('piq_team_id','');
     if(saved) document.getElementById('teamIdInput').value=saved;
   }catch(err){
     console.warn('[TransferPlanner]',err.message);
-    setBadge('fallback','Static data — deploy for live');
+    // Build minimal player pool from fallback data so tool isn't empty
+    TMAP=Object.fromEntries(Object.entries({
+      1:'Arsenal',2:'Aston Villa',3:'Bournemouth',4:'Brentford',5:'Brighton',
+      6:'Chelsea',7:'Crystal Palace',8:'Everton',9:'Fulham',10:'Leeds',
+      11:'Liverpool',12:'Man City',13:'Man Utd',14:'Newcastle',15:"Nott'm Forest",
+      16:'Burnley',17:'Spurs',18:'Sunderland',19:'West Ham',20:'Wolves'
+    }).map(([id,name])=>[id,{name,short:name.substring(0,3).toUpperCase()}]));
+    ALL=[];
+    setBadge('fallback','Static data — enter Team ID when live');
+    document.getElementById('headerSub').textContent='TRANSFER PLANNER · Sample mode';
   }
 }
 
@@ -512,6 +581,9 @@ function runSuggestions(){
 
 function renderSuggestions(suggestions){
   const body=document.getElementById('suggestionsBody');
+  // Update sort label in panel header
+  const horizonEl=document.getElementById('horizonLabel');
+  if(horizonEl) horizonEl.textContent='Ranked by projected pts gain';
   const horizonText=HORIZON===1?'Next GW':HORIZON===7?'Run-in':`Next ${HORIZON} GWs`;
   document.getElementById('horizonLabel').textContent=horizonText;
   if(!suggestions.length){

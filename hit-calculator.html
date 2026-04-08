@@ -122,7 +122,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .breakeven-badge.not-worth{background:rgba(230,57,70,0.08);border:1px solid rgba(230,57,70,0.2)}
 .breakeven-badge.marginal{background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.2)}
 .breakeven-val{font-family:var(--font-d);font-size:32px;line-height:1}
-.breakeven-label{font-family:var(--font-m);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.breakeven-label{font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;color:var(--muted);text-transform:uppercase;margin-top:2px}
 
 /* GW CHART */
 .gw-chart-wrap{background:var(--ink-2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
@@ -468,7 +468,7 @@ function renderPlayerCard(player,cardId,accentColor){
       <div class="sel-stat"><div class="sel-stat-val">${player.xg90.toFixed(2)}</div><div class="sel-stat-label">xG+xA/90</div></div>
       <div class="sel-stat"><div class="sel-stat-val" style="color:var(--grass-l)">${player.epNext>0?player.epNext.toFixed(1):'—'}</div><div class="sel-stat-label">Proj pts</div></div>
     </div>
-    <div style="font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:8px 0 4px">Next ${GWS} fixtures</div>
+    <div style="font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin:8px 0 4px">Next ${GWS} fixtures</div>
     <div class="fix-run-mini">${fixHtml||'<span style="color:var(--muted);font-size:10px">No fixtures</span>'}</div>`;
   card.classList.add('visible');
 }

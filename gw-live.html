@@ -174,7 +174,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .sort-pill{padding:3px 10px;border-radius:5px;font-size:10px;font-weight:500;border:none;background:none;color:rgba(240,236,227,0.4);cursor:pointer;transition:all 0.15s;font-family:var(--font-b)}
 .sort-pill:hover{color:var(--cream)}
 .sort-pill.active{background:var(--ink-3);color:var(--cream)}
-.threshold-divider{display:flex;align-items:center;gap:8px;margin:6px 0;font-family:var(--font-m);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.threshold-divider{display:flex;align-items:center;gap:8px;margin:6px 0;font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted)}
 .threshold-divider::before,.threshold-divider::after{content:'';flex:1;height:1px;background:var(--border)}
 .threshold-divider.likely::before,.threshold-divider.likely::after{background:rgba(39,174,96,0.2)}
 .threshold-divider.unlikely::before,.threshold-divider.unlikely::after{background:var(--border)}
@@ -318,7 +318,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
       <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
     </div>
 
-    <div id="liveContent">
+    <div id="liveContent" style="overflow-x:auto">
       <div class="no-squad-prompt">
         <h3>Import your squad</h3>
         <p>Enter your FPL Team ID above to see your live GW points,<br>captain comparison, and player-by-player breakdown.</p>

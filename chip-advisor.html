@@ -695,13 +695,20 @@ function analyseTC(gwsToShow){
   if(!best.gw)return null;
   const opp=ALL_FIXTURES.filter(f=>f.event===best.gw&&(f.team_h===best.player.teamId||f.team_a===best.player.teamId)).map(f=>getOpp(f,best.player.teamId))[0];
   const isSquadSpecific=SQUAD_PLAYERS.length>0;
+  const isDGWBest=ALL_FIXTURES.filter(f=>f.event===best.gw&&(f.team_h===best.player.teamId||f.team_a===best.player.teamId)).length>1;
+  const dgwNote=isDGWBest?' ⚡ Double GW — two games, doubled TC points.':'';
   return{
     gw:best.gw,
     player:best.player,
     diff:best.diff,
     opp,
-    const isDGWBest=ALL_FIXTURES.filter(f=>f.event===best.gw&&(f.team_h===best.player.teamId||f.team_a===best.player.teamId)).length>1;
-  reason:`${isSquadSpecific?'From your squad, ':''}${best.player.status==='d'?'<span style="color:var(--gold)">⚠ Doubt — </span>':''}<strong>${best.player.name}</strong> is the strongest TC candidate in GW${best.gw}. Projected ${best.player.epNext>0?best.player.epNext.toFixed(1)+' pts':best.player.form.toFixed(1)+' form'}, facing <strong>${opp?.short??'?'} (${opp?.ha??'?'})</strong> — difficulty ${best.diff}/5.${isDGWBest?' <strong style="color:var(--gold)">⚡ Double GW — two games, doubled TC points.</strong>':''}${isSquadSpecific?'':' Import your squad for a personalised pick.'}`,
+    reason:(isSquadSpecific?'From your squad, ':'')+
+      (best.player.status==='d'?'<span style="color:var(--gold)">⚠ Doubt — </span>':'')+
+      '<strong>'+best.player.name+'</strong> is the strongest TC candidate in GW'+best.gw+'. Projected '+
+      (best.player.epNext>0?best.player.epNext.toFixed(1)+' pts':best.player.form.toFixed(1)+' form')+
+      ', facing <strong>'+(opp?.short??'?')+' ('+(opp?.ha??'?')+')</strong> — difficulty '+best.diff+'/5.'+
+      (isDGWBest?'<strong style="color:var(--gold)">'+dgwNote+'</strong>':'')+
+      (isSquadSpecific?'':' Import your squad for a personalised pick.'),
     urgency: best.gw===GW?'urgent':best.gw<=GW+1?'good':'wait',
   };
 }

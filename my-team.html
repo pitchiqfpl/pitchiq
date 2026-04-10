@@ -350,9 +350,18 @@ function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null)return fb;if
 function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){
-  const r=await fetch(url);
-  if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
-  return r.json();
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
+    return r.json();
+  }catch(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError'){const t=new Error('Timeout');t.status=408;throw t;}
+    throw e;
+  }
 }
 
 async function loadData(){

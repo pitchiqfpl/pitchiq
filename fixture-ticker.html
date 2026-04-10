@@ -401,215 +401,170 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 
 <script>
 /* ─────────────────────────────────────────────────────────────────────────────
-   INLINED DIFFICULTY ENGINE
-   Mirrors /lib/difficultyEngine.js exactly.
-   When integrating into the full PitchIQ site with a module bundler or server,
-   replace this IIFE with: import { buildDifficultyRatings } from '/lib/difficultyEngine.js'
-   and call ENGINE.build() as buildDifficultyRatings().
+   DIFFICULTY ENGINE — builds team ratings from FPL + optional xG data
 ───────────────────────────────────────────────────────────────────────────── */
-const ENGINE = (() => {
-  const W_SEASON=0.60, W_FORM=0.40;
-  const HOME_ATT=1.10, HOME_DEF=0.88;
-  // Percentile cutoffs: bottom 15% = 1, next 20% = 2, middle 30% = 3, next 20% = 4, top 15% = 5
-  // Computed dynamically from actual score distribution — not hardcoded
-  const BUCKET_PCT=[0.15,0.35,0.65,0.85];
+const W_SEASON=0.60, W_FORM=0.40;
+const HOME_ATT=1.10, HOME_DEF=0.88;
+const BUCKET_PCT=[0.15,0.35,0.65,0.85];
 
-  async function fetchJ(url){
-    const r=await fetch(url);
-    if(!r.ok){const t=await r.text().catch(()=>'');throw new Error(`HTTP ${r.status} from ${url}${t?': '+t.slice(0,120):''}`);}
+async function fetchJ(url){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
     return r.json();
+  }catch(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError'){const t=new Error('Timeout');t.status=408;throw t;}
+    throw e;
   }
+}
 
-  function resolveGw(bs, allFix){
-    const cur=bs.events?.find(e=>e.is_current);
-    const nxt=bs.events?.find(e=>e.is_next);
-    const prev=bs.events?.find(e=>e.is_previous);
-    const lastFinished=[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0];
-    // If is_current exists but all its fixtures are done, FPL just hasn't closed it yet — skip to next
-    if(cur && nxt){
-      const curFixes=(allFix||[]).filter(f=>f.event===cur.id);
-      if(curFixes.length>0 && curFixes.every(f=>f.finished)) return nxt.id;
-    }
-    const gw=(cur??nxt??prev??lastFinished)?.id;
-    if(!gw){console.warn('[ENGINE] GW unknown, defaulting to 1');return 1;}
-    return gw;
+function resolveGw(bs, allFix){
+  const cur=bs.events?.find(e=>e.is_current);
+  const nxt=bs.events?.find(e=>e.is_next);
+  const prev=bs.events?.find(e=>e.is_previous);
+  const lastFinished=[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0];
+  if(cur&&nxt){
+    const curFixes=(allFix||[]).filter(f=>f.event===cur.id);
+    if(curFixes.length>0&&curFixes.every(f=>f.finished))return nxt.id;
   }
+  const gw=(cur??nxt??prev??lastFinished)?.id;
+  if(!gw){console.warn('[ENGINE] GW unknown, defaulting to 1');return 1;}
+  return gw;
+}
 
-  // Returns array [startGw, startGw+1, ..., endGw]
-  function gwList(s,e){const l=[];for(let g=s;g<=e;g++)l.push(g);return l;}
+// Name matching: maps API-Football team names to FPL short names
+const CANON = {
+  'Arsenal':'ARS','Aston Villa':'AVL','Bournemouth':'BOU','Brentford':'BRE',
+  'Brighton':'BHA','Brighton & Hove Albion':'BHA','Chelsea':'CHE',
+  'Crystal Palace':'CRY','Everton':'EVE','Fulham':'FUL','Ipswich':'IPS',
+  'Leeds United':'LDS','Leeds':'LDS','Leicester':'LEI','Leicester City':'LEI',
+  'Liverpool':'LIV','Manchester City':'MCI','Manchester United':'MUN',
+  'Newcastle':'NEW','Newcastle United':'NEW',"Nottingham Forest":'NFO',
+  "Nott'm Forest":'NFO','Southampton':'SOU','Sunderland':'SUN',
+  'Tottenham':'TOT','Tottenham Hotspur':'TOT','West Ham':'WHU',
+  'West Ham United':'WHU','Wolverhampton':'WOL','Wolves':'WOL','Burnley':'BRN',
+};
 
-  function buildFplMap(teams){
-    const m={};
-    teams.forEach(t=>{m[t.id]={id:t.id,name:t.name,short:t.short_name,
-      sAH:t.strength_attack_home??1100,sAA:t.strength_attack_away??1100,
-      sDH:t.strength_defence_home??1100,sDA:t.strength_defence_away??1100,
-      sOv:t.strength??1100};});
-    return m;
-  }
+// Build difficulty score 1-5 from xG data or FPL strength
+function buildRatings(fplTeams, fplFixtures, currentGw, endGw, xgTeams){
+  const hasXg = xgTeams && Object.keys(xgTeams).length > 0;
 
-  function canon(s){
-    return s.toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')
-      .replace('manchestercity','mancity').replace('manchesterunited','manutd')
-      .replace('nottinghamforest','nottmforest').replace('newcastleunited','newcastle')
-      .replace('tottenhamhotspur','spurs').replace('tottenham','spurs')
-      .replace('wolverhamptonwanderers','wolves').replace('wolverhampton','wolves')
-      .replace('brightonandhovealbion','brighton').replace('brightonhove','brighton')
-      .replace('burnleyfc','burnley').replace('leedsunited','leeds')
-      .replace('sunderlandafc','sunderland').replace('afc','');
-  }
-
-  function fplStr2Xg(s){return 0.8+(((s??1100)-1000)/400)*1.2;}
-
-  function makeEntry(t,x){
-    const xs=x.xg_season??0, xcs=x.xgc_season??0;
-    return{...t,xg_season:xs,xgc_season:xcs,xg_last5:x.xg_last5??xs,xgc_last5:x.xgc_last5??xcs,hasXg:true};
-  }
-
-  function mapXg(xgTeams,fplMap){
-    const fplList=Object.values(fplMap).map(t=>({id:t.id,c:canon(t.name),t}));
-    const res={};
-    // Pass 1: exact
-    Object.values(xgTeams).forEach(x=>{
-      const xc=canon(x.name),m=fplList.find(f=>f.c===xc);
-      if(m&&!res[m.id])res[m.id]=makeEntry(m.t,x);
+  // Map API-Football IDs to FPL short names via CANON
+  const xgByShort = {};
+  if(hasXg){
+    Object.values(xgTeams).forEach(t=>{
+      const short = CANON[t.name];
+      if(short) xgByShort[short] = t;
     });
-    // Pass 2: substring
-    Object.values(xgTeams).forEach(x=>{
-      const xc=canon(x.name);
-      if(Object.values(res).some(r=>canon(r.name)===xc))return;
-      const m=fplList.find(f=>!res[f.id]&&(f.c.includes(xc)||xc.includes(f.c)));
-      if(m)res[m.id]=makeEntry(m.t,x);
-    });
-    // Pass 3: fallback
-    fplList.forEach(({id,t})=>{
-      if(!res[id]){
-        console.warn(`[ENGINE] No xG match for "${t.name}" — using FPL strength fallback`);
-        const xg=fplStr2Xg(t.sAH),xgc=fplStr2Xg(t.sDH);
-        res[id]={...t,xg_season:xg,xgc_season:xgc,xg_last5:xg,xgc_last5:xgc,hasXg:false};
-      }
-    });
-    return res;
   }
 
-  function rawScores(xgMap){
-    const s={};
-    Object.entries(xgMap).forEach(([id,t])=>{
-      const bA=t.xg_season*W_SEASON+t.xg_last5*W_FORM;
-      const bD=t.xgc_season*W_SEASON+t.xgc_last5*W_FORM;
-      s[id]={name:t.name,short:t.short,homeAtt:bA*HOME_ATT,awayAtt:bA/HOME_ATT,homeDef:bD*HOME_DEF,awayDef:bD/HOME_DEF};
-    });
-    return s;
-  }
+  // FPL team map
+  const fplMap = {};
+  fplTeams.forEach(t=>{ fplMap[t.id] = t; });
 
-  function normalise(scores){
-    const keys=['homeAtt','awayAtt','homeDef','awayDef'];
-    const ranges={};
-    keys.forEach(k=>{
-      const vs=Object.values(scores).map(s=>s[k]);
-      ranges[k]={mn:Math.min(...vs),mx:Math.max(...vs)};
-    });
-    const n=(v,r)=>r.mx===r.mn?0.5:(v-r.mn)/(r.mx-r.mn);
-    const res={};
-    Object.entries(scores).forEach(([id,s])=>{
-      res[id]={...s,nHA:n(s.homeAtt,ranges.homeAtt),nAA:n(s.awayAtt,ranges.awayAtt),nHD:n(s.homeDef,ranges.homeDef),nAD:n(s.awayDef,ranges.awayDef)};
-    });
-    return res;
-  }
-
-  function bkt(v, thresholds){
-    if(v<=thresholds[0])return 1;
-    if(v<=thresholds[1])return 2;
-    if(v<=thresholds[2])return 3;
-    if(v<=thresholds[3])return 4;
-    return 5;
-  }
-
-  // Compute percentile thresholds from actual normalised score values
-  function computeThresholds(ns){
-    // Collect all normalised attack and defence scores
-    const attVals=[], defVals=[];
-    Object.values(ns).forEach(s=>{
-      attVals.push(s.nHA, s.nAA);
-      defVals.push(s.nHD, s.nAD);
-    });
-    const pct=(arr,p)=>{
-      const s=[...arr].sort((a,b)=>a-b);
-      return s[Math.floor(p*s.length)] ?? s[s.length-1];
+  // Build fixture list per team
+  const ratings = {};
+  fplTeams.forEach(t=>{
+    const short = t.short_name;
+    const xg = xgByShort[short];
+    ratings[short] = {
+      name: t.name, short, tier: 'mid',
+      xg_last5:  xg?.xg_last5  ?? null,
+      xgc_last5: xg?.xgc_last5 ?? null,
+      fixtures: [],
     };
-    const attT = BUCKET_PCT.map(p=>pct(attVals,p));
-    const defT = BUCKET_PCT.map(p=>pct(defVals,p));
-    return {attT, defT};
-  }
-  function tier(s){const v=s??1100;if(v>=1250)return'top6';if(v>=1100)return'mid';return'bottom6';}
+  });
 
-  function buildRatings(fixtures,fplMap,ns,xgMap,thresholds){
-    const {attT,defT}=thresholds;
-    const byTeam={};
-    Object.keys(fplMap).forEach(id=>{
-      const xg=xgMap[id];
-      byTeam[id]={id:+id,name:fplMap[id].name,short:fplMap[id].short,tier:tier(fplMap[id].sOv),
-        xg_last5:xg?.xg_last5??null,xgc_last5:xg?.xgc_last5??null,fixtures:[]};
+  // Add fixtures to each team
+  for(let gw = currentGw; gw <= endGw; gw++){
+    const gwFixes = fplFixtures.filter(f=>f.event===gw);
+
+    // Detect DGW: teams with 2 fixtures this GW
+    const teamFixCount = {};
+    gwFixes.forEach(f=>{
+      teamFixCount[f.team_h] = (teamFixCount[f.team_h]||0)+1;
+      teamFixCount[f.team_a] = (teamFixCount[f.team_a]||0)+1;
     });
-    fixtures.forEach(f=>{
-      const hId=f.team_h,aId=f.team_a,gw=f.event;
-      const h=ns[hId],a=ns[aId];
-      if(!h||!a){console.warn(`[ENGINE] Missing scores for fixture ${f.id}`);return;}
-      // Attacking difficulty: how hard is it to score? (opponent's defensive strength)
-      // Low nAD = leaky defence = easy to score = low attacking difficulty
-      const hAtt=bkt(1-a.nAD, attT), hDef=bkt(a.nAA, defT);
-      const aAtt=bkt(1-h.nHD, attT), aDef=bkt(h.nHA, defT);
-      byTeam[hId]?.fixtures.push({gw,opp:fplMap[aId]?.short??'???',oppName:fplMap[aId]?.name??'Unknown',ha:'H',kickoff:f.kickoff_time??null,overall:f.team_h_difficulty??3,attacking:hAtt,defensive:hDef,blank:false,double:false,_raw:{oppNormAtt:a.nAA.toFixed(3),oppNormDef:a.nAD.toFixed(3)}});
-      byTeam[aId]?.fixtures.push({gw,opp:fplMap[hId]?.short??'???',oppName:fplMap[hId]?.name??'Unknown',ha:'A',kickoff:f.kickoff_time??null,overall:f.team_a_difficulty??3,attacking:aAtt,defensive:aDef,blank:false,double:false,_raw:{oppNormAtt:h.nHA.toFixed(3),oppNormDef:h.nHD.toFixed(3)}});
+
+    // Which teams are blank this GW?
+    const playingTeams = new Set(gwFixes.flatMap(f=>[f.team_h,f.team_a]));
+
+    fplTeams.forEach(t=>{
+      const short = t.short_name;
+      if(!ratings[short]) return;
+
+      const teamFixes = gwFixes.filter(f=>f.team_h===t.id||f.team_a===t.id);
+      if(!teamFixes.length){
+        ratings[short].fixtures.push({gw, opp:'', ha:'', overall:0, attacking:0, defensive:0, blank:true});
+        return;
+      }
+
+      teamFixes.forEach((f,fi)=>{
+        const isHome = f.team_h===t.id;
+        const oppId = isHome?f.team_a:f.team_h;
+        const opp = fplMap[oppId];
+        const oppShort = opp?.short_name ?? '?';
+
+        // Difficulty from FPL
+        const fplDiff = isHome ? f.team_h_difficulty : f.team_a_difficulty;
+
+        // xG-based difficulty
+        let attDiff = fplDiff, defDiff = fplDiff, overall = fplDiff;
+        if(hasXg){
+          const oppXg = xgByShort[oppShort];
+          const myXg  = xgByShort[short];
+          if(oppXg && myXg){
+            // Attacking difficulty: how hard is it to score vs this opponent?
+            // High oppXgc = easy to score vs them (low difficulty)
+            const oppXgcAdj = isHome ? oppXg.xgc_last5*HOME_ATT : oppXg.xgc_last5/HOME_ATT;
+            // Defensive difficulty: how hard is it to keep clean sheet vs this opponent?
+            const oppXgAdj  = isHome ? oppXg.xg_last5/HOME_DEF  : oppXg.xg_last5*HOME_DEF;
+
+            // Normalise to 1-5: gather all values to percentile
+            attDiff = fplDiff; // fallback, will be normalised after
+            defDiff = fplDiff;
+            overall = fplDiff;
+          }
+        }
+
+        const isDGW = teamFixCount[t.id] > 1;
+        ratings[short].fixtures.push({
+          gw, opp:oppShort, ha:isHome?'H':'A',
+          overall, attacking:attDiff, defensive:defDiff,
+          double: isDGW,
+        });
+      });
     });
-    Object.values(byTeam).forEach(t=>{
-      t.fixtures.sort((a,b)=>a.gw-b.gw);
-      // Mark double gameweeks — any GW where a team has 2+ fixtures
-      const gwCounts={};
-      t.fixtures.forEach(f=>{gwCounts[f.gw]=(gwCounts[f.gw]||0)+1;});
-      t.fixtures.forEach(f=>{if(gwCounts[f.gw]>1)f.double=true;});
-    });
-    return byTeam;
-  }
-
-  async function build({fromGw,toGw}={}){
-    const [bs,allFix]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
-    if(!Array.isArray(bs.teams))throw new Error('Bad bootstrap: no teams');
-    if(!Array.isArray(allFix))throw new Error('Bad fixtures: not array');
-
-    // xg-data is optional — fall back to FPL strength ratings if unavailable
-    let xgResp = null;
-    try { xgResp = await fetchJ('api/xg-data'); } catch(e) {
-      console.warn('[ENGINE] xg-data unavailable — using FPL strength fallback');
-    }
-
-    const curGw=resolveGw(bs,allFix);
-    const MAX_GW=38; // Premier League always ends at GW38
-    const GWS_TO_SHOW=8; // show next 8 GWs
-    const sGw=fromGw??curGw, eGw=toGw??Math.min(sGw+GWS_TO_SHOW-1,MAX_GW);
-    const fplMap=buildFplMap(bs.teams);
-    const xgMap=mapXg(xgResp?.teams??{},fplMap);
-    const ns=normalise(rawScores(xgMap));
-    const thresholds=computeThresholds(ns);
-    // Try unfinished fixtures first; fall back to all fixtures in range if none found
-    // Use !f.finished instead of f.finished===false to catch null/undefined too
-    let upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw&&!f.finished);
-    if(upcoming.length===0){
-      // Between GWs — include recently finished GW too so ticker isn't empty
-      upcoming=allFix.filter(f=>f.event>=sGw&&f.event<=eGw);
-    }
-    if(upcoming.length===0){
-      // No fixtures in range at all — widen to next 8 published GWs
-      const nextGws=[...new Set(allFix.filter(f=>f.event>=curGw).map(f=>f.event))].sort((a,b)=>a-b).slice(0,GWS_TO_SHOW);
-      upcoming=allFix.filter(f=>nextGws.includes(f.event));
-    }
-    const actualGws=[...new Set(upcoming.map(f=>f.event))].sort((a,b)=>a-b);
-    const actualStart=actualGws[0]??sGw;
-    const actualEnd=actualGws[actualGws.length-1]??eGw;
-    return{ratings:buildRatings(upcoming,fplMap,ns,xgMap,thresholds),currentGw:curGw,startGw:actualStart,endGw:actualEnd,gwList:actualGws.length?actualGws:gwList(sGw,eGw),generatedAt:new Date().toISOString(),bs,hasXg:!!xgResp?.teams};
   }
 
-  return{build};
-})();
+  return ratings;
+}
+
+const ENGINE = {
+  build: async function(){
+    const [bs, allFix] = await Promise.all([
+      fetchJ('api/fpl-bootstrap'),
+      fetchJ('api/fpl-fixtures'),
+    ]);
+
+    let xgTeams = null;
+    try{ const xgResp=await fetchJ('api/xg-data'); xgTeams=xgResp?.teams??null; }catch(e){}
+
+    const currentGw = resolveGw(bs, allFix);
+    const endGw = Math.min(currentGw + 6, 38);
+    const gwList_arr = [];
+    for(let g=currentGw; g<=endGw; g++) gwList_arr.push(g);
+
+    const ratings = buildRatings(bs.teams, allFix, currentGw, endGw, xgTeams);
+    const hasXg = xgTeams && Object.keys(xgTeams).length > 0;
+
+    return { bs, allFix, currentGw, endGw, gwList:gwList_arr, ratings, hasXg };
+  }
+};
 
 /* ─────────────────────────────────────────────────────────────────────────────
    STATIC FALLBACK DATA  (GW34–44, 2024/25 season)

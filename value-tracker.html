@@ -307,42 +307,19 @@ const FIX_CLS={1:'d1',2:'d2',3:'d3',4:'d4',5:'d5'};
 function setBadge(t,x){const b=document.getElementById('dataBadge');b.className='data-badge '+t;document.getElementById('dataBadgeText').textContent=x;}
 function lsGet(k,d){try{let v=localStorage.getItem(k);if(v===null)return d;if(v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return d;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
-async function fetchJ(url){const r=await fetch(url);if(!r.ok){const t=await r.text().catch(()=>'');throw Object.assign(new Error(`HTTP ${r.status}`),{status:r.status});}return r.json();}
-
-/* ── PROJECTION ENGINE ─────────────────────────────────────────
-   GW1:  ep_next × minutes_factor × availability
-         FPL's ep_next already accounts for the next fixture, form,
-         team context and set piece roles. Trust it directly.
-         Only apply minutes reliability and injury/doubt factor.
-
-   GW2+: 45% ppg + 55% physics model
-         ep_next is fixture-specific and becomes stale for future GWs.
-         Physics model uses player xG/xA, opponent xG/xGC, position
-         scoring values, Poisson CS probability and set piece bonus.
-──────────────────────────────────────────────────────────────── */
-function diffWeight(d){ return [0,1.28,1.12,1.0,0.84,0.68][d]??1.0; }
-function haWeight(ha){ return ha==='H'?1.06:0.94; }
-
-function physicsPts(p, fix, mins){
-  if(!fix) return 0;
-  const mf = Math.min(mins/90, 1);
-  const pos = p.pos;
-  const app = mins >= 60 ? 2 : 1;
-  const oppXg  = fix.oppXg  ?? [0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
-  const oppXgc = fix.oppXgc ?? [0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
-  const oppDef = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
-  // Blend season xG/xA with L6 cache if available
-  const pXgR = p.xg90Recent ?? 0;
-  const pXg = pXgR > 0.01 ? Math.min((p.xg90||0)*0.5 + pXgR*0.5, 1.2) : (p.xg90||0);
-  const pXa = p.xa90 || 0;
-  const goalPts = pos==='FWD' ? 4 : pos==='MID' ? 5 : 6;
-  const attPts  = (pXg * oppDef * goalPts + pXa * oppDef * 3) * mf;
-  const setPiece = p.isPenTaker ? 0.7 * mf : 0;
-  const csProb   = Math.exp(-Math.max(oppXg * mf, 0.01));
-  const csPer    = pos==='GK'||pos==='DEF' ? 4 : pos==='MID' ? 1 : 0;
-  const csPts    = csProb * csPer * (mins >= 60 ? 1.0 : 0.5);
-  const savePts  = pos==='GK' ? (oppXg * 2.5 * mf) / 3 : 0;
-  return app + attPts + setPiece + csPts + savePts;
+async function fetchJ(url){
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
+    return r.json();
+  }catch(e){
+    clearTimeout(tid);
+    if(e.name==='AbortError'){const t=new Error('Timeout');t.status=408;throw t;}
+    throw e;
+  }
 }
 
 function projEngine(p, gwIndex){

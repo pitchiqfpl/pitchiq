@@ -409,6 +409,28 @@ function sellUrgency(p){
   if(p.epNext<3)s+=2;
   return s;
 }
+function sellReasons(p){
+  const r=[];
+  if(p.status==='i') r.push('Injured');
+  else if(p.status==='d') r.push('Doubt');
+  if(p.form<3) r.push('Poor form');
+  const ad=(p.fixes?.slice(0,3).reduce((t,f)=>t+f.diff,0)||9)/3;
+  if(ad>=4) r.push('Tough run');
+  else if(ad>=3) r.push('Hard fixtures');
+  if(p.priceChg<0) r.push('Falling price');
+  if(p.epNext<3) r.push('Low EP');
+  return r;
+}
+function buyReasons(p){
+  const r=[];
+  const ad=(p.fixes?.slice(0,3).reduce((t,f)=>t+f.diff,0)||9)/3;
+  if(ad<=2) r.push('Easy run');
+  if(p.form>7) r.push('In form');
+  if(p.priceChg>0) r.push('Rising price');
+  if(p.epNext>7) r.push('High EP');
+  if(p.ownedPct<10) r.push('Differential');
+  return r;
+}
 
 function buildPlayer(e,fixMap,teamStr){
   const mins=e.minutes||1;
@@ -624,6 +646,10 @@ function renderSuggestions(suggestions){
     const nc=net>=0?'gain-pos':'gain-neg';
     const sF=s.sell.fixes?.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`).join('')||'';
     const bF=s.buy.fixes?.slice(0,3).map(f=>`<span class="fix-pill ${FIX_CLS[f.diff]}">${f.opp} ${f.ha}</span>`).join('')||'';
+    const sR=sellReasons(s.sell);
+    const bR=buyReasons(s.buy);
+    const sRhtml=sR.map(r=>`<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(230,57,70,0.1);color:var(--accent);font-family:var(--font-m)">${r}</span>`).join(' ');
+    const bRhtml=bR.map(r=>`<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(39,174,96,0.1);color:var(--grass-l);font-family:var(--font-m)">${r}</span>`).join(' ');
     return`<div class="suggestion-card">
       <div class="suggestion-rank">Transfer ${i+1} &nbsp; ${hitB}</div>
       <div class="swap-row">
@@ -632,6 +658,7 @@ function renderSuggestions(suggestions){
           <div class="swap-text">
             <div class="swap-name sell">↑ Sell: ${s.sell.name}</div>
             <div class="swap-meta">£${s.sell.price.toFixed(1)}m · ${s.sell.ownedPct.toFixed(1)}% owned</div>
+            ${sRhtml?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${sRhtml}</div>`:''}
             <div class="swap-fixes">${sF}</div>
           </div>
         </div>
@@ -641,6 +668,7 @@ function renderSuggestions(suggestions){
           <div class="swap-text" style="text-align:right">
             <div class="swap-name buy">↓ Buy: ${s.buy.name}</div>
             <div class="swap-meta">£${s.buy.price.toFixed(1)}m · ${s.buy.ownedPct.toFixed(1)}% owned</div>
+            ${bRhtml?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px;justify-content:flex-end">${bRhtml}</div>`:''}
             <div class="swap-fixes" style="justify-content:flex-end">${bF}</div>
           </div>
         </div>

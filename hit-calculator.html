@@ -225,6 +225,17 @@ body.ads-enabled .ad-slot-sticky{display:flex}
     <strong>Is the transfer worth it?</strong> Select the player you're selling and the player you're bringing in. We'll calculate the projected points difference and tell you whether taking a hit pays off — and exactly which gameweek you'd break even. <strong>Planning two transfers?</strong> Add a second swap below.
   </div>
 
+  <!-- SQUAD IMPORT — loads your players for quick selection -->
+  <div id="squadImportBar" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--muted);font-family:var(--font-m);flex-shrink:0">Load your squad</span>
+    <input type="text" id="hitTeamId" placeholder="Team ID" autocomplete="off"
+      style="width:110px;background:var(--ink-3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:13px;color:var(--cream);font-family:var(--font-b);outline:none">
+    <button id="hitLoadBtn" onclick="loadHitSquad()"
+      style="background:var(--grass);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-b)">Load squad</button>
+    <span id="hitSquadStatus" style="font-size:11px;color:var(--muted)"></span>
+    <div id="hitSquadPills" style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:4px"></div>
+  </div>
+
   <!-- TRANSFER SELECTORS -->
   <div class="transfer-grid">
     <div class="transfer-card">
@@ -343,6 +354,65 @@ window._t2Active=false;
 async function fetchJ(url){const r=await fetch(url);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
 
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
+
+async function loadHitSquad(){
+  const raw=document.getElementById('hitTeamId')?.value?.trim()?.replace(/"/g,'');
+  const id=parseInt(raw,10);
+  const st=document.getElementById('hitSquadStatus');
+  const pills=document.getElementById('hitSquadPills');
+  const btn=document.getElementById('hitLoadBtn');
+  if(!id||isNaN(id)||id<1){if(st)st.textContent='⚠ Enter a valid Team ID';return;}
+  btn.disabled=true;btn.textContent='Loading…';
+  if(st)st.textContent='';
+  try{
+    let data,gw=GW||1;
+    try{data=await fetchJ(`api/fpl-picks?team=${id}&gw=${gw}`);}
+    catch(e){if(e.status===404&&gw>1){gw--;data=await fetchJ(`api/fpl-picks?team=${id}&gw=${gw}`);}else throw e;}
+    if(!data?.picks?.length)throw new Error('No picks');
+    // Save team ID for other tools
+    try{localStorage.setItem('piq_team_id',String(id));}catch{}
+    // Build squad pills — clicking selects player as OUT
+    const squadIds=new Set(data.picks.map(p=>p.element));
+    const squadPlayers=ALL.filter(p=>squadIds.has(p.id))
+      .sort((a,b)=>{const po={'GK':0,'DEF':1,'MID':2,'FWD':3};return po[a.pos]-po[b.pos]||b.epNext-a.epNext;});
+    if(pills){
+      pills.innerHTML=`<div style="font-size:10px;color:var(--muted);font-family:var(--font-m);width:100%;margin-bottom:2px">Click a player to set as SELL</div>`+
+        squadPlayers.map(p=>`
+        <button onclick="selectHitOut(${p.id})" style="
+          background:var(--ink-3);border:1px solid var(--border);border-radius:7px;
+          padding:5px 10px;font-size:11px;color:var(--cream);cursor:pointer;
+          font-family:var(--font-b);transition:all 0.1s;white-space:nowrap;
+          display:flex;align-items:center;gap:5px"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--cream)'">
+          <span style="font-size:9px;color:var(--muted);font-family:var(--font-m)">${p.pos}</span>
+          ${p.name}
+          <span style="font-size:9px;color:var(--muted)">£${p.price.toFixed(1)}m</span>
+        </button>`).join('');
+    }
+    if(st)st.textContent=`✓ ${squadPlayers.length} players loaded`;
+  }catch(err){
+    if(st)st.textContent=err.status===404?'⚠ Squad not found':'⚠ Could not load squad';
+  }finally{
+    btn.disabled=false;btn.textContent='Load squad';
+  }
+}
+
+function selectHitOut(playerId){
+  const p=ALL.find(x=>x.id===playerId);
+  if(!p)return;
+  OUT=p;
+  renderPlayerCard(p,'outCard','var(--accent)');
+  // Highlight the selected pill
+  document.getElementById('hitSquadPills')?.querySelectorAll('button').forEach(b=>{
+    const isSelected=b.getAttribute('onclick')===`selectHitOut(${playerId})`;
+    b.style.borderColor=isSelected?'var(--accent)':'var(--border)';
+    b.style.background=isSelected?'rgba(230,57,70,0.08)':'var(--ink-3)';
+  });
+  // Focus the IN search to encourage completing the transfer
+  document.getElementById('inSearch')?.focus();
+  calculate();
+}
 
 async function loadData(){
   setBadge('loading','Fetching live data…');
@@ -649,10 +719,28 @@ const FB_PLAYERS=[
 document.addEventListener('DOMContentLoaded',()=>{
   ALL=FB_PLAYERS;TMAP=FB_TEAMS;
 
+  // Auto-fill Team ID from localStorage if saved by another tool
+  try{
+    const saved=localStorage.getItem('piq_team_id')||
+                localStorage.getItem('pitchiq_myteam_teamId')||
+                localStorage.getItem('pitchiq_scout_squadTeamId')||'';
+    const id=saved.replace(/"/g,'').trim();
+    const input=document.getElementById('hitTeamId');
+    if(id&&input){
+      input.value=id;
+      // Auto-load if live data is ready
+      setTimeout(()=>{if(ALL!==FB_PLAYERS)loadHitSquad();},800);
+    }
+  }catch{}
+  // Enter key on team ID input
+  document.getElementById('hitTeamId')?.addEventListener('keydown',e=>{
+    if(e.key==='Enter')loadHitSquad();
+  });
+
   setupSearch('outSearch','outAC',p=>{OUT=p;renderPlayerCard(p,'outCard','var(--accent)');calculate();});
   setupSearch('inSearch','inAC',p=>{IN=p;renderPlayerCard(p,'inCard','var(--grass-l)');calculate();});
   setupSearch('out2Search','out2AC',p=>{OUT2=p;renderPlayerCard(p,'out2Card','var(--accent)');calculate();});
-  setupSearch('in2Search','in2AC',p=>{IN2=p;renderPlayerCard(p,'in2Card','var(--grass-l)');calculate();});
+  setupSearch('in2Search','in2AC',p=>{IN2=p;renderPlayerCard(p,'in2Card','var(--grass-l)');calculate();}); 
 
   document.getElementById('addT2Btn').addEventListener('click',()=>{
     window._t2Active=true;

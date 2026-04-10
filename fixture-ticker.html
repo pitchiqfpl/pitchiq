@@ -95,6 +95,9 @@ tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,0.025)}
 tbody tr.hl{background:rgba(39,174,96,0.05)}
+tbody tr.my-squad{background:rgba(39,174,96,0.04);border-left:2px solid rgba(39,174,96,0.4)}
+tbody tr.my-squad td.team-col{border-left:none}
+.squad-badge{display:inline-block;font-size:9px;font-family:var(--font-m);font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(39,174,96,0.15);color:var(--grass-l);margin-left:6px;vertical-align:middle;letter-spacing:0.5px}
 td{padding:6px;vertical-align:middle}
 td.team-col{padding:9px 18px;white-space:nowrap;position:sticky;left:0;z-index:4;background:var(--ink-2);box-shadow:2px 0 8px rgba(0,0,0,0.35)}
 tbody tr:hover td.team-col{background:#1c2128}
@@ -181,7 +184,7 @@ td.score-td{text-align:center}
 .tt-bl{font-size:10px;color:var(--muted);width:62px}
 .tt-bt{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
 .tt-bf{height:100%;border-radius:2px}
-.tt-bv{font-size:9px;color:var(--muted);width:48px;text-align:right;font-family:var(--font-m)}
+.tt-bv{font-size:10px;color:var(--muted);width:48px;text-align:right;font-family:var(--font-m)}
 .tt-note{margin-top:9px;font-size:10px;font-family:var(--font-m)}
 .tt-xg-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid rgba(255,255,255,0.05);margin-top:8px}
 .tt-xg-label{font-size:10px;color:var(--muted)}
@@ -1061,9 +1064,11 @@ function rBody(ts) {
       </td>`;
     }).join('');
 
-    return `<tr class="${hl?'hl':''}">
+    const inSquad = TEAM_META[t.abbr]?.inMySquad ?? false;
+    const rowCls = hl ? 'hl' : inSquad ? 'my-squad' : '';
+    return `<tr class="${rowCls}">
       <td class="team-col">
-        <div class="team-name">${t.name}</div>
+        <div class="team-name">${t.name}${inSquad?'<span class="squad-badge">MY SQUAD</span>':''}</div>
         <div class="team-abbr">${t.abbr}</div>
       </td>
       ${cells}

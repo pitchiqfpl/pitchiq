@@ -614,7 +614,9 @@ function renderTeam(){
 
   const fixturesHtml=`<div class="stat-card">
     <div class="stat-card-title">Upcoming fixtures</div>
-    <table class="fix-table">${fixRows}</table>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="fix-table">${fixRows}</table>
+    </div>
   </div>`;
 
   // Concerns

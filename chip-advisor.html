@@ -567,6 +567,29 @@ async function loadSquad(){
     lsSet('squadId',String(id));
     lsSet('squadIds',[...SQUAD_IDS]);
 
+    // Auto-detect used chips from entry_history
+    // entry_history.chips = [{name:"wildcard"|"bboost"|"freehit"|"3xc", event:N}]
+    if(data.entry_history?.chips){
+      const used={tc:false,bb:false,fh:false,wc1:false,wc2:false};
+      const wcEvents=[];
+      data.entry_history.chips.forEach(chip=>{
+        if(chip.name==='3xc')       used.tc=true;
+        if(chip.name==='bboost')    used.bb=true;
+        if(chip.name==='freehit')   used.fh=true;
+        if(chip.name==='wildcard')  wcEvents.push(chip.event);
+      });
+      if(wcEvents.length>=1) used.wc1=true;
+      if(wcEvents.length>=2) used.wc2=true;
+      // Update PREFS and UI toggles
+      PREFS.used=used;
+      lsSet('used',used);
+      // Update toggle button states
+      ['tc','bb','fh','wc1','wc2'].forEach(k=>{
+        const btn=document.getElementById('chipToggle'+k.charAt(0).toUpperCase()+k.slice(1));
+        if(btn) btn.className='chip-used-btn '+(used[k]?'used':'available');
+      });
+    }
+
     setSquadTag('loaded',`✓ ${SQUAD_PLAYERS.length} players loaded`);
     document.getElementById('clearSquadBtn').style.display='inline-block';
     hint.style.display='none';
@@ -661,7 +684,11 @@ function analyseTC(gwsToShow){
       if(!fixes.length)return;
       const diff=getDiff(fixes[0],p.teamId);
       const reliabilityMult=p.status==='d'?0.5:1.0;
-      const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*reliabilityMult;
+      // DGW bonus: TC is massively more valuable when player has 2 fixtures
+      const fixes2=getFixtures(p.teamId,gw);
+      const isDGW=ALL_FIXTURES.filter(f=>f.event===gw&&(f.team_h===p.teamId||f.team_a===p.teamId)).length>1;
+      const dgwMult=isDGW?1.8:1.0; // TC on a DGW player is worth ~80% more
+      const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*reliabilityMult*dgwMult;
       if(score>best.score){best={gw,score,player:p,diff};}
     });
   });
@@ -673,7 +700,8 @@ function analyseTC(gwsToShow){
     player:best.player,
     diff:best.diff,
     opp,
-    reason:`${isSquadSpecific?'From your squad, ':''}${best.player.status==='d'?'<span style="color:var(--gold)">⚠ Doubt — </span>':''}<strong>${best.player.name}</strong> is the strongest TC candidate in GW${best.gw}. Projected ${best.player.epNext>0?best.player.epNext.toFixed(1)+' pts':best.player.form.toFixed(1)+' form'}, facing <strong>${opp?.short??'?'} (${opp?.ha??'?'})</strong> — difficulty ${best.diff}/5.${isSquadSpecific?'':' Import your squad for a personalised pick.'}`,
+    const isDGWBest=ALL_FIXTURES.filter(f=>f.event===best.gw&&(f.team_h===best.player.teamId||f.team_a===best.player.teamId)).length>1;
+  reason:`${isSquadSpecific?'From your squad, ':''}${best.player.status==='d'?'<span style="color:var(--gold)">⚠ Doubt — </span>':''}<strong>${best.player.name}</strong> is the strongest TC candidate in GW${best.gw}. Projected ${best.player.epNext>0?best.player.epNext.toFixed(1)+' pts':best.player.form.toFixed(1)+' form'}, facing <strong>${opp?.short??'?'} (${opp?.ha??'?'})</strong> — difficulty ${best.diff}/5.${isDGWBest?' <strong style="color:var(--gold)">⚡ Double GW — two games, doubled TC points.</strong>':''}${isSquadSpecific?'':' Import your squad for a personalised pick.'}`,
     urgency: best.gw===GW?'urgent':best.gw<=GW+1?'good':'wait',
   };
 }
@@ -1179,10 +1207,21 @@ function runValidator(){
   }else if(chip==='wc'){
     const avgD=data.avgD??3;
     if(SQUAD_PLAYERS.length){
-      const squadAvgD=SQUAD_PLAYERS.filter(p=>p.pos!=='GK').reduce((s,p)=>{const f=getFixtures(p.teamId,gw);return f.length?s+getDiff(f[0],p.teamId):s+3;},0)/Math.max(SQUAD_PLAYERS.filter(p=>p.pos!=='GK').length,1);
-      if(squadAvgD>=3.8){verdict='Strong Wildcard window';cls='good';body=`Your squad faces an average difficulty of <strong>${squadAvgD.toFixed(1)}/5</strong> in GW${gw} — one of its tougher runs. Wildcarding now lets you bring in players with much better fixtures immediately. ${recGw&&recGw!==gw?`Our model also flags <strong>GW${recGw}</strong> — both are valid.`:''}`;}
-      else if(squadAvgD>=3.3){verdict='Reasonable timing';cls='warn';body=`Your squad's average fixture difficulty in GW${gw} is <strong>${squadAvgD.toFixed(1)}/5</strong> — moderately tough. Wildcarding works but isn't urgent. ${recGw&&recGw!==gw?`Consider waiting until <strong>GW${recGw}</strong> when fixtures get harder.`:'If you have significant squad issues beyond fixtures, now is fine.'}`;}
-      else{verdict='Probably too early';cls='bad';body=`Your squad has average fixture difficulty <strong>${squadAvgD.toFixed(1)}/5</strong> in GW${gw} — relatively easy. The Wildcard is most impactful when your fixtures are at their worst. ${recGw?`Hold until around <strong>GW${recGw}</strong>.`:'Consider waiting for a tougher fixture run.'}`;}
+      // Use 3-GW run difficulty to match the recommendation logic
+      // Single GW difficulty is misleading — WC value is about the upcoming run
+      let runDiff=0,runCount=0;
+      [gw,gw+1,gw+2].forEach(g=>{
+        SQUAD_PLAYERS.filter(p=>p.pos!=='GK').forEach(p=>{
+          const f=getFixtures(p.teamId,g);
+          if(f.length){runDiff+=getDiff(f[0],p.teamId);runCount++;}
+        });
+      });
+      const squadRunAvg=runCount?runDiff/runCount:3;
+      // Also check if this is the recommended GW from analyseWC
+      const isRecGw=recGw===gw;
+      if(squadRunAvg>=3.5||isRecGw){verdict='Strong Wildcard window';cls='good';body=`Your squad faces an average difficulty of <strong>${squadRunAvg.toFixed(1)}/5</strong> over the next 3 GWs — one of its tougher runs. Wildcarding now lets you bring in players with much better fixtures immediately.${recGw&&recGw!==gw?` Our model also flags <strong>GW${recGw}</strong> — both are valid.`:''}`;}
+      else if(squadRunAvg>=3.0){verdict='Reasonable timing';cls='warn';body=`Your squad's 3-GW run difficulty from GW${gw} is <strong>${squadRunAvg.toFixed(1)}/5</strong> — moderately tough. Wildcarding works but isn't urgent.${recGw&&recGw!==gw?` Consider waiting until <strong>GW${recGw}</strong> when your run gets harder.`:'If you have significant squad issues beyond fixtures, now is fine.'}`;}
+      else{verdict='Probably too early';cls='bad';body=`Your squad has a relatively easy 3-GW run from GW${gw} (avg <strong>${squadRunAvg.toFixed(1)}/5</strong>). The Wildcard is most impactful when your fixtures are at their worst.${recGw?` Hold until around <strong>GW${recGw}</strong>.`:'Consider waiting for a tougher fixture run.'}`;}
     }else{
       if(avgD>=3.5){verdict='Good time league-wide';cls='good';body=`GW${gw} sees average fixture difficulty of <strong>${avgD.toFixed(1)}/5</strong> — fixtures are broadly tough. Load your squad for a personalised Wildcard recommendation.`;}
       else{verdict='Average timing';cls='warn';body=`GW${gw} has average difficulty <strong>${avgD.toFixed(1)}/5</strong>. Load your Team ID above for a squad-specific Wildcard analysis.`;}

@@ -794,10 +794,14 @@ async function syncTransfers(teamId){
 document.addEventListener('DOMContentLoaded',()=>{
   ALL=FB_PLAYERS;TMAP=FB_TEAMS;
   const importBtn=document.getElementById('importBtn');
-  document.getElementById('teamIdInput').value='1500';
+  // Restore saved team ID if present
+  const _savedId=lsG('teamId','');
+  if(_savedId) document.getElementById('teamIdInput').value=_savedId;
   // Disable until live data has loaded so GW is correct
   importBtn.disabled=true;
   loadData().then(()=>{
+    importBtn.disabled=false;
+  }).catch(()=>{
     importBtn.disabled=false;
   });
   importBtn.addEventListener('click',importTeam);

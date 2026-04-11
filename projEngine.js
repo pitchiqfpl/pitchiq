@@ -2,19 +2,13 @@
  * projEngine.js - PitchIQ shared projection engine
  * Single source of truth for expected points across all tools.
  *
- * xG blend: 70% recent (xg90Recent from bootstrap) + 30% season
+ * DGW support: gwIndex maps to unique GW numbers, not array positions.
+ * For a DGW player with two fixtures in GW33 then GW34:
+ *   gwIndex=0 -> GW33 (sums both fixtures)
+ *   gwIndex=1 -> GW34 (single fixture)
  *
- * CS probability uses BOTH:
- *   oppXg    - opponent's attacking threat (how likely they score)
- *   teamXgc  - player's own team's defensive record (how well they defend)
- *   Combined: csInput = oppXg * teamDefFactor
- *   where teamDefFactor = teamXgc / 1.25 (normalised around league average)
- *   Arsenal (low xGC) -> teamDefFactor < 1 -> lower effective threat -> higher CS
- *   Burnley (high xGC) -> teamDefFactor > 1 -> higher effective threat -> lower CS
- *
- * GW1: DEF/GK: physics 0.50 + ep_next 0.40 + ppg 0.10
- *      MID/FWD: physics 0.40 + ep_next 0.45 + ppg 0.15
- * GW2+: physics 0.55 + ppg 0.45
+ * xG blend: 70% recent + 30% season
+ * CS uses both oppXg (opponent attack) and teamXgc (own defence)
  */
 
 function pitchiqPhysics(p, fix, mins) {
@@ -25,20 +19,11 @@ function pitchiqPhysics(p, fix, mins) {
 
   var oppXg  = fix.oppXg  != null ? fix.oppXg  : [0,0.7,1.0,1.3,1.6,2.0][fix.diff != null ? fix.diff : 3];
   var oppXgc = fix.oppXgc != null ? fix.oppXgc : [0,1.8,1.5,1.25,1.0,0.7][fix.diff != null ? fix.diff : 3];
-
-  // Own team's defensive xGC - how many goals this team's defence concedes
-  // Normalised around league average (1.25) to get a multiplier
-  // Low teamXgc (good defence like Arsenal) -> factor < 1 -> amplifies CS probability
-  // High teamXgc (poor defence like Burnley) -> factor > 1 -> reduces CS probability
   var teamXgc = fix.teamXgc != null ? fix.teamXgc : 1.25;
   var teamDefFactor = Math.max(0.5, Math.min(teamXgc / 1.25, 2.0));
-
-  // Effective threat faced = opponent attack * own defensive quality
   var effectiveThreat = oppXg * teamDefFactor;
-
   var oppDef = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
 
-  // xG blend: 70% recent, 30% season
   var l6 = (typeof L6_CACHE !== 'undefined') ? L6_CACHE.get(p.id) : null;
   var pXgRecent = (l6 && l6.xg90L6) ? l6.xg90L6 : (p.xg90Recent || 0);
   var pXaRecent = (l6 && l6.xa90L6) ? l6.xa90L6 : (p.xa90Recent || 0);
@@ -48,8 +33,6 @@ function pitchiqPhysics(p, fix, mins) {
   var goalPts = pos==='FWD' ? 4 : pos==='MID' ? 5 : 6;
   var attPts  = (pXg * oppDef * goalPts + pXa * oppDef * 3) * mf;
   var setPiece = p.isPenTaker ? 0.7 * mf : 0;
-
-  // CS probability: Poisson using effective threat (opponent attack x own defence)
   var csProb  = Math.exp(-Math.max(effectiveThreat * mf, 0.01));
   var csPer   = (pos==='GK'||pos==='DEF') ? 4 : pos==='MID' ? 1 : 0;
   var csPts   = csProb * csPer * ((mins||75) >= 60 ? 1.0 : 0.5);
@@ -59,33 +42,54 @@ function pitchiqPhysics(p, fix, mins) {
 }
 
 function pitchiqProj(p, gwIndex) {
+  if (!p.fixes || !p.fixes.length) return 0;
+
   var chanceNext = p.chanceNext != null ? p.chanceNext : 100;
   var avail = chanceNext < 100 ? chanceNext/100
             : p.status==='i' ? 0
             : p.status==='d' ? 0.55
             : 1;
 
-  var mins  = p.minsRel != null ? p.minsRel : 75;
-  var mf    = Math.min(mins/90, 1);
-  var pos   = p.pos;
-  var fThis = p.fixes ? p.fixes[gwIndex] : null;
-  if (!fThis) return 0;
+  var mins = p.minsRel != null ? p.minsRel : 75;
+  var mf   = Math.min(mins/90, 1);
+  var pos  = p.pos;
+
+  // Map gwIndex to unique GW numbers (handles DGW)
+  // e.g. fixes = [{gw:33},{gw:33},{gw:34}] -> uniqueGws = [33,34]
+  // gwIndex=0 -> gw33 (2 fixtures), gwIndex=1 -> gw34 (1 fixture)
+  var seen = {};
+  var uniqueGws = [];
+  p.fixes.forEach(function(f) {
+    if (!seen[f.gw]) { seen[f.gw] = true; uniqueGws.push(f.gw); }
+  });
+
+  var targetGw = uniqueGws[gwIndex];
+  if (targetGw == null) return 0;
+
+  // All fixtures for this GW (1 for normal, 2 for DGW)
+  var gwFixes = p.fixes.filter(function(f) { return f.gw === targetGw; });
 
   var epCaps   = {GK:7.5, DEF:9.0, MID:12.0, FWD:11.0};
   var epCapped = p.epNext > 0 ? Math.min(p.epNext, epCaps[pos]||12.0) : 0;
   var ppgDef   = (pos==='GK'||pos==='DEF') ? 4.5 : 5.0;
   var ppg      = p.ppg > 0 ? p.ppg : ppgDef;
 
-  if (gwIndex === 0) {
-    var phys = pitchiqPhysics(p, fThis, mins);
-    var wPhys, wEp, wPpg;
-    if (pos==='GK'||pos==='DEF') { wPhys=0.50; wEp=0.40; wPpg=0.10; }
-    else                          { wPhys=0.40; wEp=0.45; wPpg=0.15; }
-    var base = phys*wPhys + epCapped*wEp + ppg*wPpg;
-    return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
-  } else {
-    var phys2  = pitchiqPhysics(p, fThis, mins);
-    var result = ppg*0.45 + phys2*0.55;
-    return Math.max(Math.round(result * avail * 10) / 10, 0);
-  }
+  // Sum projected pts across all fixtures in this GW
+  var total = 0;
+  gwFixes.forEach(function(fix) {
+    var singlePts;
+    if (gwIndex === 0) {
+      var phys = pitchiqPhysics(p, fix, mins);
+      var wPhys, wEp, wPpg;
+      if (pos==='GK'||pos==='DEF') { wPhys=0.50; wEp=0.40; wPpg=0.10; }
+      else                          { wPhys=0.40; wEp=0.45; wPpg=0.15; }
+      singlePts = Math.max((phys*wPhys + epCapped*wEp + ppg*wPpg) * mf * avail, 0);
+    } else {
+      var phys2 = pitchiqPhysics(p, fix, mins);
+      singlePts = Math.max((ppg*0.45 + phys2*0.55) * avail, 0);
+    }
+    total += singlePts;
+  });
+
+  return Math.round(total * 10) / 10;
 }

@@ -592,8 +592,8 @@ const COMPONENTS = [
     info:'Expected goals + expected assists per 90 mins this season. Strips out luck — more reliable than actual goals as a predictor of future output.' },
   { key:'fix',  label:'Fixture',     color:'#f0b429', weight:0.23,
     info:'How easy the next fixture is for an attacker, based on the opponent\'s defensive weakness. Higher = easier fixture = more chance to score.' },
-  { key:'ep',   label:'Proj pts',    color:'#f472b6', weight:0.10,
-    info:'Projected points for the next gameweek. Combines form, fixture, and team context into a single points estimate — used here to keep the captain score aligned with raw point expectations.' },
+  { key:'ep',   label:'Pred pts',    color:'#f472b6', weight:0.10,
+    info:'Predicted points for the next gameweek. Combines form, fixture, and team context into a single points estimate — used here to keep the captain score aligned with raw point expectations.' },
   { key:'ict',  label:'ICT',         color:'#a78bfa', weight:0.12,
     info:'FPL\'s Influence, Creativity & Threat index. Composite of match impact, chances created, and shots in the box.' },
   { key:'mins', label:'Reliability', color:'#f97316', weight:0.09,
@@ -1189,7 +1189,7 @@ function renderBanner(players, top) {
   if (main.key==='form')     why += `is in outstanding form — avg <strong>${top.form.toFixed(1)} pts/game</strong> over the last 5 GWs`;
   else if (main.key==='xg') why += `leads on xG+xA per 90 (<strong>${top.xg90.toFixed(2)}</strong>), suggesting sustained output`;
   else if (main.key==='fix') why += `has a highly favourable next fixture`;
-  else if (main.key==='ep') why += `has the highest projected points next GW`;
+  else if (main.key==='ep') why += `has the highest predicted points next GW`;
   else                      why += `scores highest on the combined model`;
   if (fix) why += `, facing <strong>${fix.opp} (${fix.ha})</strong> — <strong>${FIX_LABEL[fix.difficulty]?.toLowerCase()}</strong> difficulty`;
   why += `.${squadNote}`;
@@ -1288,7 +1288,7 @@ function renderCard(p, rank) {
   const avgPts   = p.starts > 0 ? (p.totalPts / p.starts).toFixed(1) : '—';
   const statsRow = `<div class="cap-stats-row">
     <div class="cap-stat">
-      <div class="cap-stat-label">Proj pts</div>
+      <div class="cap-stat-label">Pred pts</div>
       <div class="cap-stat-val ep">${p.epNext > 0 ? p.epNext.toFixed(1) : '—'}</div>
       <div class="cap-stat-sub">next GW estimate</div>
     </div>

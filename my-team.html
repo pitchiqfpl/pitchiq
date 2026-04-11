@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta name="description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, predicted points and injury alerts.">
   <meta name="keywords" content="FPL my team, FPL squad view, Fantasy Premier League team analysis, FPL team importer">
   <meta name="author" content="PitchIQ">
   <meta name="robots" content="index, follow">
@@ -12,13 +12,13 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pitchiqfpl.com/my-team.html">
   <meta property="og:title" content="FPL My Team — Pitch View & Fixture Analysis | PitchIQ">
-  <meta property="og:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta property="og:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, predicted points and injury alerts.">
   <meta property="og:site_name" content="PitchIQ">
   <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FPL My Team — Pitch View & Fixture Analysis | PitchIQ">
-  <meta name="twitter:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, projected points and injury alerts.">
+  <meta name="twitter:description" content="Import your FPL squad by team ID and see your players on a pitch with upcoming fixture difficulty, predicted points and injury alerts.">
   <meta name="twitter:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -331,7 +331,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
   <div id="mainWrap">
     <div class="import-prompt">
       <h3>Import your squad</h3>
-      <p>Enter your FPL Team ID above to see your players on the pitch with their upcoming fixtures, projected points, and squad concerns.</p>
+      <p>Enter your FPL Team ID above to see your players on the pitch with their upcoming fixtures, predicted points, and squad concerns.</p>
     </div>
   </div>
 
@@ -426,6 +426,7 @@ function buildPlayers(els,fm){
     ppg:parseFloat(e.points_per_game)||0,
     xg90:Math.min((parseFloat(e.expected_goals)||0)/((e.minutes||1)/90),1.0),
     xa90:Math.min((parseFloat(e.expected_assists)||0)/((e.minutes||1)/90),0.8),
+    minutes:e.minutes||0,
     xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
     xa90Recent:Math.min(parseFloat(e.expected_assists_per_90)||0,0.8),
     starts:e.starts||0,
@@ -496,6 +497,9 @@ function renderTeam(){
   // Split starting XI (positions 1-11) from bench (12-15)
   const starters=players.filter(p=>p.position<=11).sort((a,b)=>a.position-b.position);
   const bench=players.filter(p=>p.position>11).sort((a,b)=>a.position-b.position);
+
+  // Compute a single GW to show for the whole team — consistent across all players
+  const TEAM_FIX_GW = getTeamFixGw(players);
 
   // Group starters by position for pitch layout
   const gks=starters.filter(p=>p.posId===1);
@@ -571,8 +575,8 @@ function renderTeam(){
       const priceCls = Math.abs(swapDiff)<0.05?'same':swapDiff>0?'cost':'save';
       const outPhoto = pOut.code?`https://resources.premierleague.com/premierleague/photos/players/110x140/p${pOut.code}.png`:'';
       const inPhoto  = pIn.code?`https://resources.premierleague.com/premierleague/photos/players/110x140/p${pIn.code}.png`:'';
-      const outFix = pOut.fixes[0];
-      const inFix  = pIn.fixes[0];
+      const outFix = getNextFix(pOut, TEAM_FIX_GW);
+      const inFix  = getNextFix(pIn, TEAM_FIX_GW);
       return `<div class="xfer-card">
         <div>
           <div class="xfer-tag-out">Out</div>
@@ -637,10 +641,10 @@ function renderTeam(){
   const concerns=[];
   starters.filter(p=>p.status==='d').forEach(p=>concerns.push({icon:'⚠',text:`<strong>${p.name}</strong> is a doubt — watch for team news before deadline`}));
   starters.filter(p=>!p.fixes.length).forEach(p=>concerns.push({icon:'📅',text:`<strong>${p.name}</strong> has a blank gameweek — consider benching or transferring`}));
-  const hardFix=starters.filter(p=>p.fixes[0]?.diff>=4);
-  hardFix.slice(0,2).forEach(p=>concerns.push({icon:'🔴',text:`<strong>${p.name}</strong> faces ${p.fixes[0].opp} (${p.fixes[0].ha}) — difficulty ${p.fixes[0].diff}/5`}));
+  const hardFix=starters.filter(p=>getNextFix(p, TEAM_FIX_GW)?.diff>=4);
+  hardFix.slice(0,2).forEach(p=>{const f=getNextFix(p, TEAM_FIX_GW);concerns.push({icon:'🔴',text:`<strong>${p.name}</strong> faces ${f.opp} (${f.ha}) — difficulty ${f.diff}/5`});});
   const captain=starters.find(p=>p.isCaptain);
-  if(captain&&captain.fixes[0]?.diff>=4)concerns.push({icon:'⚡',text:`Your captain <strong>${captain.name}</strong> has a hard fixture — consider switching captaincy`});
+  if(captain&&getNextFix(captain, TEAM_FIX_GW)?.diff>=4)concerns.push({icon:'⚡',text:`Your captain <strong>${captain.name}</strong> has a hard fixture — consider switching captaincy`});
 
   const concernsHtml=concerns.length?`<div class="stat-card">
     <div class="stat-card-title">⚠ Concerns</div>
@@ -693,8 +697,20 @@ function shirtSvg(pos){
   </svg>`;
 }
 
-function tokenHtml(p,isSub){
-  const fix=p.fixes[0];
+function getTeamFixGw(players){
+  // Pick a single GW to show for the whole team
+  // If any player hasn't played yet this GW → show current GW
+  // If all players have played → show next GW
+  const anyUnplayed = players.some(p => (p.minutes||0) === 0 && p.fixes?.[0]?.gw === GW);
+  return anyUnplayed ? GW : (GW + 1);
+}
+
+function getNextFix(p, teamGw){
+  // Return the fixture for the team's chosen GW
+  return p.fixes?.find(f => f.gw === teamGw) ?? p.fixes?.[0];
+}
+function tokenHtml(p,isSub,teamFixGw){
+  const fix = getNextFix(p, TEAM_FIX_GW);
   const fixLabel=fix?`${fix.opp} ${fix.ha}`:'BGW';
   const fixPillCls=fix?`fix-pill-${fix.diff}`:'fix-pill-3';
   const bgCls=`shirt-${p.pos.toLowerCase()}-bg`;

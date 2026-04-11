@@ -12,7 +12,7 @@
   <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
 <meta property="og:url" content="https://pitchiqfpl.com/value-tracker.html">
 <meta property="og:title" content="FPL Transfer Planner — Maximise Your Free Transfers | PitchIQ">
-<meta property="og:description" content="Enter your Team ID, set your free transfers and time horizon — PitchIQ ranks every possible swap by projected points gain so you know exactly who to bring in.">
+<meta property="og:description" content="Enter your Team ID, set your free transfers and time horizon — PitchIQ ranks every possible swap by predicted points gain so you know exactly who to bring in.">
 <meta property="og:site_name" content="PitchIQ">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="FPL Transfer Planner — Maximise Your Free Transfers | PitchIQ">
@@ -260,7 +260,7 @@ body.ads-enabled .ad-slot{display:block}
         <span style="font-size:10px;color:var(--muted)" id="horizonLabel">—</span>
       </div>
       <div class="panel-body" id="suggestionsBody">
-        <div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">Load your squad first</div><div class="empty-desc">We'll rank every possible swap by projected points gain over your chosen time horizon</div></div>
+        <div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">Load your squad first</div><div class="empty-desc">We'll rank every possible swap by predicted points gain over your chosen time horizon</div></div>
       </div>
     </div>
   </div>
@@ -699,7 +699,7 @@ function buildComparisonHTML(sell, buy){
 
   // ── HEAD TO HEAD STATS ──
   const stats = [
-    { label:'Proj pts (next GW)', sVal: sell.epNext>0?sell.epNext.toFixed(1):'—', bVal: buy.epNext>0?buy.epNext.toFixed(1):'—',
+    { label:'Pred pts (next GW)', sVal: sell.epNext>0?sell.epNext.toFixed(1):'—', bVal: buy.epNext>0?buy.epNext.toFixed(1):'—',
       sNum: sell.epNext, bNum: buy.epNext, higherWins: true },
     { label:'Form', sVal: sell.form.toFixed(1), bVal: buy.form.toFixed(1),
       sNum: sell.form, bNum: buy.form, higherWins: true },

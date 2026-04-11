@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta name="description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare predicted points over the next 5 gameweeks and find your break-even gameweek.">
   <meta name="keywords" content="FPL hit calculator, FPL transfer hit worth it, -4 hit FPL, Fantasy Premier League transfer calculator">
   <meta name="author" content="PitchIQ">
   <meta name="robots" content="index, follow">
@@ -12,13 +12,13 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://pitchiqfpl.com/hit-calculator.html">
   <meta property="og:title" content="FPL Transfer Hit Calculator — Is It Worth It? | PitchIQ">
-  <meta property="og:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta property="og:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare predicted points over the next 5 gameweeks and find your break-even gameweek.">
   <meta property="og:site_name" content="PitchIQ">
   <meta property="og:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="FPL Transfer Hit Calculator — Is It Worth It? | PitchIQ">
-  <meta name="twitter:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare projected points over the next 5 gameweeks and find your break-even gameweek.">
+  <meta name="twitter:description" content="Calculate whether a -4 point FPL transfer hit is worth taking. Compare predicted points over the next 5 gameweeks and find your break-even gameweek.">
   <meta name="twitter:image" content="https://pitchiqfpl.com/og-image.png">
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -223,7 +223,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
   </div>
 
   <div class="page-intro">
-    <strong>Is the transfer worth it?</strong> Select the player you're selling and the player you're bringing in. We'll calculate the projected points difference and tell you whether taking a hit pays off — and exactly which gameweek you'd break even. <strong>Planning two transfers?</strong> Add a second swap below.
+    <strong>Is the transfer worth it?</strong> Select the player you're selling and the player you're bringing in. We'll calculate the predicted points difference and tell you whether taking a hit pays off — and exactly which gameweek you'd break even. <strong>Planning two transfers?</strong> Add a second swap below.
   </div>
 
   <!-- SQUAD IMPORT — loads your players for quick selection -->
@@ -320,7 +320,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
     </div>
 
     <div class="gw-chart-wrap">
-      <div class="gw-chart-title">Projected points — gameweek by gameweek</div>
+      <div class="gw-chart-title">Predicted points — gameweek by gameweek</div>
       <div class="gw-chart" id="gwChart"></div>
       <div class="gw-cumulative" id="gwCumulative"></div>
       <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -508,7 +508,7 @@ function renderPlayerCard(player,cardId,accentColor){
     <div class="sel-stats">
       <div class="sel-stat"><div class="sel-stat-val" style="color:${accentColor}">${player.form.toFixed(1)}</div><div class="sel-stat-label">Form</div></div>
       <div class="sel-stat"><div class="sel-stat-val">${player.xg90.toFixed(2)}</div><div class="sel-stat-label">xG+xA/90</div></div>
-      <div class="sel-stat"><div class="sel-stat-val" style="color:var(--grass-l)">${player.epNext>0?player.epNext.toFixed(1):'—'}</div><div class="sel-stat-label">Proj pts</div></div>
+      <div class="sel-stat"><div class="sel-stat-val" style="color:var(--grass-l)">${player.epNext>0?player.epNext.toFixed(1):'—'}</div><div class="sel-stat-label">Pred pts</div></div>
     </div>
     <div style="font-family:var(--font-m);font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin:8px 0 4px">Next ${GWS} fixtures</div>
     <div class="fix-run-mini">${fixHtml||'<span style="color:var(--muted);font-size:10px">No fixtures</span>'}</div>`;
@@ -626,7 +626,7 @@ function calculate(){
     const metrics=[
       {label:'Form',outV:outP.form.toFixed(1),inV:inP.form.toFixed(1),hi:true},
       {label:'xG+xA/90',outV:outP.xg90.toFixed(2),inV:inP.xg90.toFixed(2),hi:true},
-      {label:'Proj pts',outV:outP.epNext>0?outP.epNext.toFixed(1):'—',inV:inP.epNext>0?inP.epNext.toFixed(1):'—',hi:true},
+      {label:'Pred pts',outV:outP.epNext>0?outP.epNext.toFixed(1):'—',inV:inP.epNext>0?inP.epNext.toFixed(1):'—',hi:true},
       {label:'Price',outV:`£${outP.price.toFixed(1)}m`,inV:`£${inP.price.toFixed(1)}m`,hi:false},
       {label:'Owned',outV:`${outP.ownedPct.toFixed(1)}%`,inV:`${inP.ownedPct.toFixed(1)}%`,hi:false},
     ].map(m=>{

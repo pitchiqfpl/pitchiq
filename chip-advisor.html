@@ -1267,7 +1267,7 @@ function runComparison(){
     const rows=[];
     if(chip==='tc'){
       rows.push(['Best captain',data.player?data.player.name:'—']);
-      rows.push(['Proj pts',data.player?(data.player.epNext>0?data.player.epNext.toFixed(1)+'pts':data.player.form.toFixed(1)+' form'):'—']);
+      rows.push(['Pred pts',data.player?(data.player.epNext>0?data.player.epNext.toFixed(1)+'pts':data.player.form.toFixed(1)+' form'):'—']);
       rows.push(['DGW teams',data.dgws.length||'None']);
     }else if(chip==='bb'){
       rows.push(['Teams playing',data.matchTeams]);
@@ -1381,7 +1381,7 @@ function showExecContent(chip){
         </div>
         <div class="exec-pts">${p.epNext>0?p.epNext.toFixed(1):p.form.toFixed(1)}</div>
       </div>`).join('')}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:10px">Scores based on projected points × fixture difficulty. ${SQUAD_PLAYERS.length?'Showing your squad only.':'Load your squad for personalised picks.'}</div>`;
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Scores based on predicted points × fixture difficulty. ${SQUAD_PLAYERS.length?'Showing your squad only.':'Load your squad for personalised picks.'}</div>`;
 
   }else if(chip==='bb'){
     sub.textContent="You're playing Bench Boost — these are your bench players' fixtures for the upcoming GWs. Ideally play it when they have easy games or doubles.";

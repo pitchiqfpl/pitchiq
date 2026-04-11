@@ -198,6 +198,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -387,7 +388,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;if(cur.deadline_time&&Date.now()>new Date(cur.deadline_time))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,9);
     ALL=buildPlayers(bs.elements,fm);
@@ -417,11 +418,14 @@ function buildPlayers(els,fm){
     const mins=e.minutes||1;
     const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
     const xg90=Math.min(((parseFloat(e.expected_goals)||0)+(parseFloat(e.expected_assists)||0))/(mins/90),1.5);
+    const xa90=Math.min((parseFloat(e.expected_assists)||0)/(mins/90),0.8);
+    const xg90Recent=Math.min(parseFloat(e.expected_goals_per_90)||0,1.0);
+    const xa90Recent=Math.min(parseFloat(e.expected_assists_per_90)||0,0.8);
     const pos=POS_ID[e.element_type]??'MID';
     return{
       id:e.id,name:e.web_name,fullName:`${e.first_name} ${e.second_name}`,
       teamId:e.team,pos,price:e.now_cost/10,
-      form:parseFloat(e.form)||0,xg90,
+      form:parseFloat(e.form)||0,xg90,xa90,xg90Recent,xa90Recent,
       ict:parseFloat(e.ict_index)||0,
       epNext:parseFloat(e.ep_next)||0,
       ppg:parseFloat(e.points_per_game)||0,
@@ -446,32 +450,12 @@ function buildPlayers(els,fm){
    actual future ep data which isn't in the bootstrap.
 ─────────────────────────────────────────────────────────────────── */
 function projectPoints(player, numGws){
-  // Position-specific blend: DEF/GK 40% ep + 60% ppg, MID/FWD 65% ep + 35% ppg
-  const pos = player.pos;
-  const ep  = player.epNext > 0 ? player.epNext : 0;
-  const caps = {'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
-  const epC = ep > 0 ? Math.min(ep, caps[pos]??12.0) : 0;
-  const ppgDefault = pos==='GK'||pos==='DEF' ? 4.5 : 5.0;
-  const ppg = player.ppg > 0 ? player.ppg : ppgDefault;
-  const wEp = pos==='GK'||pos==='DEF' ? 0.40 : 0.65;
-  const base = epC > 0 ? epC * wEp + ppg * (1-wEp) : ppg;
-  const starts = player.starts > 0 ? player.starts : Math.max(Math.round((player.minutes||75)/75),1);
-  const mf = Math.min((player.minutes||75) / starts / 90, 1);
-  const avail = player.chanceNext < 100 ? player.chanceNext/100
-              : player.status==='i' ? 0 : player.status==='d' ? 0.55 : 1;
+  // Uses shared pitchiqProj engine (projEngine.js) — consistent across all tools
   const pts = [];
   const fixes = (player.fixes||[]).slice(0, numGws);
-  for(let i = 0; i < numGws; i++){
-    const fix = fixes[i] ?? null;
-    if(!fix){ pts.push(0); continue; }
-    if(i === 0){
-      // GW1: blended ep is already fixture-aware
-      pts.push(Math.max(Math.round(base * mf * avail * 10)/10, 0));
-    } else {
-      // GW2+: scale base by difficulty relative to average (diff 3 = 1.0)
-      const diffMult = [0,1.18,1.09,1.0,0.86,0.72][fix.diff??3] ?? 1.0;
-      pts.push(Math.max(Math.round(base * diffMult * mf * avail * 10)/10, 0));
-    }
+  for(let i=0; i<numGws; i++){
+    if(!fixes[i]){ pts.push(0); continue; }
+    pts.push(pitchiqProj(player, i));
   }
   return pts;
 }

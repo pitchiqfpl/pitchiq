@@ -199,6 +199,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -319,7 +320,7 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
-    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
+    GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;if(cur.deadline_time&&Date.now()>new Date(cur.deadline_time))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     const fm=buildFixMap(fixes,GW,6);
     ALL=buildPlayers(bs.elements,fm);
@@ -355,11 +356,14 @@ function buildPlayers(els,fm){
     const mins=e.minutes||1;
     const starts=e.starts>0?e.starts:Math.max(Math.round(mins/75),1);
     const xg90=Math.min(((parseFloat(e.expected_goals)||0)+(parseFloat(e.expected_assists)||0))/(mins/90),1.5);
+    const xa90=Math.min((parseFloat(e.expected_assists)||0)/(mins/90),0.8);
+    const xg90Recent=Math.min(parseFloat(e.expected_goals_per_90)||0,1.0);
+    const xa90Recent=Math.min(parseFloat(e.expected_assists_per_90)||0,0.8);
     return{
       id:e.id,name:e.web_name,teamId:e.team,
       pos:POS_ID[e.element_type]??'MID',
       price:e.now_cost/10,
-      form:parseFloat(e.form)||0,xg90,
+      form:parseFloat(e.form)||0,xg90,xa90,xg90Recent,xa90Recent,
       epNext:parseFloat(e.ep_next)||0,
       ownedPct:parseFloat(e.selected_by_percent)||0,
       priceChg:e.cost_change_event??0,
@@ -377,7 +381,9 @@ function classifyAndScore(players){
 
   return players.map(p=>{
     const fixAvg=p.fixes.length?p.fixes.slice(0,3).reduce((s,f)=>s+(6-f.diff),0)/p.fixes.length:3;
-    const quality=(p.form*1.8)+(p.xg90*18)+(fixAvg*1.8)+(p.epNext*2.2);
+    // quality: use pitchiqProj for expected pts — consistent with other tools
+    const projPts = p.fixes?.length ? pitchiqProj(p, 0) : (p.epNext||0);
+    const quality=(p.form*0.5)+(p.xg90*22)+(fixAvg*2.0)+(projPts*1.2);
     const ownMult=p.ownedPct<3?4:p.ownedPct<6?3:p.ownedPct<10?2.2:p.ownedPct<15?1.6:p.ownedPct<20?1.2:1;
     const rawScore=quality*ownMult;
 

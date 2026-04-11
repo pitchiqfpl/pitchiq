@@ -266,6 +266,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -402,6 +403,7 @@ const POS_ID={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const SHIRT={'GK':'shirt-gk','DEF':'shirt-def','MID':'shirt-mid','FWD':'shirt-fwd'};
 const LS='pitchiq_live_';
 let ALL=[],TMAP={},GW=1,TOTAL_PLAYERS=10000000;
+let GW_AVG=50,GW_HIGH=150; // updated from bootstrap event data
 let PICKS=[];
 let SQUAD_IDS=new Set();
 let LIVE_MAP={};
@@ -431,6 +433,12 @@ async function loadBootstrap(){
     const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
     GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TOTAL_PLAYERS=bs.total_players??10000000;
+    // Store actual GW average score for rank estimation — much better than a fixed guess
+    const curEvent=bs.events?.find(e=>e.id===GW);
+    if(curEvent){
+      GW_AVG=curEvent.average_entry_score||curEvent.average_entry_score===0?curEvent.average_entry_score:50;
+      GW_HIGH=curEvent.highest_score||150;
+    }
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     ALL=bs.elements.filter(e=>e.element_type>0).map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,
@@ -509,33 +517,152 @@ async function loadSquad(){
 }
 
 /* ── LIVE RANK CALCULATION ────────────────────────────── */
-function calcApproxRank(myPts, totalPlayers){
-  // Uses score distribution from fpl-results to estimate rank
-  // Returns {rank, percentile, confidence}
-  if(!RANK_DATA||!myPts)return null;
+/* ── LIVE AVERAGE ESTIMATION ─────────────────────────────
+   Builds an estimated live GW average by simulating what
+   the typical highly-owned squad is scoring right now.
+   
+   Method:
+   1. Sort all players by ownership %
+   2. Simulate 10,000 "typical" squads by weighting player
+      selection probability by ownership %
+   3. For each simulated squad, pick 15 players respecting
+      position limits (2GK, 5DEF, 5MID, 3FWD) and budget
+   4. Score each squad using live points from LIVE_MAP
+   5. Return the distribution mean and std dev
+   
+   In practice this reduces to: for each position group,
+   weight-average the live scores by ownership % — giving
+   the expected live score for a player "chosen at random
+   weighted by how many people own them".
+───────────────────────────────────────────────────────── */
+function calcLiveAverage(){
+  if(!ALL.length || !Object.keys(LIVE_MAP).length) return null;
 
-  // fpl-results returns {results:[{entry,event_total,...}]} for finished GWs
-  // During live GWs it returns partial data — we use total_players from bootstrap
-  // and estimate rank from the score distribution
-  let managersAbove=0;
+  // Squad structure: 2 GK, 5 DEF, 5 MID, 3 FWD (starting 11 = 1GK+4DEF+4MID+2FWD or similar)
+  // We estimate the STARTING 11 average since that's what counts for points
+  // Use position limits: 1GK, 4DEF, 4MID, 2FWD (most common formation split)
+  const SQUAD_SLOTS = { GK:2, DEF:5, MID:5, FWD:3 };
+  const START_SLOTS = { GK:1, DEF:4, MID:4, FWD:2 };
 
-  // Try results array if available (finished GW)
-  if(Array.isArray(RANK_DATA.results)){
-    managersAbove=RANK_DATA.results.filter(r=>r.event_total>myPts).length;
-    const known=RANK_DATA.results.length;
-    if(known>0&&known<totalPlayers){
-      // Scale up from sample to full population
-      managersAbove=Math.round((managersAbove/known)*totalPlayers);
-    }
-    return{
-      rank: managersAbove+1,
-      percentile: ((totalPlayers-managersAbove)/totalPlayers*100),
-      confidence: known>=1000?'high':'low',
-      based: known,
-    };
+  // Get live points for each player (0 if not in LIVE_MAP yet)
+  const withLive = ALL.map(p => ({
+    ...p,
+    livePts: getLivePoints(p),
+  }));
+
+  // For each position, compute ownership-weighted average live score
+  // This is E[score] = sum(ownership_i * score_i) / sum(ownership_i)
+  // which represents "expected score of a randomly ownership-weighted pick"
+  let totalExpected = 0;
+  let totalVariance = 0;
+  let sampleCount = 0;
+
+  const positions = ['GK','DEF','MID','FWD'];
+  for(const pos of positions){
+    const players = withLive.filter(p => p.pos === pos && p.ownedPct > 0);
+    if(!players.length) continue;
+
+    const slots = START_SLOTS[pos];
+    const totalOwn = players.reduce((s,p) => s+p.ownedPct, 0);
+    if(totalOwn === 0) continue;
+
+    // Ownership-weighted mean score for this position
+    const wMean = players.reduce((s,p) => s + (p.ownedPct/totalOwn)*p.livePts, 0);
+    // Ownership-weighted variance
+    const wVar  = players.reduce((s,p) => s + (p.ownedPct/totalOwn)*Math.pow(p.livePts - wMean, 2), 0);
+
+    totalExpected += slots * wMean;
+    totalVariance += slots * wVar;
+    sampleCount   += slots;
   }
 
-  return null;
+  if(sampleCount === 0) return null;
+
+  // Add captain contribution: most-owned player gets 2x
+  // Top-owned non-GK player by ownership weighted by live pts
+  const capCandidates = withLive.filter(p => p.pos !== 'GK').sort((a,b) => b.ownedPct - a.ownedPct);
+  const topOwned = capCandidates.slice(0, 5); // top 5 most owned
+  const capOwn = topOwned.reduce((s,p) => s+p.ownedPct, 0);
+  const capExpectedPts = capOwn > 0
+    ? topOwned.reduce((s,p) => s + (p.ownedPct/capOwn)*p.livePts, 0)
+    : 0;
+  // Captain doubles — adds 1x the captain's expected pts
+  totalExpected += capExpectedPts;
+  totalVariance += capOwn > 0 ? topOwned.reduce((s,p) => s + (p.ownedPct/capOwn)*Math.pow(p.livePts - capExpectedPts,2), 0) : 0;
+
+  const liveStd = Math.max(Math.sqrt(totalVariance), 8);
+
+  return { mean: totalExpected, std: liveStd };
+}
+
+// Get total live points for a player from LIVE_MAP
+function getLivePoints(p){
+  const live = LIVE_MAP[p.id];
+  if(!live) return 0;
+  // Sum all scoring stats
+  let pts = 0;
+  pts += (live.minutes||0)>0 ? ((live.minutes||0)>=60?2:1) : 0;
+  pts += (live.goals_scored||0) * (p.pos==='GK'||p.pos==='DEF'?6:p.pos==='MID'?5:4);
+  pts += (live.assists||0) * 3;
+  pts += (live.clean_sheets||0) * (p.pos==='GK'||p.pos==='DEF'?4:p.pos==='MID'?1:0);
+  pts += Math.floor((live.saves||0)/3);
+  pts += (live.penalty_saves||0)*5;
+  pts -= (live.penalty_misses||0)*2;
+  pts -= (live.yellow_cards||0);
+  pts -= (live.red_cards||0)*3;
+  pts -= Math.floor((live.goals_conceded||0)/2) * (p.pos==='GK'||p.pos==='DEF'?1:0);
+  pts += (live.own_goals||0)*(-2);
+  pts += (live.bonus||0);
+  return Math.max(0, pts);
+}
+
+function calcApproxRank(myPts, totalPlayers){
+  if(!myPts || myPts < 1) return null;
+
+  // Priority 1: actual results from a FINISHED GW (most accurate)
+  if(RANK_DATA && Array.isArray(RANK_DATA.results) && RANK_DATA.results.length > 100){
+    const results = RANK_DATA.results;
+    const sorted = [...results].map(r=>r.event_total).sort((a,b)=>a-b);
+    const median = sorted[Math.floor(sorted.length/2)];
+    if(GW_AVG > 0 && Math.abs(median - GW_AVG) < 20){
+      let managersAbove = results.filter(r=>r.event_total > myPts).length;
+      const known = results.length;
+      if(known < totalPlayers) managersAbove = Math.round((managersAbove/known)*totalPlayers);
+      return{
+        rank: managersAbove+1,
+        percentile: ((totalPlayers-managersAbove)/totalPlayers*100),
+        confidence: known>=10000?'high':known>=1000?'medium':'low',
+        based: known, method:'results',
+      };
+    }
+  }
+
+  // Priority 2: live ownership-weighted average (real-time, calibrated to current scores)
+  const liveAvg = calcLiveAverage();
+
+  // Priority 3: previous GW average from bootstrap (stale but real)
+  const mean = liveAvg?.mean > 0 ? liveAvg.mean : GW_AVG > 0 ? GW_AVG : 50;
+  const std  = liveAvg?.std  > 0 ? liveAvg.std  : Math.max(mean*0.38, 10);
+
+  function normCDF(z){
+    const t=1/(1+0.2316419*Math.abs(z));
+    const d=0.3989423*Math.exp(-z*z/2);
+    const p=d*t*(0.3193815+t*(-0.3565638+t*(1.7814779+t*(-1.8212560+t*1.3302744))));
+    return z>=0?1-p:p;
+  }
+
+  const z = (myPts - mean) / std;
+  const percentileAbove = normCDF(z);
+  const rank = Math.max(1, Math.round((1-percentileAbove)*totalPlayers)+1);
+
+  return{
+    rank,
+    percentile: (percentileAbove*100),
+    confidence: 'est',
+    based: null,
+    method: liveAvg ? 'live' : 'model',
+    gwAvg: Math.round(mean*10)/10,
+  };
 }
 
 function formatRank(rank){
@@ -724,10 +851,17 @@ function renderLiveContent(){
 
   // Live rank calculation
   const rankInfo=hasLive?calcApproxRank(totalLive,TOTAL_PLAYERS):null;
+  const rankAccuracy = rankInfo?.method==='results'
+    ? `~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores`
+    : rankInfo?.method==='live'
+    ? `~${rankInfo.percentile.toFixed(1)}% · live avg ${rankInfo.gwAvg}pts`
+    : rankInfo?.method==='model'
+    ? `~${rankInfo.percentile.toFixed(1)}% · GW avg ${rankInfo.gwAvg}pts`
+    : '';
   const rankHtml=rankInfo
     ?`<div class="rank-val ${rankClass(rankInfo.rank,TOTAL_PLAYERS)}">${formatRank(rankInfo.rank)}</div>
        <div class="pts-label">Live rank</div>
-       <div class="rank-accuracy">~${rankInfo.percentile.toFixed(1)}% · est. from ${rankInfo.based>=1000?(rankInfo.based/1000).toFixed(0)+'k':rankInfo.based} scores</div>`
+       <div class="rank-accuracy">${rankAccuracy}</div>`
     :hasLive
       ?`<div class="rank-loading"></div>
         <div class="pts-label" style="margin-top:6px">Live rank</div>

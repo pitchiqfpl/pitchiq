@@ -294,6 +294,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -423,6 +424,10 @@ function buildPlayers(els,fm){
     form:parseFloat(e.form)||0,
     epNext:parseFloat(e.ep_next)||0,
     ppg:parseFloat(e.points_per_game)||0,
+    xg90:Math.min((parseFloat(e.expected_goals)||0)/((e.minutes||1)/90),1.0),
+    xa90:Math.min((parseFloat(e.expected_assists)||0)/((e.minutes||1)/90),0.8),
+    xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
+    xa90Recent:Math.min(parseFloat(e.expected_assists_per_90)||0,0.8),
     starts:e.starts||0,
     chanceNext:e.chance_of_playing_next_round??100,
     ownedPct:parseFloat(e.selected_by_percent)||0,
@@ -717,15 +722,11 @@ function tokenHtml(p,isSub){
     ? `<div class="status-dot doubt" title="Doubt"></div>`
     : p.status==='i' ? `<div class="status-dot injured" title="Injured"></div>` : '';
   const epBadge = (()=>{
-    const ep=p.epNext||0,ppg=p.ppg>0?p.ppg:p.pos==='GK'||p.pos==='DEF'?4.5:5.0;
-    const caps={'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
-    const epC=ep>0?Math.min(ep,caps[p.pos]??12):0;
-    const wEp=p.pos==='GK'||p.pos==='DEF'?0.40:0.65;
-    const proj=epC>0?epC*wEp+ppg*(1-wEp):ppg;
-    const mf=Math.min((p.starts>0?(p.minutes||0)/p.starts:75)/90,1)||1;
-    const avail=p.chanceNext<100?p.chanceNext/100:p.status==='i'?0:p.status==='d'?0.55:1;
-    const final=Math.round(proj*mf*avail*10)/10;
-    return final>0?`<div class="ep-badge">${final.toFixed(1)}<span class="ep-pts">pts</span></div>`:'';
+    // Uses shared pitchiqProj engine (projEngine.js)
+    const proj = p.fixes?.length ? pitchiqProj(p, 0) : 0;
+    return proj > 0
+      ? `<div class="ep-badge">${proj.toFixed(1)}<span class="ep-pts">pts</span></div>`
+      : '';
   })();
 
   const isXferIn  = PENDING_TRANSFERS.some(t=>t.element_in===p.id);

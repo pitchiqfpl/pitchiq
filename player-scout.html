@@ -331,6 +331,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -659,7 +660,7 @@ async function loadData(){
   if(F.mode==='sell') renderTransferSuggester();
 }
 
-function resolveGw(bs,fixes){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
+function resolveGw(bs,fixes){return(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;if(cur.deadline_time&&Date.now()>new Date(cur.deadline_time))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();}
 
 async function loadSquad(teamId){
   const el=document.getElementById('squadStatus');
@@ -770,9 +771,13 @@ function buildFixMap(fixtures,gw,tmap,bs,xgData){
       if(!m[tid])m[tid]=[];
       const isHome=tid===f.team_h;
       const oppId=isHome?f.team_a:f.team_h;
-      const oppStr=teamStr[oppId]??{xgH:1.25,xgA:1.1,xgcH:1.25,xgcA:1.35};
-      const oppXg  = isHome ? oppStr.xgA  : oppStr.xgH;
-      const oppXgc = isHome ? oppStr.xgcA : oppStr.xgcH;
+      const oppStr  = teamStr[oppId] ?? {xgH:1.25, xgA:1.1,  xgcH:1.25, xgcA:1.35};
+      const myStr   = teamStr[tid]   ?? {xgH:1.25, xgA:1.1,  xgcH:1.25, xgcA:1.35};
+      const oppXg   = isHome ? oppStr.xgA  : oppStr.xgH;
+      const oppXgc  = isHome ? oppStr.xgcA : oppStr.xgcH;
+      // Player's own team xGC — how many goals their defence concedes
+      // Used in CS probability: good defence (low xGC) increases CS chance
+      const teamXgc = isHome ? myStr.xgcH  : myStr.xgcA;
       m[tid].push({
         gw:f.event,
         opp:tmap[oppId]?.short??'?',
@@ -780,6 +785,7 @@ function buildFixMap(fixtures,gw,tmap,bs,xgData){
         diff:isHome?f.team_h_difficulty??3:f.team_a_difficulty??3,
         oppXg,
         oppXgc,
+        teamXgc,
       });
     });
   });
@@ -1523,64 +1529,13 @@ function renderGwH(id){
 function diffWeight(d){ return [0,1.28,1.12,1.0,0.84,0.68][d]??1.0; }
 function haWeight(ha){ return ha==='H'?1.06:0.94; }
 
-function physicsPts(p, fix, mins){
-  if(!fix) return 0;
-  const mf = Math.min(mins/90, 1);
-  const pos = p.pos;
-  const app = mins >= 60 ? 2 : 1;
-  const oppXg  = fix.oppXg  ?? [0,0.7,1.0,1.3,1.6,2.0][fix.diff??3];
-  const oppXgc = fix.oppXgc ?? [0,1.8,1.5,1.25,1.0,0.7][fix.diff??3];
-  const oppDef = Math.max(0.45, Math.min(oppXgc / 1.25, 2.2));
-  // Blend season xG/xA with L6 cache if available
-  const l6 = typeof L6_CACHE !== 'undefined' ? L6_CACHE.get(p.id) : null;
-  const pXgL6 = l6?.xg90L6 ?? p.xg90Recent ?? 0;
-  const pXaL6 = l6?.xa90L6 ?? 0;
-  const pXg = pXgL6 > 0.01 ? Math.min((p.xg90||0)*0.5 + pXgL6*0.5, 1.2) : (p.xg90||0);
-  const pXa = pXaL6 > 0.01 ? Math.min((p.xa90||0)*0.5 + pXaL6*0.5, 0.9) : (p.xa90||0);
-  const goalPts = pos==='FWD' ? 4 : pos==='MID' ? 5 : 6;
-  const attPts  = (pXg * oppDef * goalPts + pXa * oppDef * 3) * mf;
-  const setPiece = p.isPenTaker ? 0.7 * mf : 0;
-  const csProb   = Math.exp(-Math.max(oppXg * mf, 0.01));
-  const csPer    = pos==='GK'||pos==='DEF' ? 4 : pos==='MID' ? 1 : 0;
-  const csPts    = csProb * csPer * (mins >= 60 ? 1.0 : 0.5);
-  const savePts  = pos==='GK' ? (oppXg * 2.5 * mf) / 3 : 0;
-  return app + attPts + setPiece + csPts + savePts;
-}
 
-function projEngine(p, gwIndex){
-  const chanceNext = p.chanceNext ?? 100;
-  const avail = chanceNext < 100 ? chanceNext/100
-              : p.status==='i' ? 0 : p.status==='d' ? 0.55 : 1;
-  const mins   = p.minsRel ?? 75;
-  const mf     = Math.min(mins/90, 1);
-  const epNext = p.epNext > 0 ? p.epNext : 0;
-  // Cap ep_next at realistic position ceiling — prevents impossible spikes
-  const epCaps={'GK':7.5,'DEF':9.0,'MID':12.0,'FWD':11.0};
-  const epCapped = epNext > 0 ? Math.min(epNext, epCaps[p.pos]??12.0) : 0;
-  // ppg fallback: use position average if ppg=0 (new player or insufficient games)
-  // Do NOT use FPL form as fallback — form spikes wildly after hauls (can be 14+)
-  const posPpgDefault = p.pos==='GK'?4.5:p.pos==='DEF'?4.5:p.pos==='MID'?5.0:5.0;
-  const ppg = p.ppg > 0 ? p.ppg : posPpgDefault;
-  const fThis  = p.fixes?.[gwIndex];
-  if(!fThis) return 0;
 
-  if(gwIndex === 0){
-    // GW1: position-specific blend of ep_next and ppg
-    // DEF/GK: 40% ep_next + 60% ppg — CS luck means ep_next overshoots more
-    // MID/FWD: 65% ep_next + 35% ppg — ep_next is more reliable for attackers
-    // Blending grounds projections against post-haul spikes in ep_next
-    const pos = p.pos;
-    const wEp  = (pos==='DEF'||pos==='GK') ? 0.40 : 0.65;
-    const wPpg = 1 - wEp;
-    const base = epCapped > 0 ? epCapped * wEp + ppg * wPpg : ppg;
-    return Math.max(Math.round(base * mf * avail * 10) / 10, 0);
-  } else {
-    // GW2+: physics model — ep_next is no longer relevant for future fixtures
-    const phys   = physicsPts(p, fThis, mins);
-    const result = ppg * 0.45 + phys * 0.55;
-    return Math.max(Math.round(result * avail * 10) / 10, 0);
-  }
-}
+// ── Shared projection engine (projEngine.js) ────────────────────────────────
+// pitchiqProj() and pitchiqPhysics() are loaded from projEngine.js
+// These aliases keep existing code working unchanged
+function physicsPts(p, fix, mins){ return pitchiqPhysics(p, fix, mins); }
+function projEngine(p, gwIndex){   return pitchiqProj(p, gwIndex); }
 
 function buildMinuteCalc(p) {
   // Expected minutes per game based on minsRel + status + rotation signals

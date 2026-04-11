@@ -274,6 +274,7 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 </head>
 <body>
 <script src="nav.js"></script>
+<script src="projEngine.js"></script>
 <!-- AD SLOT: Content leaderboard (728x90) — below nav, above content -->
 <!-- Enable by adding class="ads-enabled" to <body> when AdSense approved -->
 <div class="ad-slot ad-slot-content" aria-hidden="true" style="margin:8px auto 0">
@@ -495,6 +496,10 @@ async function loadData(){
       pos:POS_ID[e.element_type]??'MID',
       form:parseFloat(e.form)||0,
       epNext:parseFloat(e.ep_next)||0,
+      xg90:Math.min((parseFloat(e.expected_goals)||0)/((e.minutes||1)/90),1.0),
+      xa90:Math.min((parseFloat(e.expected_assists)||0)/((e.minutes||1)/90),0.8),
+      xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
+      xa90Recent:Math.min(parseFloat(e.expected_assists_per_90)||0,0.8),
       ownedPct:parseFloat(e.selected_by_percent)||0,
       status:e.status,
     }));
@@ -688,7 +693,9 @@ function analyseTC(gwsToShow){
       const fixes2=getFixtures(p.teamId,gw);
       const isDGW=ALL_FIXTURES.filter(f=>f.event===gw&&(f.team_h===p.teamId||f.team_a===p.teamId)).length>1;
       const dgwMult=isDGW?1.8:1.0; // TC on a DGW player is worth ~80% more
-      const score=(p.epNext>0?p.epNext:p.form)*(6-diff)*reliabilityMult*dgwMult;
+      // TC score: use shared projEngine for consistency across all tools
+      const projPts=pitchiqProj({...p,fixes:[{diff,ha:'H',oppXg:null,oppXgc:null,gw}]},0);
+      const score=projPts*reliabilityMult*dgwMult;
       if(score>best.score){best={gw,score,player:p,diff};}
     });
   });

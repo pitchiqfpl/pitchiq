@@ -422,7 +422,7 @@ function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){
   const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);
-  if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
+  if(r.status===429){const e=new Error('FPL rate limited');e.status=429;throw e;}if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
   return r.json();
 }
 

@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const responses = await Promise.allSettled(
       ids.map(id =>
         fetch(`${FPL_BASE}/element-summary/${id}/`, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PitchIQ/1.0)' }
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
         }).then(r => r.ok ? r.json() : null).catch(() => null)
       )
     );
@@ -93,6 +93,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('[fpl-l6-batch] Error:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch L6 batch data', detail: err.message });
+    return res.status(503).json({ error: 'Failed to fetch L6 batch data', detail: err.message });
   }
 }

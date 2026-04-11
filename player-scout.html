@@ -653,7 +653,7 @@ function sellUrgency(p){
   return parseFloat((fixScore*2 + formPenalty*1.5 + pricePenalty + netOutPenalty).toFixed(2));
 }
 
-async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(r.status===429){const e=new Error('FPL rate limited');e.status=429;throw e;}if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
 
 async function loadData(){
   setBadge('loading','Fetching live FPL data…');

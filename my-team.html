@@ -357,6 +357,7 @@ async function fetchJ(url){
   try{
     const r=await fetch(url,{signal:ctrl.signal});
     clearTimeout(tid);
+    if(r.status===429){const e=new Error('FPL rate limited — try again in a moment');e.status=429;throw e;}
     if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
     return r.json();
   }catch(e){
@@ -379,7 +380,7 @@ async function loadData(){
     setBadge('live',`Live · GW${GW}`);
     document.getElementById('headerSub').textContent=`MY TEAM · GW${GW}`;
     // Restore saved team
-    const savedId=lsG('teamId','');
+    const savedId=parseInt(lsG('teamId',''),10)||0;
     if(savedId){
       document.getElementById('teamIdInput').value=savedId;
       const savedPicks=lsG('picks',[]);

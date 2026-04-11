@@ -345,6 +345,7 @@ const POS={1:'GK',2:'DEF',3:'MID',4:'FWD'};
 const LS='pitchiq_myteam_';
 let ALL=[],TMAP={},GW=1;
 let PICKS=[]; // [{element, position, multiplier, is_captain, is_vice_captain}]
+let TEAM_FIX_GW=1; // single GW shown for all players — updated in renderTeam
 let PENDING_TRANSFERS=[]; // transfers made this GW from FPL API
 
 function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null)return fb;if(typeof v==='string'&&v.startsWith('"')&&v.endsWith('"'))v=v.slice(1,-1);try{return JSON.parse(v);}catch{return v;}}catch{return fb;}}
@@ -499,7 +500,7 @@ function renderTeam(){
   const bench=players.filter(p=>p.position>11).sort((a,b)=>a.position-b.position);
 
   // Compute a single GW to show for the whole team — consistent across all players
-  const TEAM_FIX_GW = getTeamFixGw(players);
+  TEAM_FIX_GW = getTeamFixGw(players);
 
   // Group starters by position for pitch layout
   const gks=starters.filter(p=>p.posId===1);

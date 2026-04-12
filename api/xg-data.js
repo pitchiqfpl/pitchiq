@@ -36,6 +36,7 @@ export default async function handler(req, res) {
 
   // 24-hour cache — only 1 real API call per day maximum
   // stale-while-revalidate means visitors never wait for a slow API call
+  res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600');
 
   const apiKey = process.env.API_FOOTBALL_KEY;
@@ -55,6 +56,8 @@ export default async function handler(req, res) {
         signal: controller.signal,
         headers: {
           'x-apisports-key':  apiKey,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
           'x-rapidapi-key':   apiKey,
           'x-rapidapi-host':  'v3.football.api-sports.io',
         },

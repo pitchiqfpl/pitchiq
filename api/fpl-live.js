@@ -23,12 +23,17 @@ export default async function handler(req, res) {
   }
 
   // Short cache during live matches — 60 seconds
+  res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
 
   try {
     const response = await fetch(
       `${FPL_BASE}/event/${gw}/live/`,
-      { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } }
+      { headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      } }
     );
 
     if (response.status === 403) {

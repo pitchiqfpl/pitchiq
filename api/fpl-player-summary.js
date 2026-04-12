@@ -8,6 +8,8 @@ const FPL_BASE = 'https://fantasy.premierleague.com/api';
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
   'Accept': 'application/json, text/plain, */*',
   'Accept-Language': 'en-GB,en;q=0.9',
   'Origin': 'https://fantasy.premierleague.com',
@@ -25,6 +27,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing or invalid ?id= parameter' });
   }
 
+  res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=600');
 
   try {

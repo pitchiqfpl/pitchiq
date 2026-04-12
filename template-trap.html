@@ -276,7 +276,22 @@ const FIX_CLS=['','fix-d1','fix-d2','fix-d3','fix-d4','fix-d5'];
 let ALL=[],TMAP={},GW=1;
 
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
-async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+async function fetchJ(url){const r=await Promise.race([fetch(url,{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+
+
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    console.log(`[PitchIQ] Season changed ${stored}→${season}, clearing localStorage`);
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
+}
 
 async function loadData(){
   setBadge('loading','Fetching live data…');

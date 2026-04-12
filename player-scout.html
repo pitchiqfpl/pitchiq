@@ -653,13 +653,39 @@ function sellUrgency(p){
   return parseFloat((fixScore*2 + formPenalty*1.5 + pricePenalty + netOutPenalty).toFixed(2));
 }
 
-async function fetchJ(url){const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(r.status===429){const e=new Error('FPL rate limited');e.status=429;throw e;}if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+async function fetchJ(url){const r=await Promise.race([fetch(url,{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);if(r.status===429){const e=new Error('FPL rate limited');e.status=429;throw e;}if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}return r.json();}
+
+
+/* ── SEASON CHANGE DETECTION ──────────────────────────────────────────────────
+   FPL changes all player IDs at season start. If we detect a new season,
+   clear all localStorage to prevent stale player IDs showing.
+   Season is read from bootstrap events[0].id year, or current_season field.
+────────────────────────────────────────────────────────────────────────────── */
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  // FPL season can be detected from the year of the first event deadline
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    // Season has changed — clear all PitchIQ localStorage to prevent stale data
+    console.log(`[PitchIQ] Season changed ${stored}→${season}, clearing localStorage`);
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
+}
 
 async function loadData(){
   setBadge('loading','Fetching live FPL data…');
   try{
-    // Fetch bootstrap and fixtures in parallel; xg-data is optional (fails gracefully)
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    // On first load append ?bust=1 to force past any stale Vercel edge cache
+    // Subsequent refreshes use cached version for speed
+    const firstLoad = !sessionStorage.getItem('piq_bs_loaded');
+    const bsUrl = firstLoad ? 'api/fpl-bootstrap?bust=1' : 'api/fpl-bootstrap';
+    const[bs,fixes]=await Promise.all([fetchJ(bsUrl),fetchJ('api/fpl-fixtures')]);
+    sessionStorage.setItem('piq_bs_loaded','1');
     if(!Array.isArray(bs.teams)||!Array.isArray(bs.elements))throw new Error('Bad bootstrap');
     // xg-data is optional — provides real xG/xGC per team; falls back to FPL strength
     let xgData=null;

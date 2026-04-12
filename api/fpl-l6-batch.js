@@ -47,6 +47,7 @@ export default async function handler(req, res) {
   }
 
   // Cache aggressively — 30 min edge cache, 10 min stale-while-revalidate
+  res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=600');
 
   try {
@@ -54,7 +55,11 @@ export default async function handler(req, res) {
     const responses = await Promise.allSettled(
       ids.map(id =>
         fetch(`${FPL_BASE}/element-summary/${id}/`, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+          headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      }
         }).then(r => r.ok ? r.json() : null).catch(() => null)
       )
     );

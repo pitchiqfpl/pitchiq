@@ -23,12 +23,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing or invalid ?team= parameter' });
   }
 
+  res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
 
   try {
     const response = await fetch(
       `${FPL_BASE}/entry/${teamId}/transfers/`,
-      { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } }
+      { headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      } }
     );
 
     if (response.status === 404) {

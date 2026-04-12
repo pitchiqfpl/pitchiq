@@ -312,7 +312,7 @@ async function fetchJ(url){
   const ctrl=new AbortController();
   const tid=setTimeout(()=>ctrl.abort(),8000);
   try{
-    const r=await fetch(url,{signal:ctrl.signal});
+    const r=await fetch(url,{signal:ctrl.signal,cache:'no-store'});
     clearTimeout(tid);
     if(r.status===429){const e=new Error('FPL rate limited — try again in a moment');e.status=429;throw e;}
     if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
@@ -418,6 +418,28 @@ function buildPlayer(e,fixMap,teamStr){
     totalPts:e.total_points||0,starts,
     minsRel:Math.min(starts>0?mins/starts:90,90),fixes,
   };
+}
+
+
+/* ── SEASON CHANGE DETECTION ──────────────────────────────────────────────────
+   FPL changes all player IDs at season start. If we detect a new season,
+   clear all localStorage to prevent stale player IDs showing.
+   Season is read from bootstrap events[0].id year, or current_season field.
+────────────────────────────────────────────────────────────────────────────── */
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  // FPL season can be detected from the year of the first event deadline
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    // Season has changed — clear all PitchIQ localStorage to prevent stale data
+    console.log(`[PitchIQ] Season changed ${stored}→${season}, clearing localStorage`);
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
 }
 
 async function loadBootstrap(){

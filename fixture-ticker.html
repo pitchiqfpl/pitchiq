@@ -412,7 +412,7 @@ async function fetchJ(url){
   const ctrl=new AbortController();
   const tid=setTimeout(()=>ctrl.abort(),8000);
   try{
-    const r=await fetch(url,{signal:ctrl.signal});
+    const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});
     clearTimeout(tid);
     if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
     return r.json();
@@ -635,6 +635,21 @@ const FIX_STORE = new Map();
 let   fixKey    = 0;
 
 /* ── LOAD LIVE DATA ── */
+
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    console.log(`[PitchIQ] Season changed ${stored}→${season}, clearing localStorage`);
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
+}
+
 async function loadLive() {
   setBadge('loading','Fetching live data…');
   try {

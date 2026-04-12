@@ -421,12 +421,34 @@ function lsG(k,fb){try{let v=localStorage.getItem(LS+k);if(v===null)return fb;if
 function lsS(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch{}}
 function setBadge(t,txt){document.getElementById('dataBadge').className='data-badge '+t;document.getElementById('dataBadgeText').textContent=txt;}
 async function fetchJ(url){
-  const r=await Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);
+  const r=await Promise.race([fetch(url,{cache:'no-store'}),new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000))]);
   if(r.status===429){const e=new Error('FPL rate limited');e.status=429;throw e;}if(!r.ok){const e=new Error(`HTTP ${r.status}`);e.status=r.status;throw e;}
   return r.json();
 }
 
 /* ── BOOTSTRAP + PLAYER DATA ─────────────────────────── */
+
+/* ── SEASON CHANGE DETECTION ──────────────────────────────────────────────────
+   FPL changes all player IDs at season start. If we detect a new season,
+   clear all localStorage to prevent stale player IDs showing.
+   Season is read from bootstrap events[0].id year, or current_season field.
+────────────────────────────────────────────────────────────────────────────── */
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  // FPL season can be detected from the year of the first event deadline
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    // Season has changed — clear all PitchIQ localStorage to prevent stale data
+    console.log(`[PitchIQ] Season changed ${stored}→${season}, clearing localStorage`);
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
+}
+
 async function loadBootstrap(){
   setBadge('loading','Loading…');
   try{

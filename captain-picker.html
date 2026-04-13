@@ -743,21 +743,44 @@ async function loadFixtures() {
 
 function attachFixtures(fixes, gw) {
   const byTeam = {};
-  const gwFixes    = fixes.filter(f => f.event === gw);
-  const unfinished = gwFixes.filter(f => !f.finished);
-  const nextFixes  = fixes.filter(f => f.event === gw + 1 && !f.finished);
 
-  // Priority: unfinished current GW → next GW unfinished → current GW finished (for display)
-  const source = unfinished.length  ? unfinished
-               : nextFixes.length   ? nextFixes
-               : gwFixes.length     ? gwFixes
-               : fixes.filter(f => f.event === gw + 1);
+  // Build upcoming fixtures starting from the planning GW
+  // Include next 5 GWs so DGW fixtures are captured
+  const upcoming = fixes
+    .filter(f => f.event >= gw && !f.finished)
+    .sort((a, b) => a.event - b.event);
 
-  source.forEach(f => {
-    byTeam[f.team_h] = { opp:TEAMS_MAP[f.team_a]?.short??'?', ha:'H', difficulty:f.team_h_difficulty??3 };
-    byTeam[f.team_a] = { opp:TEAMS_MAP[f.team_h]?.short??'?', ha:'A', difficulty:f.team_a_difficulty??3 };
+  upcoming.forEach(f => {
+    if (!byTeam[f.team_h]) byTeam[f.team_h] = [];
+    if (!byTeam[f.team_a]) byTeam[f.team_a] = [];
+    byTeam[f.team_h].push({
+      gw:   f.event,
+      opp:  TEAMS_MAP[f.team_a]?.short ?? '?',
+      ha:   'H',
+      diff: f.team_h_difficulty ?? 3,
+      difficulty: f.team_h_difficulty ?? 3,
+    });
+    byTeam[f.team_a].push({
+      gw:   f.event,
+      opp:  TEAMS_MAP[f.team_h]?.short ?? '?',
+      ha:   'A',
+      diff: f.team_a_difficulty ?? 3,
+      difficulty: f.team_a_difficulty ?? 3,
+    });
   });
-  ALL_PLAYERS.forEach(p => { p.fix = byTeam[p.teamId] ?? null; });
+
+  ALL_PLAYERS.forEach(p => {
+    const teamFixes = byTeam[p.teamId] ?? [];
+    // p.fix: first upcoming fixture (for display)
+    p.fix   = teamFixes[0] ?? null;
+    // p.fixes: full array for pitchiqProj DGW support
+    p.fixes = teamFixes;
+    // xg90Recent and xa90Recent needed by projEngine
+    p.xg90Recent = p.xg90Recent ?? 0;
+    p.xa90Recent = p.xa90Recent ?? 0;
+    p.minsRel    = p.minsRel ?? p.minsReliability ?? 75;
+    p.ppg        = p.ppg ?? 0;
+  });
   invalidateCache();
   renderAll();
 }
@@ -1234,7 +1257,7 @@ function renderBanner(players, top) {
     if (vcMain.key==='form')     vcWhy += `strong recent form (${vc.form.toFixed(1)} pts/game)`;
     else if (vcMain.key==='xg') vcWhy += `excellent underlying xG+xA (${vc.xg90.toFixed(2)} per 90)`;
     else if (vcMain.key==='fix') vcWhy += `favourable next fixture`;
-    else if (vcMain.key==='ep') vcWhy += `solid projected pts (${vc.epNext.toFixed(1)})`;
+    else if (vcMain.key==='ep') vcWhy += `solid projected pts (${(vc.projPts??vc.epNext).toFixed(1)})`;
     else                        vcWhy += `scores well across all components`;
     if (vcFix) vcWhy += ` · vs ${vcFix.opp} (${vcFix.ha})`;
     document.getElementById('vcWhy').innerHTML = vcWhy;
@@ -1327,7 +1350,7 @@ function renderCard(p, rank) {
     const disp = c.key==='form'  ? p.form.toFixed(1)
                : c.key==='xg'    ? p.xg90.toFixed(2)
                : c.key==='fix'   ? (fix ? FIX_LABEL[fix.difficulty] : '—')
-               : c.key==='ep'    ? (p.epNext > 0 ? p.epNext.toFixed(1)+'pts' : '—')
+               : c.key==='ep'    ? ((p.projPts??p.epNext) > 0 ? (p.projPts??p.epNext).toFixed(1)+'pts' : '—')
                : c.key==='ict'   ? Math.round(p.ict)
                :                   Math.round(p.minsReliability)+'m';
     return `<div class="breakdown-row">
@@ -1429,7 +1452,7 @@ function renderComparePanel() {
       const disp  = c.key==='form'  ? p.form.toFixed(1)
                   : c.key==='xg'    ? p.xg90.toFixed(2)
                   : c.key==='fix'   ? (fix ? FIX_LABEL[fix.difficulty] : '—')
-                  : c.key==='ep'    ? (p.epNext > 0 ? p.epNext.toFixed(1)+'pts' : '—')
+                  : c.key==='ep'    ? ((p.projPts??p.epNext) > 0 ? (p.projPts??p.epNext).toFixed(1)+'pts' : '—')
                   : c.key==='ict'   ? Math.round(p.ict)
                   :                   Math.round(p.minsReliability)+'m';
       return `<div class="cmp-row${isWin?' best':''}">
@@ -1603,10 +1626,10 @@ const FALLBACK_TEAMS = {
 };
 const FALLBACK_PLAYERS = [
   {id:1, name:'Salah',   fullName:'Mohamed Salah',  teamId:12,pos:'MID',posId:3,price:13.4,ownedPct:14.1,form:7.8, xg90:0.72,ict:310.2,minsReliability:88,totalPts:198,epNext:8.2,starts:26,transfersDelta:45000, priceChange:0, status:'a',fix:{opp:'BOU',ha:'H',difficulty:2}},
-  {id:2, name:'Haaland', fullName:'Erling Haaland',  teamId:13,pos:'FWD',posId:4,price:14.5,ownedPct:28.4,form:9.2, xg90:0.91,ict:298.4,minsReliability:90,totalPts:182,epNext:9.1,starts:24,transfersDelta:80000, priceChange:1, status:'a',fix:{opp:'EVE',ha:'A',difficulty:2}},
-  {id:3, name:'Mbeumo',  fullName:'Bryan Mbeumo',    teamId:4, pos:'FWD',posId:4,price:8.8, ownedPct:38.2,form:8.4, xg90:0.68,ict:241.7,minsReliability:86,totalPts:171,epNext:7.4,starts:25,transfersDelta:62000, priceChange:1, status:'a',fix:{opp:'CHE',ha:'H',difficulty:3}},
+  {id:2, name:'Haaland', fullName:'Erling Haaland',  teamId:12,pos:'FWD',posId:4,price:14.5,ownedPct:28.4,form:9.2, xg90:0.91,ict:298.4,minsReliability:90,totalPts:182,epNext:9.1,starts:24,transfersDelta:80000, priceChange:1, status:'a',fix:{opp:'EVE',ha:'A',difficulty:2}},
+  {id:3, name:'Mbeumo',  fullName:'Bryan Mbeumo',    teamId:13, pos:'MID',posId:3,price:8.8, ownedPct:38.2,form:8.4, xg90:0.68,ict:241.7,minsReliability:86,totalPts:171,epNext:7.4,starts:25,transfersDelta:62000, priceChange:1, status:'a',fix:{opp:'ARS',ha:'A',difficulty:4}},
   {id:4, name:'Palmer',  fullName:'Cole Palmer',     teamId:6, pos:'MID',posId:3,price:11.2,ownedPct:32.6,form:6.8, xg90:0.61,ict:318.9,minsReliability:84,totalPts:164,epNext:6.9,starts:23,transfersDelta:-12000,priceChange:0, status:'a',fix:{opp:'BRE',ha:'A',difficulty:3}},
-  {id:5, name:'Isak',    fullName:'Alexander Isak',  teamId:15,pos:'FWD',posId:4,price:9.2, ownedPct:22.1,form:7.1, xg90:0.58,ict:224.3,minsReliability:80,totalPts:148,epNext:6.2,starts:21,transfersDelta:18000, priceChange:0, status:'a',fix:{opp:'WOL',ha:'H',difficulty:2}},
+  {id:5, name:'Isak',    fullName:'Alexander Isak',  teamId:14,pos:'FWD',posId:4,price:9.2, ownedPct:22.1,form:7.1, xg90:0.58,ict:224.3,minsReliability:80,totalPts:148,epNext:6.2,starts:21,transfersDelta:18000, priceChange:0, status:'a',fix:{opp:'WOL',ha:'H',difficulty:2}},
   {id:6, name:'Saka',    fullName:'Bukayo Saka',     teamId:1, pos:'MID',posId:3,price:10.2,ownedPct:18.4,form:6.2, xg90:0.54,ict:287.1,minsReliability:82,totalPts:152,epNext:6.4,starts:24,transfersDelta:8000,  priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:3}},
   {id:7, name:'Watkins', fullName:'Ollie Watkins',   teamId:2, pos:'FWD',posId:4,price:9.4, ownedPct:16.8,form:5.4, xg90:0.48,ict:198.6,minsReliability:83,totalPts:134,epNext:5.2,starts:22,transfersDelta:-8000, priceChange:0, status:'a',fix:{opp:'LIV',ha:'A',difficulty:4}},
   {id:8, name:'Trossard',fullName:'Leandro Trossard',teamId:1, pos:'MID',posId:3,price:7.4, ownedPct:8.2, form:5.8, xg90:0.44,ict:178.4,minsReliability:76,totalPts:118,epNext:5.1,starts:19,transfersDelta:4000,  priceChange:0, status:'a',fix:{opp:'FUL',ha:'A',difficulty:3}},

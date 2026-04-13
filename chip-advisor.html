@@ -508,22 +508,32 @@ function checkSeasonChange(bs) {
 async function loadData(){
   setBadge('loading','Fetching fixture data…');
   try{
-    const[bs,fixes]=await Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]);
+    const[bs,fixes,xgData]=await Promise.all([
+      fetchJ('api/fpl-bootstrap'),
+      fetchJ('api/fpl-fixtures'),
+      fetchJ('api/xg-data').catch(()=>null),
+    ]);
     GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
     EVENTS=bs.events??[];
     ALL_FIXTURES=Array.isArray(fixes)?fixes:[];
+    // Build enriched fixture map for projEngine (oppXg/oppXgc/teamXgc)
+    const FIXMAP=pitchiqBuildFixMap(fixes,GW,TMAP,bs,xgData);
     ALL=bs.elements.filter(e=>e.element_type>0&&e.status!=='u').map(e=>({
       id:e.id,name:e.web_name,teamId:e.team,
       pos:POS_ID[e.element_type]??'MID',
       form:parseFloat(e.form)||0,
       epNext:parseFloat(e.ep_next)||0,
+      ppg:parseFloat(e.points_per_game)||0,
       xg90:Math.min((parseFloat(e.expected_goals)||0)/((e.minutes||1)/90),1.0),
       xa90:Math.min((parseFloat(e.expected_assists)||0)/((e.minutes||1)/90),0.8),
       xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
       xa90Recent:Math.min(parseFloat(e.expected_assists_per_90)||0,0.8),
+      minsRel:Math.min(e.starts>0?(e.minutes||0)/e.starts:75,90),
+      isPenTaker:e.penalties_order===1,
       ownedPct:parseFloat(e.selected_by_percent)||0,
       status:e.status,
+      fixes:FIXMAP[e.team]??[],
     }));
     document.getElementById('headerSub').textContent=`CHIP TIMING ADVISOR · GW${GW}`;
     setBadge('live',`Live · GW${GW}`);
@@ -715,8 +725,8 @@ function analyseTC(gwsToShow){
       const fixes2=getFixtures(p.teamId,gw);
       const isDGW=ALL_FIXTURES.filter(f=>f.event===gw&&(f.team_h===p.teamId||f.team_a===p.teamId)).length>1;
       const dgwMult=isDGW?1.8:1.0; // TC on a DGW player is worth ~80% more
-      // TC score: use shared projEngine for consistency across all tools
-      const projPts=pitchiqProj({...p,fixes:[{diff,ha:'H',oppXg:null,oppXgc:null,gw}]},0);
+      // TC score: use shared projEngine with enriched fixture data
+      const projPts=pitchiqProj(p,0);
       const score=projPts*reliabilityMult*dgwMult;
       if(score>best.score){best={gw,score,player:p,diff};}
     });

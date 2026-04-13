@@ -394,9 +394,10 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
+    let xgData=null;try{xgData=await fetchJ('api/xg-data');}catch{}
     GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
-    const fm=buildFixMap(fixes,GW,6);
+    const fm=pitchiqBuildFixMap(fixes,GW,TMAP,bs,xgData);
     ALL=buildPlayers(bs.elements,fm);
     
     setBadge('live',`Live · GW${GW}`);
@@ -451,6 +452,9 @@ function buildPlayers(els,fm){
     xg90:Math.min((parseFloat(e.expected_goals)||0)/((e.minutes||1)/90),1.0),
     xa90:Math.min((parseFloat(e.expected_assists)||0)/((e.minutes||1)/90),0.8),
     minutes:e.minutes||0,
+    minsRel:Math.min((e.starts>0?(e.minutes||0)/e.starts:75),90),
+    ppg:parseFloat(e.points_per_game)||0,
+    isPenTaker:e.penalties_order===1,
     xg90Recent:Math.min(parseFloat(e.expected_goals_per_90)||0,1.0),
     xa90Recent:Math.min(parseFloat(e.expected_assists_per_90)||0,0.8),
     starts:e.starts||0,

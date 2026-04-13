@@ -411,9 +411,10 @@ async function loadData(){
   try{
     const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timeout')),10000));
     const[bs,fixes]=await Promise.race([Promise.all([fetchJ('api/fpl-bootstrap'),fetchJ('api/fpl-fixtures')]),timeout]);
+    let xgData=null;try{xgData=await fetchJ('api/xg-data');}catch{}
     GW=(()=>{const cur=bs.events?.find(e=>e.is_current),nxt=bs.events?.find(e=>e.is_next),prv=bs.events?.find(e=>e.is_previous);if(cur&&nxt){const cf=(fixes||[]).filter(f=>f.event===cur.id);if(cf.length>0&&cf.every(f=>f.finished))return nxt.id;if(cur.deadline_time&&Date.now()>new Date(cur.deadline_time))return nxt.id;}return(cur??nxt??prv??[...(bs.events??[])].filter(e=>e.finished).sort((a,b)=>b.id-a.id)[0])?.id??1;})();
     TMAP={};bs.teams.forEach(t=>{TMAP[t.id]={name:t.name,short:t.short_name};});
-    const fm=buildFixMap(fixes,GW,9);
+    const fm=pitchiqBuildFixMap(fixes,GW,TMAP,bs,xgData);
     ALL=buildPlayers(bs.elements,fm);
     setBadge('live',`Live · GW${GW}`);
   }catch(err){
@@ -449,6 +450,9 @@ function buildPlayers(els,fm){
       id:e.id,name:e.web_name,fullName:`${e.first_name} ${e.second_name}`,
       teamId:e.team,pos,price:e.now_cost/10,
       form:parseFloat(e.form)||0,xg90,xa90,xg90Recent,xa90Recent,
+      minsRel:Math.min(starts>0?mins/starts:90,90),
+      ppg:parseFloat(e.points_per_game)||0,
+      isPenTaker:e.penalties_order===1,
       ict:parseFloat(e.ict_index)||0,
       epNext:parseFloat(e.ep_next)||0,
       ppg:parseFloat(e.points_per_game)||0,

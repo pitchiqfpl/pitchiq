@@ -732,41 +732,22 @@ async function loadData() {
 async function loadFixtures() {
   if(!ALL_PLAYERS.length || ALL_PLAYERS===FALLBACK_PLAYERS) return;
   try {
-    const fixes = await fetchJ('api/fpl-fixtures');
+    const [fixes, xgData] = await Promise.all([fetchJ('api/fpl-fixtures'), fetchJ('api/xg-data').catch(()=>null)]);
     if (!Array.isArray(fixes)) return;
     _fixturesCache = fixes;
-    attachFixtures(fixes, SELECTED_GW);
+    attachFixtures(fixes, SELECTED_GW, bs, xgData);
   } catch (err) {
     if (err.status !== 404) console.warn('[CaptainPicker] Fixtures failed:', err.message);
   }
 }
 
-function attachFixtures(fixes, gw) {
+function attachFixtures(fixes, gw, bs, xgData) {
   const byTeam = {};
 
-  // Build upcoming fixtures starting from the planning GW
-  // Include next 5 GWs so DGW fixtures are captured
-  const upcoming = fixes
-    .filter(f => f.event >= gw && !f.finished)
-    .sort((a, b) => a.event - b.event);
-
-  upcoming.forEach(f => {
-    if (!byTeam[f.team_h]) byTeam[f.team_h] = [];
-    if (!byTeam[f.team_a]) byTeam[f.team_a] = [];
-    byTeam[f.team_h].push({
-      gw:   f.event,
-      opp:  TEAMS_MAP[f.team_a]?.short ?? '?',
-      ha:   'H',
-      diff: f.team_h_difficulty ?? 3,
-      difficulty: f.team_h_difficulty ?? 3,
-    });
-    byTeam[f.team_a].push({
-      gw:   f.event,
-      opp:  TEAMS_MAP[f.team_h]?.short ?? '?',
-      ha:   'A',
-      diff: f.team_a_difficulty ?? 3,
-      difficulty: f.team_a_difficulty ?? 3,
-    });
+  // Use shared pitchiqBuildFixMap for consistent oppXg/oppXgc/teamXgc
+  var builtMap = pitchiqBuildFixMap(fixes, gw, TEAMS_MAP, bs, xgData);
+  Object.entries(builtMap).forEach(function([tid, tFixes]) {
+    byTeam[+tid] = tFixes.map(f => ({...f, difficulty: f.diff}));
   });
 
   ALL_PLAYERS.forEach(p => {
@@ -782,6 +763,7 @@ function attachFixtures(fixes, gw) {
     p.xg90Recent = p.xg90Recent ?? 0;
     p.xa90Recent = p.xa90Recent ?? 0;
     p.minsRel    = p.minsRel ?? p.minsReliability ?? 75;
+    p.isPenTaker = p.isPenTaker ?? false;
     p.ppg        = p.ppg ?? 0;
   });
   invalidateCache();
@@ -1023,6 +1005,7 @@ function buildPlayers(elements) {
         totalPts:     e.total_points   || 0,
         epNext:       parseFloat(e.ep_next) || 0,
         ppg:          parseFloat(e.points_per_game) || 0,
+        isPenTaker:   e.penalties_order === 1,
         chanceNext:   e.chance_of_playing_next_round ?? 100,
         bonusPts:     e.bonus || 0,
         // Captaincy history: FPL tracks total_points but not captain pts directly.
@@ -1603,7 +1586,7 @@ async function changeGw(delta) {
   try {
     // Use cached fixtures if available — only fetch once per page load
     if (!_fixturesCache) {
-      const fixes = await fetchJ('api/fpl-fixtures');
+      const [fixes, xgData] = await Promise.all([fetchJ('api/fpl-fixtures'), fetchJ('api/xg-data').catch(()=>null)]);
       if (Array.isArray(fixes)) _fixturesCache = fixes;
     }
     if (_fixturesCache) attachFixtures(_fixturesCache, SELECTED_GW);

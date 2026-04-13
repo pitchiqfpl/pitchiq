@@ -93,3 +93,78 @@ function pitchiqProj(p, gwIndex) {
 
   return Math.round(total * 10) / 10;
 }
+
+/* ── SHARED FIXTURE MAP BUILDER ──────────────────────────────────────────────
+   Builds enriched fixture objects with oppXg/oppXgc/teamXgc for all tools.
+   Call this instead of local buildFixMap to get consistent physics inputs.
+   
+   Usage:
+     const fm = pitchiqBuildFixMap(fixtures, gw, TMAP, bs, xgData);
+     // fm[teamId] = [{gw, opp, ha, diff, oppXg, oppXgc, teamXgc}, ...]
+──────────────────────────────────────────────────────────────────────────── */
+function pitchiqBuildFixMap(fixtures, gw, tmap, bs, xgData) {
+  var m = {};
+  if (!Array.isArray(fixtures)) return m;
+
+  // Build team strength map from xg-data or FPL strength ratings
+  var teamStr = {};
+  var W_SEASON = 0.60, W_FORM = 0.40, HOME_ATT = 1.10, HOME_DEF = 0.88;
+
+  function fplStr2Xg(s) { return 0.8 + (((s||1100) - 1000) / 400) * 1.2; }
+
+  if (xgData && xgData.teams && Object.keys(xgData.teams).length > 0) {
+    var fplList = (bs&&bs.teams||[]).map(function(t) {
+      return {id:t.id, name:t.name.toLowerCase().replace(/[^a-z0-9]/g,'')};
+    });
+    Object.values(xgData.teams).forEach(function(x) {
+      var xc = x.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+      var match = fplList.find(function(f) { return f.name===xc||f.name.includes(xc)||xc.includes(f.name); });
+      if (match && !teamStr[match.id]) {
+        var bA = x.xg_season*W_SEASON + (x.xg_last5||x.xg_season)*W_FORM;
+        var bD = x.xgc_season*W_SEASON + (x.xgc_last5||x.xgc_season)*W_FORM;
+        teamStr[match.id] = {
+          xgH:bA*HOME_ATT, xgA:bA/HOME_ATT,
+          xgcH:bD*HOME_DEF, xgcA:bD/HOME_DEF
+        };
+      }
+    });
+  }
+
+  // Fallback: FPL strength ratings
+  if (bs && bs.teams) {
+    bs.teams.forEach(function(t) {
+      if (teamStr[t.id]) return;
+      var sAH=t.strength_attack_home||1100, sAA=t.strength_attack_away||1100;
+      var sDH=t.strength_defence_home||1100, sDA=t.strength_defence_away||1100;
+      teamStr[t.id] = {
+        xgH:Math.max(0.6,Math.min(fplStr2Xg(sAH)*HOME_ATT,2.5)),
+        xgA:Math.max(0.5,Math.min(fplStr2Xg(sAA)/HOME_ATT,2.2)),
+        xgcH:Math.max(0.5,Math.min(fplStr2Xg(sDH)*HOME_DEF,2.5)),
+        xgcA:Math.max(0.6,Math.min(fplStr2Xg(sDA)/HOME_DEF,2.8))
+      };
+    });
+  }
+
+  var upcoming = fixtures.filter(function(f) { return f.event >= gw && !f.finished; });
+  upcoming.forEach(function(f) {
+    [f.team_h, f.team_a].forEach(function(tid) {
+      if (!m[tid]) m[tid] = [];
+      var isHome = tid === f.team_h;
+      var oppId  = isHome ? f.team_a : f.team_h;
+      var oppStr = teamStr[oppId] || {xgH:1.25,xgA:1.1,xgcH:1.25,xgcA:1.35};
+      var myStr  = teamStr[tid]   || {xgH:1.25,xgA:1.1,xgcH:1.25,xgcA:1.35};
+      m[tid].push({
+        gw:      f.event,
+        opp:     (tmap && tmap[oppId]) ? (tmap[oppId].short||tmap[oppId]) : '?',
+        ha:      isHome ? 'H' : 'A',
+        diff:    isHome ? (f.team_h_difficulty||3) : (f.team_a_difficulty||3),
+        oppXg:   isHome ? oppStr.xgA  : oppStr.xgH,
+        oppXgc:  isHome ? oppStr.xgcA : oppStr.xgcH,
+        teamXgc: isHome ? myStr.xgcH  : myStr.xgcA,
+      });
+    });
+  });
+
+  Object.values(m).forEach(function(a) { a.sort(function(x,y){return x.gw-y.gw;}); });
+  return m;
+}

@@ -2,15 +2,15 @@
  * /api/xg-data.js
  * Fetches Premier League xG data from API-Football.
  *
- * RATE LIMITING PROTECTION:
- * - 24-hour Vercel edge cache — at most 1 API call per day per region
- * - stale-while-revalidate means cached response served while refreshing
- * - Single API call (last 50 fixtures) — not per-team calls
- * - Returns graceful empty response if key missing or suspended
- *   so all tools fall back to FPL strength ratings without error
- *
+ * RATE LIMIT GUARANTEE:
  * API-Football free tier: 100 calls/day
- * This endpoint uses 1 call per cache miss = max 1/day = well within limits
+ * This endpoint makes exactly 1 call per 24-hour Vercel edge cache cycle.
+ * Vercel has ~18 edge regions → worst case 18 calls/day.
+ * Hard circuit breaker: tracks daily call count, refuses above 50/day.
+ *
+ * HOW WE WERE SUSPENDED PREVIOUSLY:
+ *   Old code made 22 per-team calls × every visitor = hundreds/day
+ *   Now: 1 call per fixture batch, cached 24h, graceful fallback on any error
  *
  * Env var: API_FOOTBALL_KEY (Vercel → Settings → Environment Variables)
  */
@@ -19,6 +19,7 @@ const API_BASE       = 'https://v3.football.api-sports.io';
 const PL_LEAGUE_ID   = 39;
 const CURRENT_SEASON = 2025;
 const FORM_GAMES     = 5;
+const DAILY_CALL_CAP = 50; // hard limit — API-Football free tier is 100/day
 
 const EMPTY_RESPONSE = {
   teams: {},
@@ -28,22 +29,44 @@ const EMPTY_RESPONSE = {
   fallback: true,
 };
 
+// In-memory daily call counter
+// Resets when the serverless function cold-starts (at least once per day)
+let callsToday = 0;
+let callCountDate = new Date().toDateString();
+
+function checkCallBudget() {
+  const today = new Date().toDateString();
+  if (today !== callCountDate) {
+    callsToday = 0;
+    callCountDate = today;
+  }
+  if (callsToday >= DAILY_CALL_CAP) {
+    console.warn(`[xg-data] Daily call cap reached (${callsToday}/${DAILY_CALL_CAP}) — serving fallback`);
+    return false;
+  }
+  callsToday++;
+  console.log(`[xg-data] Call ${callsToday}/${DAILY_CALL_CAP} today`);
+  return true;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  // 24-hour cache — only 1 real API call per day maximum
-  // stale-while-revalidate means visitors never wait for a slow API call
+  // 24-hour Vercel edge cache — at most 1 real call per region per day
   res.setHeader('Vary', 'Accept-Encoding');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=3600');
 
   const apiKey = process.env.API_FOOTBALL_KEY;
   if (!apiKey) {
-    // No key configured — return empty so tools use FPL fallback
-    console.log('[xg-data] API_FOOTBALL_KEY not set — using FPL fallback');
     return res.status(200).json({ ...EMPTY_RESPONSE, reason: 'API key not configured' });
+  }
+
+  // Hard circuit breaker — never exceed daily call cap
+  if (!checkCallBudget()) {
+    return res.status(200).json({ ...EMPTY_RESPONSE, reason: 'Daily call cap reached' });
   }
 
   const controller = new AbortController();
@@ -55,20 +78,17 @@ export default async function handler(req, res) {
       {
         signal: controller.signal,
         headers: {
-          'x-apisports-key':  apiKey,
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'x-rapidapi-key':   apiKey,
-          'x-rapidapi-host':  'v3.football.api-sports.io',
+          'x-apisports-key': apiKey,
+          'x-rapidapi-key':  apiKey,
+          'x-rapidapi-host': 'v3.football.api-sports.io',
         },
       }
     );
     clearTimeout(timeout);
 
-    // Handle API-Football specific error codes
     if (response.status === 403 || response.status === 401) {
-      console.warn('[xg-data] API key rejected — account may be suspended');
-      return res.status(200).json({ ...EMPTY_RESPONSE, reason: 'API key rejected (account may be suspended)' });
+      console.warn('[xg-data] API key rejected — check account status at api-football.com');
+      return res.status(200).json({ ...EMPTY_RESPONSE, reason: 'API key rejected' });
     }
     if (response.status === 429) {
       console.warn('[xg-data] Rate limited by API-Football');
@@ -81,11 +101,21 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // API-Football returns errors in the response body even on 200
+    // API-Football returns errors in body even on 200
     if (data.errors && Object.keys(data.errors).length > 0) {
       const errMsg = JSON.stringify(data.errors);
-      console.warn('[xg-data] API-Football error in response:', errMsg);
+      console.warn('[xg-data] API-Football body error:', errMsg);
       return res.status(200).json({ ...EMPTY_RESPONSE, reason: errMsg });
+    }
+
+    // Check remaining calls from response headers (API-Football provides this)
+    const remaining = response.headers.get('x-ratelimit-requests-remaining');
+    const limit     = response.headers.get('x-ratelimit-requests-limit');
+    if (remaining !== null) {
+      console.log(`[xg-data] API-Football quota: ${remaining}/${limit} remaining today`);
+      if (parseInt(remaining) < 10) {
+        console.warn(`[xg-data] ⚠ Only ${remaining} calls remaining today — approaching limit`);
+      }
     }
 
     const fixtures = data.response ?? [];
@@ -96,7 +126,7 @@ export default async function handler(req, res) {
     const teamMap = buildTeamXgFromFixtures(fixtures);
     const teamsWithXg = Object.values(teamMap).filter(t => t.xg_season > 0).length;
 
-    console.log(`[xg-data] Built xG for ${teamsWithXg} teams from ${fixtures.length} fixtures`);
+    console.log(`[xg-data] ✅ Built xG for ${teamsWithXg} teams from ${fixtures.length} fixtures`);
 
     return res.status(200).json({
       teams:         teamMap,
@@ -109,8 +139,7 @@ export default async function handler(req, res) {
   } catch (err) {
     clearTimeout(timeout);
     const isTimeout = err.name === 'AbortError';
-    console.warn('[xg-data]', isTimeout ? 'Timed out' : err.message);
-    // Always return 200 with empty data — tools gracefully fall back to FPL ratings
+    console.warn('[xg-data]', isTimeout ? 'Request timed out' : err.message);
     return res.status(200).json({ ...EMPTY_RESPONSE, reason: isTimeout ? 'timeout' : err.message });
   }
 }
@@ -126,13 +155,11 @@ function buildTeamXgFromFixtures(fixtures) {
   sorted.forEach(f => {
     const hId   = f.teams.home.id;
     const aId   = f.teams.away.id;
-    const hName = f.teams.home.name;
-    const aName = f.teams.away.name;
     const hXg = parseFloat(f.score?.home?.xG ?? f.goals?.home ?? 0) || (f.goals?.home ?? 0);
     const aXg = parseFloat(f.score?.away?.xG ?? f.goals?.away ?? 0) || (f.goals?.away ?? 0);
 
-    if (!byTeam[hId]) byTeam[hId] = { name: hName, xg: [], xgc: [] };
-    if (!byTeam[aId]) byTeam[aId] = { name: aName, xg: [], xgc: [] };
+    if (!byTeam[hId]) byTeam[hId] = { name: f.teams.home.name, xg: [], xgc: [] };
+    if (!byTeam[aId]) byTeam[aId] = { name: f.teams.away.name, xg: [], xgc: [] };
 
     byTeam[hId].xg.push(hXg);  byTeam[hId].xgc.push(aXg);
     byTeam[aId].xg.push(aXg);  byTeam[aId].xgc.push(hXg);

@@ -897,13 +897,31 @@ body.ads-enabled .ad-slot-sticky{display:flex}
 
 <script>
 async function fetchFPL(url) {
-  const route = url.includes('bootstrap') ? 'api/fpl-bootstrap' : 'api/fpl-fixtures';
-  const r = await fetch(route);
+  const isBootstrap = url.includes('bootstrap');
+  const firstLoad = !sessionStorage.getItem('piq_bs_loaded');
+  const route = isBootstrap
+    ? (firstLoad ? 'api/fpl-bootstrap?bust=1' : 'api/fpl-bootstrap')
+    : 'api/fpl-fixtures';
+  if (isBootstrap && firstLoad) sessionStorage.setItem('piq_bs_loaded','1');
+  const r = await fetch(route, {cache:'no-store'});
   if (r.ok) return r.json();
   throw new Error('API unavailable');
 }
 
 function set(id, v) { const el = document.getElementById(id); if (el) el.innerHTML = v; }
+
+function checkSeasonChange(bs) {
+  const LS_SEASON = 'pitchiq_season';
+  const firstEvent = bs.events?.[0];
+  const season = firstEvent?.deadline_time?.substring(0,4) || '2025';
+  const stored = localStorage.getItem(LS_SEASON);
+  if (stored && stored !== season) {
+    const keysToRemove = Object.keys(localStorage).filter(k => k.startsWith('pitchiq_') || k.startsWith('piq_'));
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    sessionStorage.clear();
+  }
+  localStorage.setItem(LS_SEASON, season);
+}
 
 function showOffline() {
   ['dCaptain','dOwned','dDiff','dRising','dForm','dValue'].forEach(id => set(id, '&mdash;'));
@@ -919,7 +937,24 @@ function showOffline() {
 async function loadData() {
   try {
     const bs = await fetchFPL('https://fantasy.premierleague.com/api/bootstrap-static/');
-    const gw = (bs.events?.find(e => e.is_current) ?? bs.events?.find(e => e.is_next))?.id ?? null;
+    if(bs) checkSeasonChange(bs);
+
+    const cur = bs.events?.find(e => e.is_current);
+    const nxt = bs.events?.find(e => e.is_next);
+
+    // currentGw: for live badge display
+    const currentGw = (cur ?? nxt)?.id ?? null;
+
+    // planningGw: for picks — always the next actionable GW
+    // If deadline has passed (matches live or GW complete) → show next GW
+    // This matches the logic in all other forward-looking tools
+    let planningGw = currentGw;
+    if (cur && nxt) {
+      const deadlinePassed = cur.deadline_time && Date.now() > new Date(cur.deadline_time);
+      if (deadlinePassed) planningGw = nxt.id;
+    } else if (nxt) {
+      planningGw = nxt.id;
+    }
     const teamMap = {};
     bs.teams.forEach(t => { teamMap[t.id] = t.short_name; });
     const players = bs.elements.filter(e => e.status !== 'u').map(e => ({
@@ -931,9 +966,9 @@ async function loadData() {
       ppm: e.now_cost > 0 ? (e.total_points || 0) / (e.now_cost / 10) : 0,
       priceChange: e.cost_change_event || 0,
     }));
-    if (gw) {
-      set('heroBadge', '&#9917; 2025/26 FPL Season &mdash; GW' + gw + ' live');
-      set('heroGW', gw + '<span>gw</span>');
+    if (currentGw) {
+      set('heroBadge', '&#9917; 2025/26 FPL Season &mdash; GW' + currentGw + ' live');
+      set('heroGW', currentGw + '<span>gw</span>');
     }
     const cap    = [...players].filter(p=>p.pos!=='GK'&&p.form>0).sort((a,b)=>b.ep-a.ep)[0];
     const owned  = [...players].sort((a,b)=>b.sel-a.sel)[0];
@@ -963,8 +998,8 @@ async function loadData() {
     set('dUpdated', 'Updated ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
 
     // THIS GAMEWEEK PICKS — hero right column
-    if (gw) {
-      set('heroGwLabel', gw);
+    if (planningGw) {
+      set('heroGwLabel', planningGw);
     }
     // Captain pick
     if (cap) {
@@ -1005,7 +1040,7 @@ async function loadData() {
     // SPOTLIGHT: Fixture Ticker card — top 4 most-owned outfield players + next 5 fixtures
     try {
       const fixturesData = await fetchFPL('https://fantasy.premierleague.com/api/fixtures/');
-      const upcomingFix = fixturesData.filter(f => !f.finished && f.event >= (gw||1));
+      const upcomingFix = fixturesData.filter(f => !f.finished && f.event >= (planningGw||1));
       const teamFixMap = {};
       bs.teams.forEach(t => { teamFixMap[t.id] = []; });
       upcomingFix.forEach(f => {

@@ -693,8 +693,9 @@ async function loadLive() {
           localStorage.getItem('piq_team_id');
 
         if (savedId) {
-          // Use the /api/fpl-picks serverless proxy (consistent with other tools)
-          const picks = await fetch(`api/fpl-picks?team=${savedId}&gw=${result.currentGw}`)
+          const cleanId = parseInt(savedId.replace(/"/g,''), 10);
+          if (!cleanId) throw new Error('invalid team id');
+          const picks = await fetch(`api/fpl-picks?team=${cleanId}&gw=${result.currentGw}`)
             .then(r => r.ok ? r.json() : null).catch(() => null);
           if (picks?.picks) {
             picks.picks.forEach(p => {

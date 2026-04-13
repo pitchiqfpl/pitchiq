@@ -399,10 +399,18 @@
 
   function getSavedTeamId() {
     try {
-      let v = localStorage.getItem(TEAM_ID_KEY) || '';
-      // Some tools store via JSON.stringify — unwrap quotes if present
-      if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
-      return v;
+      // Check all keys used by different tools
+      const keys = [TEAM_ID_KEY, 'pitchiq_my_teamId', 'pitchiq_cap_teamId',
+                    'pitchiq_scout_squadTeamId', 'pitchiq_live_teamId'];
+      for (const k of keys) {
+        let v = localStorage.getItem(k);
+        if (!v) continue;
+        // Strip JSON.stringify quotes if present
+        v = v.replace(/^"+|"+$/g, '').trim();
+        const n = parseInt(v, 10);
+        if (n > 0) return String(n);
+      }
+      return '';
     } catch(e) { return ''; }
   }
 

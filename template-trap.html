@@ -420,8 +420,8 @@ async function analyse(){
   let squadLoadedSuccessfully=false;
   try{
     let data,_gwU=GW||1;
-    try{data=await fetchJ(`api/fpl-picks?team=${teamId}&gw=${_gwU}`);}
-    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${teamId}&gw=${_gwU}`);}else throw e;}
+    try{data=await fetchJ(`api/fpl-picks?team=${parseInt(String(teamId),10)||0}&gw=${_gwU}`);}
+    catch(e){if(e.status===404&&_gwU>1){_gwU--;data=await fetchJ(`api/fpl-picks?team=${parseInt(String(teamId),10)||0}&gw=${_gwU}`);}else throw e;}
     if(!Array.isArray(data.picks)||!data.picks.length)throw new Error('No picks returned');
     picks=data.picks;
     st.className='squad-status loaded';st.textContent=`✓ Squad loaded — ${picks.length} players`;

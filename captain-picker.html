@@ -623,6 +623,8 @@ let SELECTED_GW      = 1;   // the GW being viewed — can differ from current
 let MAX_GW           = 38;  // updated from bootstrap
 let DEADLINE_TIME    = null;
 let _deadlineTimer   = null;
+let _BS             = null; // bootstrap data — needed by attachFixtures
+let _XG_DATA        = null; // xg data — needed by attachFixtures
 
 
 // Scored cache — reused across render functions, invalidated on data/filter change
@@ -735,6 +737,7 @@ async function loadFixtures() {
     const [fixes, xgData] = await Promise.all([fetchJ('api/fpl-fixtures'), fetchJ('api/xg-data').catch(()=>null)]);
     if (!Array.isArray(fixes)) return;
     _fixturesCache = fixes;
+    _BS = bs; _XG_DATA = xgData;
     attachFixtures(fixes, SELECTED_GW, bs, xgData);
   } catch (err) {
     if (err.status !== 404) console.warn('[CaptainPicker] Fixtures failed:', err.message);
@@ -1589,7 +1592,7 @@ async function changeGw(delta) {
       const [fixes, xgData] = await Promise.all([fetchJ('api/fpl-fixtures'), fetchJ('api/xg-data').catch(()=>null)]);
       if (Array.isArray(fixes)) _fixturesCache = fixes;
     }
-    if (_fixturesCache) attachFixtures(_fixturesCache, SELECTED_GW);
+    if (_fixturesCache) attachFixtures(_fixturesCache, SELECTED_GW, _BS, _XG_DATA);
   } catch(e) {}
   _gwNavLock = false;
   document.getElementById('headerSub').textContent =

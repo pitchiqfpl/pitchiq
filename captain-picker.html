@@ -709,6 +709,7 @@ async function loadData() {
     MAX_GW       = bs.events ? Math.max(...bs.events.map(e=>e.id)) : 38;
     TEAMS_MAP    = buildTeamsMap(bs.teams);
     ALL_PLAYERS  = buildPlayers(bs.elements);
+    _BS          = bs; // store for use in loadFixtures/attachFixtures
     DEADLINE_TIME = resolveDeadline(bs);
     invalidateCache();
     updateGwNav();
@@ -737,8 +738,8 @@ async function loadFixtures() {
     const [fixes, xgData] = await Promise.all([fetchJ('api/fpl-fixtures'), fetchJ('api/xg-data').catch(()=>null)]);
     if (!Array.isArray(fixes)) return;
     _fixturesCache = fixes;
-    _BS = bs; _XG_DATA = xgData;
-    attachFixtures(fixes, SELECTED_GW, bs, xgData);
+    _XG_DATA = xgData;
+    attachFixtures(fixes, SELECTED_GW, _BS, xgData);
   } catch (err) {
     if (err.status !== 404) console.warn('[CaptainPicker] Fixtures failed:', err.message);
   }
@@ -787,23 +788,28 @@ async function loadSparklines(players) {
   const toFetch = players.slice(0, 24).filter(p => !XG_TREND_CACHE.has(p.id));
   if (!toFetch.length) { patchSparklines(players); return; }
 
-  // Fetch all in parallel — silent on failure per player
-  await Promise.allSettled(
-    toFetch.map(async p => {
-      try {
-        const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
-        // history[] is newest-first array of GW objects with expected_goals, expected_assists
-        const history = Array.isArray(data.history) ? data.history : [];
-        const vals = history
-          .slice(0, SPARK_GWS)
-          .reverse()  // oldest first for left-to-right chart
-          .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
-        XG_TREND_CACHE.set(p.id, vals);
-      } catch {
-        XG_TREND_CACHE.set(p.id, []); // mark as fetched even on failure
-      }
-    })
-  );
+  // Fetch in small batches with delay to avoid FPL 429 rate limiting
+  // 3 at a time, 300ms apart = max ~10/sec, well within FPL limits
+  const BATCH = 3, DELAY = 300;
+  for (let i = 0; i < toFetch.length; i += BATCH) {
+    const batch = toFetch.slice(i, i + BATCH);
+    await Promise.allSettled(
+      batch.map(async p => {
+        try {
+          const data = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
+          const history = Array.isArray(data.history) ? data.history : [];
+          const vals = history
+            .slice(0, SPARK_GWS)
+            .reverse()
+            .map(gw => (parseFloat(gw.expected_goals)||0) + (parseFloat(gw.expected_assists)||0));
+          XG_TREND_CACHE.set(p.id, vals);
+        } catch {
+          XG_TREND_CACHE.set(p.id, []); // mark as attempted so we don't retry
+        }
+      })
+    );
+    if (i + BATCH < toFetch.length) await new Promise(r => setTimeout(r, DELAY));
+  }
 
   patchSparklines(players);
 }

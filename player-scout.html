@@ -1606,17 +1606,22 @@ function computeL6(id, history){
 async function loadTableXg(players){
   if(ALL===FB_PLAYERS) return;
   const toFetch = players.filter(p => !L6_CACHE.has(p.id));
-  await Promise.allSettled(toFetch.map(async p => {
-    try{
-      const d = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
-      computeL6(p.id, d.history??[]);
-      // Also warm the GWH cache for detail panel
-      if(!GWH.has(p.id)){
-        const h=(d.history??[]).slice(0,5).reverse();
-        GWH.set(p.id,h.map(g=>({gw:g.round,pts:g.total_points??0,xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),mins:g.minutes||0})));
-      }
-    }catch{ L6_CACHE.set(p.id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); }
-  }));
+  // Fetch in batches of 4 with 250ms delay to avoid FPL 429 rate limiting
+  const BATCH=4, DELAY=250;
+  for(let i=0; i<toFetch.length; i+=BATCH){
+    const batch=toFetch.slice(i,i+BATCH);
+    await Promise.allSettled(batch.map(async p => {
+      try{
+        const d = await fetchJ(`api/fpl-player-summary?id=${p.id}`);
+        computeL6(p.id, d.history??[]);
+        if(!GWH.has(p.id)){
+          const h=(d.history??[]).slice(0,5).reverse();
+          GWH.set(p.id,h.map(g=>({gw:g.round,pts:g.total_points??0,xg:(parseFloat(g.expected_goals)||0)+(parseFloat(g.expected_assists)||0),mins:g.minutes||0})));
+        }
+      }catch{ L6_CACHE.set(p.id,{xg90L6:0,xa90L6:0,goals90L6:0,assists90L6:0}); }
+    }));
+    if(i+BATCH<toFetch.length) await new Promise(r=>setTimeout(r,DELAY));
+  }
   patchL6Cells(players);
 }
 

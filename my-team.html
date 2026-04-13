@@ -730,13 +730,22 @@ function getTeamFixGw(players){
 }
 
 function getNextFix(p, teamGw){
-  // Return the fixture for the team's chosen GW
+  // Return the first fixture for the team's chosen GW (for single-fix contexts)
   return p.fixes?.find(f => f.gw === teamGw) ?? p.fixes?.[0];
 }
+function getGwFixes(p, teamGw){
+  // Return ALL fixtures for the team's chosen GW (handles DGW)
+  const all = p.fixes?.filter(f => f.gw === teamGw) ?? [];
+  return all.length ? all : (p.fixes?.[0] ? [p.fixes[0]] : []);
+}
 function tokenHtml(p,isSub,teamFixGw){
-  const fix = getNextFix(p, TEAM_FIX_GW);
-  const fixLabel=fix?`${fix.opp} ${fix.ha}`:'BGW';
-  const fixPillCls=fix?`fix-pill-${fix.diff}`:'fix-pill-3';
+  const gwFixes = getGwFixes(p, TEAM_FIX_GW);
+  const fix = gwFixes[0] ?? null;
+  // For DGW: show all fixtures as pills e.g. "BOU H · SUN A"
+  const fixLabel = gwFixes.length
+    ? gwFixes.map(f=>`${f.opp} ${f.ha}`).join(' · ')
+    : 'BGW';
+  const fixPillCls = fix ? `fix-pill-${fix.diff}` : 'fix-pill-3';
   const bgCls=`shirt-${p.pos.toLowerCase()}-bg`;
 
   // Position ring — captain overrides to gold, VC to cyan

@@ -771,10 +771,13 @@ function attachFixtures(fixes, gw) {
 
   ALL_PLAYERS.forEach(p => {
     const teamFixes = byTeam[p.teamId] ?? [];
-    // p.fix: first upcoming fixture (for display)
+    // p.fix: first upcoming fixture (for display + scoring)
     p.fix   = teamFixes[0] ?? null;
     // p.fixes: full array for pitchiqProj DGW support
     p.fixes = teamFixes;
+    // p.gwFixes: all fixtures in the first upcoming GW (for DGW display)
+    const firstGw = teamFixes[0]?.gw;
+    p.gwFixes = firstGw ? teamFixes.filter(f => f.gw === firstGw) : [];
     // xg90Recent and xa90Recent needed by projEngine
     p.xg90Recent = p.xg90Recent ?? 0;
     p.xa90Recent = p.xa90Recent ?? 0;
@@ -1237,7 +1240,7 @@ function renderBanner(players, top) {
   else if (main.key==='fix') why += `has a highly favourable next fixture`;
   else if (main.key==='ep') why += `has the highest predicted points next GW`;
   else                      why += `scores highest on the combined model`;
-  if (fix) why += `, facing <strong>${fix.opp} (${fix.ha})</strong> — <strong>${FIX_LABEL[fix.difficulty]?.toLowerCase()}</strong> difficulty`;
+  if (fix) why += `, facing <strong>${(top.gwFixes&&top.gwFixes.length>1)?top.gwFixes.map(f=>f.opp+' ('+f.ha+')').join(' + '):fix.opp+' ('+fix.ha+')'}</strong> — <strong>${FIX_LABEL[fix.difficulty]?.toLowerCase()}</strong> difficulty`;
   why += `.${squadNote}`;
   document.getElementById('recWhy').innerHTML = why;
 
@@ -1327,7 +1330,7 @@ function renderCard(p, rank) {
   else if (p.transfersDelta > 50000) badges.push(`<span class="badge badge-rise">↑ Popular transfer in</span>`);
 
   const fixHtml = fix
-    ? `<div class="cap-fixture ${FIX_CLS[fix.difficulty]}">vs ${fix.opp} (${fix.ha}) — ${FIX_LABEL[fix.difficulty]}</div>`
+    ? `<div class="cap-fixture ${FIX_CLS[fix.difficulty]}">${p.gwFixes&&p.gwFixes.length>1?p.gwFixes.map(f=>`vs ${f.opp} (${f.ha})`).join(' + '):`vs ${fix.opp} (${fix.ha})`} — ${FIX_LABEL[fix.difficulty]}</div>`
     : '';
 
   // Two-column stat row: FPL predicted pts + avg pts per start

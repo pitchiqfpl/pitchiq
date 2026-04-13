@@ -619,7 +619,7 @@ function calculate(){
         <div style="color:var(--accent);font-size:8px">${op.toFixed(1)}</div>
         <div style="color:var(--grass-l);font-size:8px">${ip.toFixed(1)}</div>
       </div>
-      <div class="gw-col-label">GW${gw}${fix?`<br><span style="font-size:8px">${fix.opp}</span>`:''}</div>
+      <div class="gw-col-label">GW${gw}${gwF&&gwF.length?`<br><span style="font-size:8px">${gwF.map(f=>f.opp).join('+')}</span>`:''}</div>
     </div>`;
   }).join('');
 
